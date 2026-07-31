@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="용도변경부터 폐수시설 신고와 개업까지, 손세차장 창업 절차를 순서대로 확인하세요." />
+    <meta name="theme-color" content="#eef4ff" />
+    <title>손세차장 창업 로드맵</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="처음으로">
+        <span class="brand-mark" aria-hidden="true">水</span>
+        <span>손세차장 창업 로드맵</span>
+      </a>
+      <nav aria-label="주요 메뉴">
+        <a href="#roadmap">절차</a>
+        <a href="#documents">서류</a>
+        <a href="#risk">주의사항</a>
+      </nav>
+      <button class="print-button" type="button" id="printButton">인쇄하기</button>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">KOREA · CAR WASH STARTUP GUIDE</p>
+          <h1>계약보다 먼저,<br /><em>가능한 자리</em>인지 확인하세요.</h1>
+          <p class="hero-description">
+            손세차장 창업은 좋은 장비보다 올바른 순서가 먼저입니다.
+            입지 검토부터 용도변경, 폐수시설 신고, 개업까지 한 장에 정리했습니다.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#roadmap">12단계 확인하기 <span>↓</span></a>
+            <button class="text-button" type="button" id="resetButton">체크리스트 초기화</button>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="sun"></div>
+          <div class="building">
+            <div class="sign">HAND<br />WASH</div>
+            <div class="awning"></div>
+            <div class="bay">
+              <div class="car">
+                <span class="window"></span>
+                <span class="wheel wheel-left"></span>
+                <span class="wheel wheel-right"></span>
+              </div>
+            </div>
+          </div>
+          <div class="water-line"></div>
+          <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
+        </div>
+      </section>
+
+      <section class="rule-strip" aria-label="핵심 원칙">
+        <div><span>01</span><strong>주소 먼저</strong><small>용도지역·건축물대장 확인</small></div>
+        <div><span>02</span><strong>조건부 계약</strong><small>불허 시 계약금 반환 특약</small></div>
+        <div><span>03</span><strong>공사 전 신고</strong><small>환경·건축 절차 선행</small></div>
+      </section>
+
+      <section class="roadmap-section" id="roadmap">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">STEP BY STEP</p>
+            <h2>창업 절차 12단계</h2>
+          </div>
+          <div class="progress-card" aria-live="polite">
+            <span>진행률</span>
+            <strong id="progressText">0 / 12</strong>
+            <div class="progress-track"><span id="progressBar"></span></div>
+          </div>
+        </div>
+
+        <div class="phase-tabs" role="tablist" aria-label="단계 필터">
+          <button class="active" type="button" data-phase="all">전체</button>
+          <button type="button" data-phase="check">검토</button>
+          <button type="button" data-phase="permit">인허가</button>
+          <button type="button" data-phase="build">공사</button>
+          <button type="button" data-phase="open">개업</button>
+        </div>
+
+        <div class="steps" id="steps">
+          <article class="step-card" data-phase="check">
+            <label><input type="checkbox" data-step="1" /><span class="checkmark"></span></label>
+            <div class="step-number">01</div>
+            <div><span class="phase-tag">입지 검토</span><h3>후보지 사전 확인</h3><p>건축물대장, 토지이용계획, 위반건축물 여부와 공공하수도 연결 가능성을 확인합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>관할 구청 건축·도시계획·환경·하수 부서 사전협의</li><li>차량 진입로와 도로점용 필요 여부 확인</li><li>상수도 공급량과 전기 용량 확인</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="check">
+            <label><input type="checkbox" data-step="2" /><span class="checkmark"></span></label>
+            <div class="step-number">02</div>
+            <div><span class="phase-tag">전문 검토</span><h3>건축사 용도변경 검토</h3><p>자동차 관련 시설 중 세차장으로 변경 가능한지, 허가·신고 구분과 건축 기준을 검토합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>주차대수·소방·피난·구조 기준</li><li>캐노피·컨테이너·간판 설치 가능 여부</li><li>100㎡·500㎡ 기준에 따른 추가 절차 검토</li></ul></div>
+          </article>
+          <article class="step-card critical" data-phase="check">
+            <label><input type="checkbox" data-step="3" /><span class="checkmark"></span></label>
+            <div class="step-number">03</div>
+            <div><span class="phase-tag">계약</span><h3>조건부 임대차계약</h3><p>용도변경이나 환경 신고가 불가능할 경우 계약금 반환이 가능한 특약을 넣습니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><blockquote>“세차장 영업에 필요한 행정절차가 불허될 경우 임차인은 계약을 해제하고 계약금을 반환받는다.”</blockquote></div>
+          </article>
+          <article class="step-card" data-phase="permit">
+            <label><input type="checkbox" data-step="4" /><span class="checkmark"></span></label>
+            <div class="step-number">04</div>
+            <div><span class="phase-tag">환경 설계</span><h3>폐수처리계획 설계</h3><p>세차폐수의 발생량과 처리 경로를 정하고, 바닥·트렌치·집수조·유수분리시설을 설계합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>빗물과 세차폐수 배관 분리</li><li>슬러지 보관 및 위탁처리 계획</li><li>폐수를 우수관·도로 측구로 방류 금지</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="permit">
+            <label><input type="checkbox" data-step="5" /><span class="checkmark"></span></label>
+            <div class="step-number">05</div>
+            <div><span class="phase-tag">환경 인허가</span><h3>폐수배출시설 허가·신고</h3><p>공사 전에 관할 환경부서에 위치도, 공정 흐름도, 폐수량과 방지시설 도면을 제출합니다.</p></div>
+            <a class="source-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14800000112&HighCtgCD=A09006" target="_blank" rel="noreferrer">정부24 ↗</a>
+          </article>
+          <article class="step-card" data-phase="permit">
+            <label><input type="checkbox" data-step="6" /><span class="checkmark"></span></label>
+            <div class="step-number">06</div>
+            <div><span class="phase-tag">건축 인허가</span><h3>건축물 용도변경</h3><p>건축사 도면을 갖춰 자동차 관련 시설(세차장)로 용도변경 허가 또는 신고를 진행합니다.</p></div>
+            <a class="source-link" href="https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1028542757" target="_blank" rel="noreferrer">법령 ↗</a>
+          </article>
+          <article class="step-card" data-phase="permit">
+            <label><input type="checkbox" data-step="7" /><span class="checkmark"></span></label>
+            <div class="step-number">07</div>
+            <div><span class="phase-tag">하수도</span><h3>배수설비·도로 관련 신고</h3><p>공공하수도 연결 설계와 배수설비 신고를 하고, 필요하면 도로점용·차량출입시설 허가를 받습니다.</p></div>
+            <a class="source-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14800000189&HighCtgCD=A03001&tp_seq=" target="_blank" rel="noreferrer">정부24 ↗</a>
+          </article>
+          <article class="step-card" data-phase="build">
+            <label><input type="checkbox" data-step="8" /><span class="checkmark"></span></label>
+            <div class="step-number">08</div>
+            <div><span class="phase-tag">시공</span><h3>시설공사</h3><p>허가·신고 수리 후 승인된 도면대로 방수 바닥, 트렌치, 폐수처리·급수·전기·소방시설을 시공합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>고압세척기 누전차단·접지</li><li>콤프레서 소음·진동 저감</li><li>임의 캐노피·컨테이너 설치 금지</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="build">
+            <label><input type="checkbox" data-step="9" /><span class="checkmark"></span></label>
+            <div class="step-number">09</div>
+            <div><span class="phase-tag">준공</span><h3>사용승인·대장 확인</h3><p>필요한 검사와 사용승인을 받은 뒤 건축물대장 용도가 ‘자동차 관련 시설(세차장)’인지 확인합니다.</p></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="10" /><span class="checkmark"></span></label>
+            <div class="step-number">10</div>
+            <div><span class="phase-tag">가동 준비</span><h3>폐수시설 가동 절차</h3><p>환경부서에 가동개시 신고 필요 여부를 확인하고 처리시설 시운전과 운영일지를 준비합니다.</p></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="11" /><span class="checkmark"></span></label>
+            <div class="step-number">11</div>
+            <div><span class="phase-tag">세무</span><h3>사업자등록</h3><p>시설과 필수 인허가가 확정된 후 홈택스 또는 관할 세무서에서 자동차 세차업으로 등록합니다.</p></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="12" /><span class="checkmark"></span></label>
+            <div class="step-number">12</div>
+            <div><span class="phase-tag">OPEN</span><h3>보험·안전 확인 후 개업</h3><p>영업배상책임보험, 차량 파손 보상기준, MSDS, 폐기물 처리와 직원 근로계약을 점검합니다.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="documents-section" id="documents">
+        <div class="section-heading"><div><p class="eyebrow">READY TO APPLY</p><h2>미리 준비할 서류</h2></div></div>
+        <div class="document-grid">
+          <article><span>건축</span><h3>부동산·건축 서류</h3><ul><li>건축물대장</li><li>토지이용계획확인서</li><li>등기부등본·임대차계약서</li><li>건물주 공사·용도변경 동의서</li></ul></article>
+          <article><span>환경</span><h3>폐수시설 서류</h3><ul><li>시설 위치도·배치도</li><li>폐수배출 공정 흐름도</li><li>용수·세제 사용명세</li><li>방지시설 도면·처리계획</li></ul></article>
+          <article><span>개업</span><h3>사업자등록 서류</h3><ul><li>신분증·신청서</li><li>임대차계약서</li><li>관련 허가·신고 증명</li><li>공동사업계약서(해당 시)</li></ul></article>
+        </div>
+      </section>
+
+      <section class="risk-section" id="risk">
+        <div class="risk-copy">
+          <p class="eyebrow">DO NOT SKIP</p>
+          <h2>가장 비싼 실수는<br />순서를 바꾸는 것입니다.</h2>
+          <p>지역 조례와 현장 조건에 따라 결과가 달라집니다. 계약금과 시설비를 지출하기 전에 관할 부서의 서면 또는 민원 답변을 받아두세요.</p>
+        </div>
+        <ol class="risk-list">
+          <li><span>01</span><div><strong>먼저 계약하기</strong><p>용도변경이 안 되면 보증금과 권리금이 묶일 수 있습니다.</p></div></li>
+          <li><span>02</span><div><strong>먼저 공사하기</strong><p>신고 전 시공하면 철거·원상복구 또는 행정처분 위험이 있습니다.</p></div></li>
+          <li><span>03</span><div><strong>폐수를 우수관으로 연결하기</strong><p>세차폐수는 승인된 처리경로로만 배출해야 합니다.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="final-cta">
+        <p>실무 순서 한 줄 요약</p>
+        <h2>주소 확인 → 부서 협의 → 건축사 검토 → 조건부 계약 → 인허가 → 공사 → 개업</h2>
+        <a href="#top">처음부터 다시 보기 ↑</a>
+      </section>
+    </main>
+
+    <footer>
+      <p>손세차장 창업 로드맵</p>
+      <p>본 페이지는 일반적인 절차 안내이며, 최종 판단은 소재지 관할 행정기관에 확인해야 합니다.</p>
+      <p>2026. 07 기준</p>
+    </footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
