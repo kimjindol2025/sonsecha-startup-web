@@ -4,6 +4,7 @@ const checkboxes = [...document.querySelectorAll('input[data-step]')];
 const progressText = document.querySelector('#progressText');
 const progressBar = document.querySelector('#progressBar');
 const storageKey = 'sonsecha-roadmap-progress';
+const detailStorageKey = 'sonsecha-detail-checks-v1';
 
 function escapeHtml(value) {
   return value
@@ -123,6 +124,54 @@ function hydrateGuide() {
   });
 }
 
+function updateDetailGroup(group) {
+  const boxes = [...group.querySelectorAll('input[data-detail-check]')];
+  if (!boxes.length) return;
+  let status = group.querySelector('.detail-progress');
+  if (!status) {
+    status = document.createElement('div');
+    status.className = 'detail-progress';
+    const guide = group.querySelector('.guide-content');
+    if (guide) guide.before(status);
+  }
+  const completed = boxes.filter((box) => box.checked).length;
+  status.innerHTML = `<span>세부 체크</span><strong>${completed} / ${boxes.length}</strong>`;
+}
+
+function hydrateDetailChecks() {
+  const saved = new Set(JSON.parse(localStorage.getItem(detailStorageKey) || '[]'));
+  const groups = [...document.querySelectorAll('.step-detail, .field-panel')];
+
+  groups.forEach((group, groupIndex) => {
+    const scope = group.closest('.step-card')?.querySelector('input[data-step]')?.dataset.step
+      || group.id
+      || `field-${groupIndex}`;
+
+    group.querySelectorAll('.guide-content li').forEach((item, itemIndex) => {
+      const id = `${scope}-${itemIndex}`;
+      const original = item.innerHTML;
+      item.innerHTML = `
+        <label class="detail-check-item">
+          <input type="checkbox" data-detail-check="${id}">
+          <span class="detail-checkmark" aria-hidden="true"></span>
+          <span class="detail-check-copy">${original}</span>
+        </label>
+      `;
+      const box = item.querySelector('input');
+      box.checked = saved.has(id);
+      item.classList.toggle('checked', box.checked);
+      box.addEventListener('change', () => {
+        item.classList.toggle('checked', box.checked);
+        const active = [...document.querySelectorAll('input[data-detail-check]:checked')]
+          .map((checked) => checked.dataset.detailCheck);
+        localStorage.setItem(detailStorageKey, JSON.stringify(active));
+        updateDetailGroup(group);
+      });
+    });
+    updateDetailGroup(group);
+  });
+}
+
 function loadProgress() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
   checkboxes.forEach((box) => {
@@ -174,9 +223,16 @@ document.querySelector('#resetButton').addEventListener('click', () => {
     box.checked = false;
     box.closest('.step-card').classList.remove('completed');
   });
+  document.querySelectorAll('input[data-detail-check]').forEach((box) => {
+    box.checked = false;
+    box.closest('li')?.classList.remove('checked');
+  });
+  localStorage.removeItem(detailStorageKey);
+  document.querySelectorAll('.step-detail, .field-panel').forEach(updateDetailGroup);
   updateProgress();
 });
 
 document.querySelector('#printButton').addEventListener('click', () => window.print());
 hydrateGuide();
+hydrateDetailChecks();
 loadProgress();
