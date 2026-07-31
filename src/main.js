@@ -904,6 +904,9 @@ document.querySelectorAll('.phase-tabs button').forEach((button) => {
     document.querySelectorAll('.step-card').forEach((card) => {
       card.hidden = phase !== 'all' && card.dataset.phase !== phase;
     });
+    document.querySelectorAll('.roadmap-shop-banner').forEach((banner) => {
+      banner.hidden = phase !== 'all' && banner.dataset.phase !== phase;
+    });
   });
 });
 
