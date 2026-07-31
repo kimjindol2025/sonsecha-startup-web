@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#10243f" />
+    <title>상품 관리자 · 손세차장 창업 로드맵</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <a class="admin-brand" href="/">
+        <span aria-hidden="true">水</span>
+        <strong>손세차장 상품 관리</strong>
+      </a>
+      <a class="back-shop" href="/#shop">제품몰 보기 ↗</a>
+    </header>
+
+    <main>
+      <section class="login-view" id="loginView" aria-labelledby="loginTitle">
+        <form class="login-card" id="loginForm">
+          <p>ADMIN MODE</p>
+          <h1 id="loginTitle">관리자 접속</h1>
+          <span>비밀번호만 입력하면 상품 대시보드로 접속합니다.</span>
+          <label>
+            <b>비밀번호</b>
+            <input id="adminPassword" type="password" autocomplete="current-password" required autofocus />
+          </label>
+          <button type="submit">접속하기</button>
+          <small id="loginFeedback" aria-live="polite"></small>
+        </form>
+      </section>
+
+      <section class="dashboard" id="dashboard" hidden>
+        <div class="dashboard-heading">
+          <div>
+            <p>SITE ADMIN DASHBOARD</p>
+            <h1>메인·상품 글 관리</h1>
+            <span>수정한 메인 글과 상품 내용은 사이트에 즉시 반영됩니다.</span>
+          </div>
+          <div class="dashboard-actions">
+            <button type="button" id="newProductButton" hidden>+ 상품 등록</button>
+            <button class="secondary" type="button" id="logoutButton">로그아웃</button>
+          </div>
+        </div>
+
+        <div class="admin-mode-tabs" role="tablist" aria-label="관리 항목">
+          <button class="active" type="button" data-admin-section="content" role="tab" aria-selected="true">메인페이지 글</button>
+          <button type="button" data-admin-section="products" role="tab" aria-selected="false">상품 관리</button>
+        </div>
+
+        <section class="content-panel" id="contentPanel">
+          <div class="content-panel-heading">
+            <div>
+              <p>MAIN PAGE CONTENT</p>
+              <h2>메인페이지 글 수정</h2>
+              <span>섹션별 입력란을 열어 글을 수정하세요.</span>
+            </div>
+            <a href="/" target="_blank" rel="noopener noreferrer">메인 미리보기 ↗</a>
+          </div>
+          <form id="contentForm">
+            <div class="content-field-groups" id="contentFieldGroups"></div>
+            <div class="content-save-row">
+              <button type="submit">메인 글 저장</button>
+              <p id="contentFeedback" aria-live="polite"></p>
+            </div>
+          </form>
+        </section>
+
+        <section id="productPanel" hidden>
+        <div class="dashboard-summary">
+          <p><span>전체</span><strong id="adminProductCount">0</strong></p>
+          <p><span>공개</span><strong id="adminActiveCount">0</strong></p>
+          <p><span>품절</span><strong id="adminSoldOutCount">0</strong></p>
+        </div>
+
+        <div class="dashboard-grid">
+          <aside class="product-browser">
+            <label class="admin-search">
+              <span class="sr-only">상품 검색</span>
+              <input id="adminProductSearch" type="search" placeholder="상품명 검색" />
+            </label>
+            <div class="admin-product-list" id="adminProductList"></div>
+          </aside>
+
+          <section class="product-editor">
+            <form id="productForm">
+              <div class="editor-title">
+                <div>
+                  <p id="editorMode">EDIT PRODUCT</p>
+                  <h2 id="editorTitle">상품을 선택하세요</h2>
+                  <small id="editorProductId"></small>
+                </div>
+                <div class="editor-image-preview" id="editorImagePreview"><span aria-hidden="true">水</span></div>
+              </div>
+
+              <div class="editor-fields">
+                <label class="field-wide"><span>상품명 *</span><input name="name" type="text" maxlength="160" required /></label>
+                <label><span>카테고리 *</span>
+                  <select name="category" required>
+                    <option value="equipment">장비·부품</option>
+                    <option value="chemical">세차 케미컬</option>
+                    <option value="tool">세차 도구</option>
+                    <option value="safety">안전·관리용품</option>
+                  </select>
+                </label>
+                <label><span>판매가</span><input name="price" type="number" min="0" step="1" placeholder="비우면 가격 문의" /></label>
+                <label class="field-wide"><span>상품 설명</span><textarea name="summary" maxlength="600" rows="4"></textarea></label>
+                <label class="field-wide"><span>이미지 URL</span><input name="image" type="url" placeholder="https://..." /></label>
+                <label class="field-wide"><span>공식몰 상세 URL</span><input name="shopUrl" type="url" placeholder="https://..." /></label>
+                <label><span>배지</span><input name="badge" type="text" maxlength="30" placeholder="BEST, NEW" /></label>
+                <label><span>추천 순서</span><input name="featured" type="number" min="-10000" max="10000" step="1" value="0" /></label>
+              </div>
+
+              <div class="editor-switches">
+                <label><input name="active" type="checkbox" checked /><span>제품몰 공개</span></label>
+                <label><input name="inStock" type="checkbox" checked /><span>장바구니 판매 가능</span></label>
+              </div>
+
+              <div class="editor-save-row">
+                <button type="submit" id="saveProductButton" disabled>상품 저장</button>
+                <p id="productFeedback" aria-live="polite"></p>
+              </div>
+            </form>
+
+          </section>
+        </div>
+        </section>
+
+        <form class="password-change" id="passwordForm">
+          <div>
+            <strong>관리자 비밀번호 변경</strong>
+            <small>8자 이상 · 변경 후 다시 로그인해야 합니다.</small>
+          </div>
+          <input name="password" type="password" minlength="8" autocomplete="new-password" placeholder="새 비밀번호" required />
+          <button type="submit">변경</button>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="/src/admin.js"></script>
+  </body>
+</html>

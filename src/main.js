@@ -1,4 +1,5 @@
 import guideMarkdown from '../README.md?raw';
+import { defaultSiteContent } from './content.js';
 import { productCategories, products } from './products.js';
 
 const checkboxes = [...document.querySelectorAll('input[data-step]')];
@@ -10,6 +11,34 @@ const detailNotesStorageKey = 'sonsecha-detail-notes-v1';
 const legacyCandidateStorageKey = 'sonsecha-candidate-v1';
 const candidateStorageKey = 'sonsecha-candidates-v2';
 let candidateState;
+let currentSiteContent = { ...defaultSiteContent };
+
+function applySiteContent(content) {
+  currentSiteContent = { ...defaultSiteContent, ...content };
+  document.querySelectorAll('[data-content-key]').forEach((element) => {
+    const value = currentSiteContent[element.dataset.contentKey];
+    if (typeof value === 'string') element.textContent = value;
+  });
+  const phoneHref = `tel:${currentSiteContent.phone.replace(/[^0-9+]/g, '')}`;
+  document.querySelectorAll('[data-phone-link]').forEach((link) => { link.href = phoneHref; });
+  const businessNumber = currentSiteContent.businessNumber.replace(/\D/g, '');
+  document.querySelectorAll('[data-business-link]').forEach((link) => {
+    link.href = `https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${businessNumber}`;
+  });
+}
+
+async function initializeSiteContent() {
+  try {
+    const response = await fetch('/api/content', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    if (!payload.content || typeof payload.content !== 'object') throw new Error('콘텐츠 형식 오류');
+    applySiteContent(payload.content);
+  } catch (error) {
+    console.warn('서버 메인 글을 불러오지 못해 기본 글을 사용합니다.', error);
+    applySiteContent(defaultSiteContent);
+  }
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -474,7 +503,9 @@ const shopElements = {
   quoteFeedback: document.querySelector('#quoteFeedback'),
 };
 const categoryLabels = new Map(productCategories.map((category) => [category.id, category.label]));
-const catalogProducts = products
+
+function normalizeCatalog(source) {
+  return source
   .filter((product) => product && product.active !== false)
   .map((product, index) => ({
     id: String(product.id || `product-${index + 1}`),
@@ -492,7 +523,10 @@ const catalogProducts = products
     inStock: product.inStock !== false,
     featured: Number.isFinite(Number(product.featured)) ? Number(product.featured) : 0,
   }));
-const productById = new Map(catalogProducts.map((product) => [product.id, product]));
+}
+
+let catalogProducts = normalizeCatalog(products);
+let productById = new Map(catalogProducts.map((product) => [product.id, product]));
 let activeShopCategory = 'all';
 let cart = [];
 let quoteDocumentNumber = '';
@@ -796,7 +830,7 @@ async function copyQuote() {
     '',
     `상품 합계: ${shopElements.quoteTotal.textContent}`,
     `요청사항: ${quoteFieldValue('request') || '없음'}`,
-    '문의전화: 031-1688-7759',
+    `문의전화: ${currentSiteContent.phone}`,
   ];
   try {
     await navigator.clipboard.writeText(lines.join('\n'));
@@ -811,7 +845,21 @@ function printQuote() {
   window.print();
 }
 
-function initializeShop() {
+async function loadCatalogProducts() {
+  try {
+    const response = await fetch('/api/products', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    if (!Array.isArray(payload.products)) throw new Error('상품 데이터 형식 오류');
+    catalogProducts = normalizeCatalog(payload.products);
+    productById = new Map(catalogProducts.map((product) => [product.id, product]));
+  } catch (error) {
+    console.warn('서버 상품 데이터를 불러오지 못해 기본 상품을 사용합니다.', error);
+  }
+}
+
+async function initializeShop() {
+  shopElements.results.textContent = '상품을 불러오는 중…';
   shopElements.categories.innerHTML = productCategories.map((category) => `
     <button type="button" class="${category.id === 'all' ? 'active' : ''}" data-product-category="${escapeHtml(category.id)}">
       ${escapeHtml(category.label)}
@@ -857,6 +905,7 @@ function initializeShop() {
     if (shopElements.quoteModal.classList.contains('open')) closeQuote();
     else if (shopElements.drawer.classList.contains('open')) closeCart();
   });
+  await loadCatalogProducts();
   cart = loadCart();
   loadQuoteForm();
   saveCart();
@@ -942,6 +991,7 @@ document.querySelector('#resetButton').addEventListener('click', () => {
 document.querySelector('#printButton').addEventListener('click', () => window.print());
 globalThis.addEventListener('hashchange', syncSiteView);
 syncSiteView();
+initializeSiteContent();
 hydrateGuide();
 candidateState = loadCandidateState();
 saveCandidateState();

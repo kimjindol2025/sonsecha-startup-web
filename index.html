@@ -15,11 +15,12 @@
     <header class="site-header">
       <a class="brand" href="#top" aria-label="처음으로">
         <span class="brand-mark" aria-hidden="true">水</span>
-        <span>손세차장 창업 로드맵</span>
+        <span data-content-key="brandTitle">손세차장 창업 로드맵</span>
       </a>
       <nav aria-label="주요 메뉴">
-        <a class="nav-view-tab active" href="#top" data-view-tab="guide" aria-current="page">창업가이드</a>
-        <a class="nav-view-tab" href="#shop" data-view-tab="shop">제품몰</a>
+        <a class="nav-view-tab active" href="#top" data-view-tab="guide" data-content-key="navGuideLabel" aria-current="page">창업가이드</a>
+        <a class="nav-view-tab" href="#shop" data-view-tab="shop" data-content-key="navShopLabel">제품몰</a>
+        <a class="nav-admin-link" href="/admin.html">관리자</a>
         <span class="nav-divider" aria-hidden="true"></span>
         <a class="guide-subnav" href="#roadmap">절차</a>
         <a class="guide-subnav" href="#documents">서류</a>
@@ -35,14 +36,11 @@
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">KOREA · CAR WASH STARTUP GUIDE</p>
-          <h1>계약보다 먼저,<br /><em>가능한 자리</em>인지 확인하세요.</h1>
-          <p class="hero-description">
-            손세차장 창업은 좋은 장비보다 올바른 순서가 먼저입니다.
-            입지 검토부터 용도변경, 폐수시설 신고, 개업까지 한 장에 정리했습니다.
-          </p>
+          <p class="eyebrow" data-content-key="heroEyebrow">KOREA · CAR WASH STARTUP GUIDE</p>
+          <h1><span data-content-key="heroTitleLine1">계약보다 먼저,</span><br /><em data-content-key="heroTitleHighlight">가능한 자리</em><span data-content-key="heroTitleSuffix">인지 확인하세요.</span></h1>
+          <p class="hero-description" data-content-key="heroDescription">손세차장 창업은 좋은 장비보다 올바른 순서가 먼저입니다. 입지 검토부터 용도변경, 폐수시설 신고, 개업까지 한 장에 정리했습니다.</p>
           <div class="hero-actions">
-            <a class="primary-button" href="#roadmap">12단계 확인하기 <span>↓</span></a>
+            <a class="primary-button" href="#roadmap"><span data-content-key="heroPrimaryButton">12단계 확인하기</span> <span>↓</span></a>
             <button class="text-button" type="button" id="resetButton">체크리스트 초기화</button>
           </div>
         </div>
@@ -65,22 +63,22 @@
       </section>
 
       <section class="rule-strip" aria-label="핵심 원칙">
-        <div><span>01</span><strong>주소 먼저</strong><small>용도지역·건축물대장 확인</small></div>
-        <div><span>02</span><strong>조건부 계약</strong><small>불허 시 계약금 반환 특약</small></div>
-        <div><span>03</span><strong>공사 전 신고</strong><small>환경·건축 절차 선행</small></div>
+        <div><span>01</span><strong data-content-key="rule1Title">주소 먼저</strong><small data-content-key="rule1Detail">용도지역·건축물대장 확인</small></div>
+        <div><span>02</span><strong data-content-key="rule2Title">조건부 계약</strong><small data-content-key="rule2Detail">불허 시 계약금 반환 특약</small></div>
+        <div><span>03</span><strong data-content-key="rule3Title">공사 전 신고</strong><small data-content-key="rule3Detail">환경·건축 절차 선행</small></div>
       </section>
 
       <section class="shop-section" id="shop">
         <div class="shop-heading">
           <div>
-            <p class="eyebrow">OUR PRODUCT SHOP</p>
-            <h2>세차장 운영에 필요한 제품</h2>
-            <p>품목별로 비교하고 필요한 수량을 장바구니에 담아 전화 주문이나 견적 문의로 연결할 수 있습니다.</p>
+            <p class="eyebrow" data-content-key="shopEyebrow">OUR PRODUCT SHOP</p>
+            <h2 data-content-key="shopTitle">세차장 운영에 필요한 제품</h2>
+            <p data-content-key="shopDescription">품목별로 비교하고 필요한 수량을 장바구니에 담아 전화 주문이나 견적 문의로 연결할 수 있습니다.</p>
           </div>
           <div class="shop-heading-actions">
-            <a class="official-shop-button" href="https://k002.com/" target="_blank" rel="noopener noreferrer">
+            <a class="official-shop-button" href="https://www.k002.com/mall/m_mall_list.php?ps_ctid=01000000" target="_blank" rel="noopener noreferrer">
               <span>OFFICIAL SHOP</span>
-              <strong>k002.com 바로가기 ↗</strong>
+              <strong>K002 세차장 상품 보기 ↗</strong>
             </a>
             <button class="shop-cart-button" type="button" data-cart-open>
               <span>장바구니</span>
@@ -90,9 +88,9 @@
         </div>
 
         <div class="shop-benefits" aria-label="쇼핑 안내">
-          <p><span>01</span><strong>전문 제품</strong><small>손세차장 운영 품목 중심</small></p>
-          <p><span>02</span><strong>간편 견적</strong><small>장바구니 목록으로 문의</small></p>
-          <p><span>03</span><strong>전화 상담</strong><small>031-1688-7759</small></p>
+          <p><span>01</span><strong data-content-key="shopBenefit1Title">전문 제품</strong><small data-content-key="shopBenefit1Detail">손세차장 운영 품목 중심</small></p>
+          <p><span>02</span><strong data-content-key="shopBenefit2Title">간편 견적</strong><small data-content-key="shopBenefit2Detail">장바구니 목록으로 문의</small></p>
+          <p><span>03</span><strong data-content-key="shopBenefit3Title">전화 상담</strong><small data-content-key="phone">031-1688-7759</small></p>
         </div>
 
         <div class="shop-toolbar">
@@ -121,8 +119,8 @@
       <section class="roadmap-section" id="roadmap">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">STEP BY STEP</p>
-            <h2>창업 절차 12단계</h2>
+            <p class="eyebrow" data-content-key="roadmapEyebrow">STEP BY STEP</p>
+            <h2 data-content-key="roadmapTitle">창업 절차 12단계</h2>
           </div>
           <div class="progress-card" aria-live="polite">
             <span>진행률</span>
@@ -143,117 +141,117 @@
           <article class="step-card" data-phase="check">
             <label><input type="checkbox" data-step="1" /><span class="checkmark"></span></label>
             <div class="step-number">01</div>
-            <div><span class="phase-tag">입지 검토</span><h3>후보지 사전 확인</h3><p>건축물대장, 토지이용계획, 위반건축물 여부와 공공하수도 연결 가능성을 확인합니다.</p></div>
+            <div><span class="phase-tag">입지 검토</span><h3 data-content-key="step1Title">후보지 사전 확인</h3><p data-content-key="step1Description">건축물대장, 토지이용계획, 위반건축물 여부와 공공하수도 연결 가능성을 확인합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><ul><li>관할 구청 건축·도시계획·환경·하수 부서 사전협의</li><li>차량 진입로와 도로점용 필요 여부 확인</li><li>상수도 공급량과 전기 용량 확인</li></ul></div>
           </article>
           <article class="step-card" data-phase="check">
             <label><input type="checkbox" data-step="2" /><span class="checkmark"></span></label>
             <div class="step-number">02</div>
-            <div><span class="phase-tag">전문 검토</span><h3>건축사 용도변경 검토</h3><p>자동차 관련 시설 중 세차장으로 변경 가능한지, 허가·신고 구분과 건축 기준을 검토합니다.</p></div>
+            <div><span class="phase-tag">전문 검토</span><h3 data-content-key="step2Title">건축사 용도변경 검토</h3><p data-content-key="step2Description">자동차 관련 시설 중 세차장으로 변경 가능한지, 허가·신고 구분과 건축 기준을 검토합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><ul><li>주차대수·소방·피난·구조 기준</li><li>캐노피·컨테이너·간판 설치 가능 여부</li><li>100㎡·500㎡ 기준에 따른 추가 절차 검토</li></ul></div>
           </article>
           <article class="step-card critical" data-phase="check">
             <label><input type="checkbox" data-step="3" /><span class="checkmark"></span></label>
             <div class="step-number">03</div>
-            <div><span class="phase-tag">계약</span><h3>조건부 임대차계약</h3><p>용도변경이나 환경 신고가 불가능할 경우 계약금 반환이 가능한 특약을 넣습니다.</p></div>
+            <div><span class="phase-tag">계약</span><h3 data-content-key="step3Title">조건부 임대차계약</h3><p data-content-key="step3Description">용도변경이나 환경 신고가 불가능할 경우 계약금 반환이 가능한 특약을 넣습니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><blockquote>“세차장 영업에 필요한 행정절차가 불허될 경우 임차인은 계약을 해제하고 계약금을 반환받는다.”</blockquote></div>
           </article>
           <aside class="roadmap-shop-banner" data-phase="check">
-            <a href="#shop" aria-label="제품몰에서 세차장 장비 예산 확인하기">
-              <div class="roadmap-banner-image"><img src="https://k002.com/mall/shop_image/202004/sum_500%2812%29.jpg" alt="XMTA 3.5G 22 고압펌프" loading="lazy"></div>
+            <a href="#shop" aria-label="제품몰에서 세차장 폐수처리기 확인하기">
+              <div class="roadmap-banner-image"><img src="https://www.k002.com/mall/shop_image/202004/2_sum_500%282%29_1545034089%282%29.jpg" alt="셀프세차장 폐수처리기" loading="lazy"></div>
               <div class="roadmap-banner-copy">
-                <span>K002 EQUIPMENT SHOP</span>
-                <strong>계약 조건을 정했다면 장비 예산도 함께 확인하세요.</strong>
-                <p>고압펌프와 핵심 장비를 장바구니에 담아 예상 견적을 만들 수 있습니다.</p>
+                <span>WASTEWATER TREATMENT</span>
+                <strong data-content-key="banner1Title">세차장 폐수처리기</strong>
+                <p data-content-key="banner1Description">자동형·수동형 폐수처리 설비의 예산과 설치 조건을 제품몰에서 확인하세요.</p>
               </div>
-              <em>제품몰 보기 →</em>
+              <em data-content-key="banner1Cta">폐수 설비 보기 →</em>
             </a>
           </aside>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="4" /><span class="checkmark"></span></label>
             <div class="step-number">04</div>
-            <div><span class="phase-tag">환경 설계</span><h3>폐수처리계획 설계</h3><p>세차폐수의 발생량과 처리 경로를 정하고, 바닥·트렌치·집수조·유수분리시설을 설계합니다.</p></div>
+            <div><span class="phase-tag">환경 설계</span><h3 data-content-key="step4Title">폐수처리계획 설계</h3><p data-content-key="step4Description">세차폐수의 발생량과 처리 경로를 정하고, 바닥·트렌치·집수조·유수분리시설을 설계합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><ul><li>빗물과 세차폐수 배관 분리</li><li>슬러지 보관 및 위탁처리 계획</li><li>폐수를 우수관·도로 측구로 방류 금지</li></ul></div>
           </article>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="5" /><span class="checkmark"></span></label>
             <div class="step-number">05</div>
-            <div><span class="phase-tag">환경 인허가</span><h3>폐수배출시설 허가·신고</h3><p>공사 전에 관할 환경부서에 위치도, 공정 흐름도, 폐수량과 방지시설 도면을 제출합니다.</p></div>
+            <div><span class="phase-tag">환경 인허가</span><h3 data-content-key="step5Title">폐수배출시설 허가·신고</h3><p data-content-key="step5Description">공사 전에 관할 환경부서에 위치도, 공정 흐름도, 폐수량과 방지시설 도면을 제출합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><a class="source-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14800000112&HighCtgCD=A09006" target="_blank" rel="noreferrer">정부24 폐수배출시설 안내 ↗</a></div>
           </article>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="6" /><span class="checkmark"></span></label>
             <div class="step-number">06</div>
-            <div><span class="phase-tag">건축 인허가</span><h3>건축물 용도변경</h3><p>건축사 도면을 갖춰 자동차 관련 시설(세차장)로 용도변경 허가 또는 신고를 진행합니다.</p></div>
+            <div><span class="phase-tag">건축 인허가</span><h3 data-content-key="step6Title">건축물 용도변경</h3><p data-content-key="step6Description">건축사 도면을 갖춰 자동차 관련 시설(세차장)로 용도변경 허가 또는 신고를 진행합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><a class="source-link" href="https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1028542757" target="_blank" rel="noreferrer">건축법 제19조 확인 ↗</a></div>
           </article>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="7" /><span class="checkmark"></span></label>
             <div class="step-number">07</div>
-            <div><span class="phase-tag">하수도</span><h3>배수설비·도로 관련 신고</h3><p>공공하수도 연결 설계와 배수설비 신고를 하고, 필요하면 도로점용·차량출입시설 허가를 받습니다.</p></div>
+            <div><span class="phase-tag">하수도</span><h3 data-content-key="step7Title">배수설비·도로 관련 신고</h3><p data-content-key="step7Description">공공하수도 연결 설계와 배수설비 신고를 하고, 필요하면 도로점용·차량출입시설 허가를 받습니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><a class="source-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14800000189&HighCtgCD=A03001&tp_seq=" target="_blank" rel="noreferrer">정부24 배수설비 안내 ↗</a></div>
           </article>
           <aside class="roadmap-shop-banner permit-banner" data-phase="permit">
-            <a href="#shop" aria-label="제품몰에서 배수와 설비 부품 확인하기">
-              <div class="roadmap-banner-image"><img src="https://k002.com/mall/shop_image/202005/sum_600.jpg" alt="셀프세차장 필터 하우징" loading="lazy"></div>
+            <a href="#shop" aria-label="제품몰에서 세차장 고압세척기 확인하기">
+              <div class="roadmap-banner-image"><img src="https://www.k002.com/mall/shop_image/202004/sum_500.jpg" alt="손세차장 냉온수 고압세척기" loading="lazy"></div>
               <div class="roadmap-banner-copy">
-                <span>FACILITY PARTS</span>
-                <strong>배수 계획이 끝났다면 필요한 설비 부품을 점검하세요.</strong>
-                <p>필터·게이지·인젝터 등 시공 전 확인할 부품을 제품몰에서 비교할 수 있습니다.</p>
+                <span>HIGH PRESSURE WASHER</span>
+                <strong data-content-key="banner2Title">세차장 고압세척기</strong>
+                <p data-content-key="banner2Description">세차 방식과 사용량에 맞는 냉·온수 고압세척기와 관련 장비를 비교하세요.</p>
               </div>
-              <em>부품 보기 →</em>
+              <em data-content-key="banner2Cta">고압세척기 보기 →</em>
             </a>
           </aside>
           <article class="step-card" data-phase="build">
             <label><input type="checkbox" data-step="8" /><span class="checkmark"></span></label>
             <div class="step-number">08</div>
-            <div><span class="phase-tag">시공</span><h3>시설공사</h3><p>허가·신고 수리 후 승인된 도면대로 방수 바닥, 트렌치, 폐수처리·급수·전기·소방시설을 시공합니다.</p></div>
+            <div><span class="phase-tag">시공</span><h3 data-content-key="step8Title">시설공사</h3><p data-content-key="step8Description">허가·신고 수리 후 승인된 도면대로 방수 바닥, 트렌치, 폐수처리·급수·전기·소방시설을 시공합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><ul><li>고압세척기 누전차단·접지</li><li>콤프레서 소음·진동 저감</li><li>임의 캐노피·컨테이너 설치 금지</li></ul></div>
           </article>
           <article class="step-card" data-phase="build">
             <label><input type="checkbox" data-step="9" /><span class="checkmark"></span></label>
             <div class="step-number">09</div>
-            <div><span class="phase-tag">준공</span><h3>사용승인·대장 확인</h3><p>필요한 검사와 사용승인을 받은 뒤 건축물대장 용도가 ‘자동차 관련 시설(세차장)’인지 확인합니다.</p></div>
+            <div><span class="phase-tag">준공</span><h3 data-content-key="step9Title">사용승인·대장 확인</h3><p data-content-key="step9Description">필요한 검사와 사용승인을 받은 뒤 건축물대장 용도가 ‘자동차 관련 시설(세차장)’인지 확인합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
           <article class="step-card" data-phase="open">
             <label><input type="checkbox" data-step="10" /><span class="checkmark"></span></label>
             <div class="step-number">10</div>
-            <div><span class="phase-tag">가동 준비</span><h3>폐수시설 가동 절차</h3><p>허가·신고 대상 시설은 가동 전에 가동시작 신고를 하고 처리시설 시운전과 운영일지를 준비합니다.</p></div>
+            <div><span class="phase-tag">가동 준비</span><h3 data-content-key="step10Title">폐수시설 가동 절차</h3><p data-content-key="step10Description">허가·신고 대상 시설은 가동 전에 가동시작 신고를 하고 처리시설 시운전과 운영일지를 준비합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
           <aside class="roadmap-shop-banner open-banner" data-phase="open">
-            <a href="#shop" aria-label="제품몰에서 개업 준비용 제품 확인하기">
-              <div class="roadmap-banner-image"><img src="https://k002.com/mall/shop_image/202005/motor11.jpg" alt="진공청소기 카본브러쉬" loading="lazy"></div>
+            <a href="#shop" aria-label="제품몰에서 세차장 콤프레셔 확인하기">
+              <div class="roadmap-banner-image"><img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Compressorstation.jpg" alt="일반 산업용 에어 콤프레셔" loading="lazy"></div>
               <div class="roadmap-banner-copy">
-                <span>READY TO OPEN</span>
-                <strong>가동 전 소모품과 예비 부품까지 준비하세요.</strong>
-                <p>자주 교체하는 부품을 미리 담고 개업 준비 견적서를 만들 수 있습니다.</p>
+                <span>AIR COMPRESSOR</span>
+                <strong data-content-key="banner3Title">세차장 콤프레셔</strong>
+                <p data-content-key="banner3Description">에어건과 공압 장비 사용량에 맞는 탱크 용량과 설치 위치를 확인하세요.</p>
               </div>
-              <em>개업 준비 →</em>
+              <em data-content-key="banner3Cta">콤프레셔 보기 →</em>
             </a>
           </aside>
           <article class="step-card" data-phase="open">
             <label><input type="checkbox" data-step="11" /><span class="checkmark"></span></label>
             <div class="step-number">11</div>
-            <div><span class="phase-tag">세무</span><h3>사업자등록</h3><p>개업 전 또는 사업 개시일부터 20일 이내에 홈택스·관할 세무서에서 실제 서비스에 맞는 업종으로 등록합니다.</p></div>
+            <div><span class="phase-tag">세무</span><h3 data-content-key="step11Title">사업자등록</h3><p data-content-key="step11Description">개업 전 또는 사업 개시일부터 20일 이내에 홈택스·관할 세무서에서 실제 서비스에 맞는 업종으로 등록합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
           <article class="step-card" data-phase="open">
             <label><input type="checkbox" data-step="12" /><span class="checkmark"></span></label>
             <div class="step-number">12</div>
-            <div><span class="phase-tag">OPEN</span><h3>보험·안전 확인 후 개업</h3><p>영업배상책임보험, 차량 파손 보상기준, MSDS, 폐기물 처리와 직원 근로계약을 점검합니다.</p></div>
+            <div><span class="phase-tag">OPEN</span><h3 data-content-key="step12Title">보험·안전 확인 후 개업</h3><p data-content-key="step12Description">영업배상책임보험, 차량 파손 보상기준, MSDS, 폐기물 처리와 직원 근로계약을 점검합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
@@ -261,7 +259,7 @@
       </section>
 
       <section class="documents-section" id="documents">
-        <div class="section-heading"><div><p class="eyebrow">READY TO APPLY</p><h2>미리 준비할 서류</h2></div></div>
+        <div class="section-heading"><div><p class="eyebrow" data-content-key="documentsEyebrow">READY TO APPLY</p><h2 data-content-key="documentsTitle">미리 준비할 서류</h2></div></div>
         <div class="document-grid">
           <article><span>건축</span><h3>부동산·건축 서류</h3><ul><li>건축물대장</li><li>토지이용계획확인서</li><li>등기부등본·임대차계약서</li><li>건물주 공사·용도변경 동의서</li></ul></article>
           <article><span>환경</span><h3>폐수시설 서류</h3><ul><li>시설 위치도·배치도</li><li>폐수배출 공정 흐름도</li><li>용수·세제 사용명세</li><li>방지시설 도면·처리계획</li></ul></article>
@@ -272,10 +270,10 @@
       <section class="field-guide-section" id="field-guide">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">FIELD CHECKLIST</p>
-            <h2>현장에서 바로 쓰는 실무자료</h2>
+            <p class="eyebrow" data-content-key="fieldEyebrow">FIELD CHECKLIST</p>
+            <h2 data-content-key="fieldTitle">현장에서 바로 쓰는 실무자료</h2>
           </div>
-          <p class="section-intro">준비서류부터 담당 부서에 물어볼 질문까지 직접 체크하세요. 체크 상태는 이 브라우저에 자동 저장됩니다.</p>
+          <p class="section-intro" data-content-key="fieldIntro">준비서류부터 담당 부서에 물어볼 질문까지 직접 체크하세요. 체크 상태는 이 브라우저에 자동 저장됩니다.</p>
         </div>
         <div class="field-guide-grid">
           <article class="field-panel" id="fullDocuments"></article>
@@ -287,9 +285,9 @@
 
       <section class="risk-section" id="risk">
         <div class="risk-copy">
-          <p class="eyebrow">DO NOT SKIP</p>
-          <h2>가장 비싼 실수는<br />순서를 바꾸는 것입니다.</h2>
-          <p>지역 조례와 현장 조건에 따라 결과가 달라집니다. 계약금과 시설비를 지출하기 전에 관할 부서의 서면 또는 민원 답변을 받아두세요.</p>
+          <p class="eyebrow" data-content-key="riskEyebrow">DO NOT SKIP</p>
+          <h2><span data-content-key="riskTitleLine1">가장 비싼 실수는</span><br /><span data-content-key="riskTitleLine2">순서를 바꾸는 것입니다.</span></h2>
+          <p data-content-key="riskDescription">지역 조례와 현장 조건에 따라 결과가 달라집니다. 계약금과 시설비를 지출하기 전에 관할 부서의 서면 또는 민원 답변을 받아두세요.</p>
         </div>
         <ol class="risk-list">
           <li><span>01</span><div><strong>먼저 계약하기</strong><p>용도변경이 안 되면 보증금과 권리금이 묶일 수 있습니다.</p></div></li>
@@ -299,9 +297,9 @@
       </section>
 
       <section class="final-cta">
-        <p>실무 순서 한 줄 요약</p>
-        <h2>주소 확인 → 부서 협의 → 건축사 검토 → 조건부 계약 → 인허가 → 공사 → 개업</h2>
-        <a href="#top">처음부터 다시 보기 ↑</a>
+        <p data-content-key="finalEyebrow">실무 순서 한 줄 요약</p>
+        <h2 data-content-key="finalTitle">주소 확인 → 부서 협의 → 건축사 검토 → 조건부 계약 → 인허가 → 공사 → 개업</h2>
+        <a href="#top" data-content-key="finalLink">처음부터 다시 보기 ↑</a>
       </section>
     </main>
 
@@ -321,7 +319,7 @@
         <small>배송비와 설치비는 상품·지역에 따라 상담 후 확정됩니다.</small>
         <button class="cart-quote-button" id="quoteOpenButton" type="button" disabled>견적서 작성</button>
         <button class="cart-copy-button" id="cartCopyButton" type="button" disabled>문의 목록 복사</button>
-        <a class="cart-order-button" href="tel:03116887759">전화 주문·견적 문의</a>
+        <a class="cart-order-button" href="tel:03116887759" data-phone-link>전화 주문·견적 문의</a>
         <p class="cart-feedback" id="cartFeedback" aria-live="polite"></p>
       </div>
     </aside>
@@ -367,10 +365,10 @@
             <div class="quote-supplier">
               <h2>공급자</h2>
               <dl>
-                <div><dt>대표이사</dt><dd>김진돌</dd></div>
-                <div><dt>사업자번호</dt><dd>127-38-49368</dd></div>
-                <div><dt>주소</dt><dd>경기도 양주시 감악산로 244번길 117번지</dd></div>
-                <div><dt>문의전화</dt><dd>031-1688-7759</dd></div>
+                <div><dt>대표이사</dt><dd data-content-key="ceo">김진돌</dd></div>
+                <div><dt>사업자번호</dt><dd data-content-key="businessNumber">127-38-49368</dd></div>
+                <div><dt>주소</dt><dd data-content-key="address">경기도 양주시 감악산로 244번길 117번지</dd></div>
+                <div><dt>문의전화</dt><dd data-content-key="phone">031-1688-7759</dd></div>
               </dl>
             </div>
           </section>
@@ -400,7 +398,7 @@
               <li>가격 문의 상품은 합계에 포함되지 않으며 별도 상담이 필요합니다.</li>
             </ul>
           </div>
-          <p class="quote-signature">위와 같이 견적합니다. <strong>대표이사 김진돌</strong></p>
+          <p class="quote-signature">위와 같이 견적합니다. <strong>대표이사 <span data-content-key="ceo">김진돌</span></strong></p>
           <p class="quote-feedback" id="quoteFeedback" aria-live="polite"></p>
         </article>
       </div>
@@ -408,19 +406,19 @@
 
     <footer class="site-footer">
       <div class="footer-brand">
-        <strong>손세차장 창업 로드맵</strong>
-        <p>상담 및 문의전화 <a href="tel:03116887759">031-1688-7759</a></p>
+        <strong data-content-key="brandTitle">손세차장 창업 로드맵</strong>
+        <p>상담 및 문의전화 <a href="tel:03116887759" data-phone-link data-content-key="phone">031-1688-7759</a></p>
       </div>
       <div class="footer-business" aria-label="사업자 정보">
-        <p><strong>대표이사</strong> 김진돌</p>
-        <address>경기도 양주시 감악산로 244번길 117번지</address>
-        <p><strong>사업자등록번호</strong> 127-38-49368 <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=1273849368" target="_blank" rel="noopener noreferrer">정보확인</a></p>
-        <p><strong>통신판매업신고</strong> 2008-경기양주-0178</p>
-        <p><strong>개인정보관리책임자</strong> 김진돌</p>
+        <p><strong>대표이사</strong> <span data-content-key="ceo">김진돌</span></p>
+        <address data-content-key="address">경기도 양주시 감악산로 244번길 117번지</address>
+        <p><strong>사업자등록번호</strong> <span data-content-key="businessNumber">127-38-49368</span> <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=1273849368" data-business-link target="_blank" rel="noopener noreferrer">정보확인</a></p>
+        <p><strong>통신판매업신고</strong> <span data-content-key="commerceReport">2008-경기양주-0178</span></p>
+        <p><strong>개인정보관리책임자</strong> <span data-content-key="privacyManager">김진돌</span></p>
       </div>
       <div class="footer-notice">
-        <p>본 페이지는 일반적인 절차 안내이며, 최종 판단은 소재지 관할 행정기관에 확인해야 합니다.</p>
-        <p>2026. 07 기준</p>
+        <p data-content-key="footerNotice">본 페이지는 일반적인 절차 안내이며, 최종 판단은 소재지 관할 행정기관에 확인해야 합니다.</p>
+        <p data-content-key="footerDate">2026. 07 기준</p>
       </div>
     </footer>
     <script type="module" src="/src/main.js"></script>
