@@ -85,6 +85,8 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .step-card.critical { background: #fff8f2; }
 .step-card.completed { opacity: .55; }
 .step-card.completed h3 { text-decoration: line-through; }
+.step-card[data-decision="conditional"] { box-shadow: inset 5px 0 0 #f2a900; }
+.step-card[data-decision="blocked"] { box-shadow: inset 5px 0 0 #d73535; background: #fff3f3; }
 .step-card label { cursor: pointer; }
 .step-card > label > input[data-step] { position: absolute; opacity: 0; }
 .checkmark { display: block; width: 28px; height: 28px; border: 2px solid #a5b0c2; border-radius: 50%; }
@@ -111,6 +113,17 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
   background: #edf4ff; border: 1px solid #cbdcff; border-radius: 5px;
   font-size: 12px; font-weight: 700;
 }
+.step-decision {
+  display: flex; justify-content: space-between; gap: 16px; align-items: center;
+  margin: 4px 0 12px; padding: 12px 14px; color: var(--ink);
+  background: #f7f9fc; border: 1px solid #dce4ef; border-radius: 5px;
+}
+.step-decision label { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 800; }
+.step-decision select {
+  min-height: 38px; padding: 0 34px 0 11px; color: var(--ink); background: white;
+  border: 1px solid #aebdd0; border-radius: 4px; font: 700 13px Pretendard, "Noto Sans KR", sans-serif;
+}
+.step-decision small { color: var(--muted); font-size: 11px; line-height: 1.45; text-align: right; }
 .detail-check-item {
   display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 9px;
   align-items: start; padding: 5px 7px; margin-left: -7px;
@@ -151,13 +164,34 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .candidate-heading > span { grid-row: 1 / 3; padding: 5px 8px; color: #b9d0ff; border: 1px solid rgba(255,255,255,.25); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
 .candidate-heading strong { font-size: 19px; }
 .candidate-heading small { color: #aebbd0; font-size: 11px; }
+.candidate-toolbar { grid-column: 1 / -1; display: flex; align-items: stretch; gap: 10px; }
+.candidate-list { display: flex; flex: 1; gap: 8px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+.candidate-tab {
+  flex: 0 0 min(210px, 60vw); min-height: 58px; padding: 9px 11px; color: #c8d3e4;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); border-radius: 5px;
+  text-align: left; cursor: pointer;
+}
+.candidate-tab strong, .candidate-tab small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.candidate-tab strong { color: white; font-size: 13px; }
+.candidate-tab small { margin-top: 4px; color: #9eacc1; font-size: 10px; }
+.candidate-tab.active { background: var(--blue); border-color: #79a2ff; box-shadow: inset 0 0 0 1px #79a2ff; }
+.candidate-tab.active small { color: #d8e5ff; }
+.candidate-add {
+  flex: 0 0 auto; min-height: 58px; padding: 0 15px; color: white; background: transparent;
+  border: 1px solid #6f91d4; border-radius: 5px; font-size: 12px; font-weight: 800; cursor: pointer;
+}
 .candidate-fields > label span { display: block; margin-bottom: 6px; color: #c8d3e4; font-size: 11px; font-weight: 700; }
-.candidate-fields input {
+.candidate-fields input, .candidate-fields select {
   position: static; opacity: 1;
   width: 100%; height: 44px; padding: 0 12px; color: var(--ink); background: white;
   border: 2px solid transparent; border-radius: 4px; font: inherit;
 }
-.candidate-fields input:focus { outline: none; border-color: #78a3ff; }
+.candidate-fields input:focus, .candidate-fields select:focus { outline: none; border-color: #78a3ff; }
+.candidate-remove {
+  align-self: end; min-height: 44px; padding: 0 14px; color: #ffd2d2; background: rgba(215,53,53,.12);
+  border: 1px solid rgba(255,145,145,.45); border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;
+}
+.candidate-remove:disabled { opacity: .38; cursor: not-allowed; }
 .local-save-state { grid-column: 1 / -1; margin: 0; color: #8db1ff !important; font-size: 10px !important; text-align: right; }
 .guide-content blockquote { margin: 16px 0; padding: 18px 22px; color: var(--ink); background: #fff8f2; border-left: 4px solid var(--orange); }
 .guide-content hr { margin: 24px 0; border: 0; border-top: 1px solid var(--line); }
@@ -225,7 +259,7 @@ footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px
   .step-card p { display: block; margin: 8px 0 0; }
   .step-detail { grid-column: 1 / 5; }
   .candidate-fields { grid-template-columns: 1fr; }
-  .candidate-heading, .local-save-state { grid-column: 1; }
+  .candidate-heading, .candidate-toolbar, .local-save-state { grid-column: 1; }
   .document-grid { grid-template-columns: 1fr; }
   .field-guide-section { padding: 80px 6vw; }
   .field-guide-grid { grid-template-columns: 1fr; }
@@ -295,6 +329,10 @@ footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px
   }
   .step-detail { grid-column: 1 / -1; padding-top: 16px; overflow-wrap: anywhere; }
   .detail-progress { margin-bottom: 14px; }
+  .step-decision { align-items: stretch; flex-direction: column; gap: 8px; }
+  .step-decision label { justify-content: space-between; }
+  .step-decision select { min-width: 150px; font-size: 16px; }
+  .step-decision small { text-align: left; }
   .guide-content h3 { line-height: 1.45; }
   .guide-content ul, .guide-content ol { padding-left: 18px; }
   .guide-content li { margin: 9px 0; }
@@ -306,7 +344,11 @@ footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px
   .candidate-heading { grid-template-columns: 1fr; gap: 6px; }
   .candidate-heading > span { grid-row: auto; justify-self: start; }
   .candidate-heading strong { font-size: 18px; }
-  .candidate-fields input { height: 48px; font-size: 16px; }
+  .candidate-toolbar { align-items: stretch; flex-direction: column; }
+  .candidate-tab { flex-basis: min(190px, 64vw); }
+  .candidate-add { min-height: 48px; }
+  .candidate-fields input, .candidate-fields select { height: 48px; font-size: 16px; }
+  .candidate-remove { min-height: 48px; }
   .document-grid { gap: 14px; }
   .document-grid article, .field-panel { padding: 24px 20px; }
   .document-grid h3 { font-size: 22px; }
