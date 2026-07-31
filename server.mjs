@@ -344,7 +344,7 @@ let credentials = await ensureCredentials();
 
 function passwordMatches(password) {
   if (typeof password !== 'string' || password.length > 200) return false;
-  const actual = scryptSync(password, credentials.salt, 64);
+  const actual = scryptSync(password.trim(), credentials.salt, 64);
   const expected = Buffer.from(credentials.hash, 'hex');
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

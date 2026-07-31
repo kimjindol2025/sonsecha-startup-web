@@ -353,7 +353,7 @@ elements.loginForm.addEventListener('submit', async (event) => {
   try {
     await api('/api/admin/login', {
       method: 'POST',
-      body: JSON.stringify({ password: elements.password.value }),
+      body: JSON.stringify({ password: elements.password.value.trim() }),
     });
     await showDashboard();
   } catch (error) {
