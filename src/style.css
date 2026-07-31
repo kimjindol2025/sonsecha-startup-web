@@ -97,6 +97,15 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .step-detail { display: none; grid-column: 3 / 5; color: var(--muted); line-height: 1.7; }
 .detail-open .step-detail { display: block; }
 .step-detail blockquote { margin: 0; padding: 18px 22px; color: var(--ink); background: white; border-left: 4px solid var(--orange); }
+.guide-content h3 { margin: 26px 0 10px; color: var(--ink); font-size: 18px; }
+.guide-content h3:first-child { margin-top: 0; }
+.guide-content h4 { margin: 20px 0 8px; color: var(--ink); font-size: 15px; }
+.guide-content p { display: block; margin: 8px 0 14px; color: var(--muted); line-height: 1.75; }
+.guide-content ul, .guide-content ol { margin: 10px 0 20px; padding-left: 22px; color: var(--muted); }
+.guide-content li { margin: 7px 0; line-height: 1.6; }
+.guide-content li::marker { color: var(--blue); font-weight: 800; }
+.guide-content blockquote { margin: 16px 0; padding: 18px 22px; color: var(--ink); background: #fff8f2; border-left: 4px solid var(--orange); }
+.guide-content hr { margin: 24px 0; border: 0; border-top: 1px solid var(--line); }
 
 .documents-section { background: var(--sky); }
 .document-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
@@ -105,6 +114,19 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .document-grid h3 { margin: 10px 0 22px; font-size: 24px; }
 .document-grid ul { padding: 0; list-style: none; color: var(--muted); line-height: 2; }
 .document-grid li::before { content: "—"; margin-right: 10px; color: var(--blue); }
+
+.field-guide-section { padding: 110px 7vw; background: #f6f3ed; }
+.section-intro { max-width: 460px; margin: 0; color: var(--muted); line-height: 1.7; }
+.field-guide-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
+.field-panel { padding: 34px; background: white; border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(17,37,63,.06); }
+.field-panel.accent-panel { border-top: 6px solid var(--blue); }
+.field-panel.warning-panel { border-top: 6px solid var(--orange); }
+.field-panel .guide-content h2 { margin: 0 0 24px; font-size: 28px; line-height: 1.15; }
+.field-panel .guide-content h3 { padding-top: 16px; border-top: 1px solid var(--line); }
+.field-panel .guide-content ol { padding-left: 26px; }
+.one-line-summary { margin-top: 24px; padding: 38px; color: white; background: var(--blue); }
+.one-line-summary .guide-content h2 { margin: 0 0 16px; font-size: 28px; }
+.one-line-summary .guide-content p { color: rgba(255,255,255,.82); font-size: 17px; }
 
 .risk-section { display: grid; grid-template-columns: .9fr 1.1fr; gap: 8vw; padding: 110px 7vw; background: var(--ink); color: white; }
 .risk-copy p:last-child { color: #aebbd0; line-height: 1.8; max-width: 520px; }
@@ -133,6 +155,8 @@ footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px
   .step-card p { display: block; margin: 8px 0 0; }
   .step-detail { grid-column: 1 / 5; }
   .document-grid { grid-template-columns: 1fr; }
+  .field-guide-section { padding: 80px 6vw; }
+  .field-guide-grid { grid-template-columns: 1fr; }
   .risk-section { grid-template-columns: 1fr; }
   footer { flex-direction: column; }
 }

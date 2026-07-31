@@ -1,7 +1,127 @@
+import guideMarkdown from '../README.md?raw';
+
 const checkboxes = [...document.querySelectorAll('input[data-step]')];
 const progressText = document.querySelector('#progressText');
 const progressBar = document.querySelector('#progressBar');
 const storageKey = 'sonsecha-roadmap-progress';
+
+function escapeHtml(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function renderInline(value) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderMarkdown(markdown) {
+  const lines = markdown.trim().split('\n');
+  const html = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    if (!line) {
+      index += 1;
+      continue;
+    }
+    if (line === '---') {
+      html.push('<hr>');
+      index += 1;
+      continue;
+    }
+    const heading = line.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      const level = Math.min(heading[1].length + 1, 4);
+      html.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+      index += 1;
+      continue;
+    }
+    if (line.startsWith('> ')) {
+      const quote = [];
+      while (index < lines.length && lines[index].trim().startsWith('> ')) {
+        quote.push(lines[index].trim().slice(2));
+        index += 1;
+      }
+      html.push(`<blockquote>${renderInline(quote.join(' '))}</blockquote>`);
+      continue;
+    }
+    if (/^\*\s+/.test(line)) {
+      const items = [];
+      while (index < lines.length && /^\*\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^\*\s+/, ''));
+        index += 1;
+      }
+      html.push(`<ul>${items.map((item) => `<li>${renderInline(item)}</li>`).join('')}</ul>`);
+      continue;
+    }
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [];
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^\d+\.\s+/, ''));
+        index += 1;
+      }
+      html.push(`<ol>${items.map((item) => `<li>${renderInline(item)}</li>`).join('')}</ol>`);
+      continue;
+    }
+
+    const paragraph = [line];
+    index += 1;
+    while (
+      index < lines.length
+      && lines[index].trim()
+      && !/^(#{1,4})\s+|^\*\s+|^\d+\.\s+|^>\s+|^---$/.test(lines[index].trim())
+    ) {
+      paragraph.push(lines[index].trim());
+      index += 1;
+    }
+    html.push(`<p>${renderInline(paragraph.join(' '))}</p>`);
+  }
+
+  return html.join('');
+}
+
+function sectionBetween(start, end) {
+  const startIndex = guideMarkdown.indexOf(start);
+  if (startIndex < 0) return '';
+  const endIndex = end ? guideMarkdown.indexOf(end, startIndex + start.length) : guideMarkdown.length;
+  return guideMarkdown.slice(startIndex, endIndex < 0 ? guideMarkdown.length : endIndex);
+}
+
+function hydrateGuide() {
+  const stepPattern = /^## (\d{2})\.\s+(.+)\n([\s\S]*?)(?=^## \d{2}\.|^# 미리 준비할 서류)/gm;
+  const guideSteps = [...guideMarkdown.matchAll(stepPattern)];
+
+  document.querySelectorAll('.step-card').forEach((card, index) => {
+    const match = guideSteps[index];
+    if (!match) return;
+    let detail = card.querySelector('.step-detail');
+    if (!detail) {
+      detail = document.createElement('div');
+      detail.className = 'step-detail';
+      card.append(detail);
+    }
+    const existingLink = detail.querySelector('.source-link');
+    detail.innerHTML = `<div class="guide-content">${renderMarkdown(match[3])}</div>`;
+    if (existingLink) detail.append(existingLink);
+  });
+
+  const sections = [
+    ['# 미리 준비할 서류', '# 초보자가 반드시 물어봐야 할 10가지', '#fullDocuments'],
+    ['# 초보자가 반드시 물어봐야 할 10가지', '# 가장 비싼 실수', '#fullQuestions'],
+    ['# 가장 비싼 실수', '# 실무 순서 한 줄 요약', '#fullMistakes'],
+    ['# 실무 순서 한 줄 요약', null, '#fullSummary'],
+  ];
+  sections.forEach(([start, end, selector]) => {
+    const target = document.querySelector(selector);
+    if (target) target.innerHTML = `<div class="guide-content">${renderMarkdown(sectionBetween(start, end))}</div>`;
+  });
+}
 
 function loadProgress() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -58,4 +178,5 @@ document.querySelector('#resetButton').addEventListener('click', () => {
 });
 
 document.querySelector('#printButton').addEventListener('click', () => window.print());
+hydrateGuide();
 loadProgress();
