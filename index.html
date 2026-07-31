@@ -18,10 +18,14 @@
         <span>손세차장 창업 로드맵</span>
       </a>
       <nav aria-label="주요 메뉴">
+        <a href="#shop">제품몰</a>
         <a href="#roadmap">절차</a>
         <a href="#documents">서류</a>
         <a href="#field-guide">실무</a>
         <a href="#risk">주의사항</a>
+        <button class="nav-cart" type="button" data-cart-open>
+          장바구니 <span data-cart-count>0</span>
+        </button>
       </nav>
       <button class="print-button" type="button" id="printButton">인쇄하기</button>
     </header>
@@ -62,6 +66,48 @@
         <div><span>01</span><strong>주소 먼저</strong><small>용도지역·건축물대장 확인</small></div>
         <div><span>02</span><strong>조건부 계약</strong><small>불허 시 계약금 반환 특약</small></div>
         <div><span>03</span><strong>공사 전 신고</strong><small>환경·건축 절차 선행</small></div>
+      </section>
+
+      <section class="shop-section" id="shop">
+        <div class="shop-heading">
+          <div>
+            <p class="eyebrow">OUR PRODUCT SHOP</p>
+            <h2>세차장 운영에 필요한 제품</h2>
+            <p>품목별로 비교하고 필요한 수량을 장바구니에 담아 전화 주문이나 견적 문의로 연결할 수 있습니다.</p>
+          </div>
+          <button class="shop-cart-button" type="button" data-cart-open>
+            <span>장바구니</span>
+            <strong><span data-cart-count>0</span>개</strong>
+          </button>
+        </div>
+
+        <div class="shop-benefits" aria-label="쇼핑 안내">
+          <p><span>01</span><strong>전문 제품</strong><small>손세차장 운영 품목 중심</small></p>
+          <p><span>02</span><strong>간편 견적</strong><small>장바구니 목록으로 문의</small></p>
+          <p><span>03</span><strong>전화 상담</strong><small>031-1688-7759</small></p>
+        </div>
+
+        <div class="shop-toolbar">
+          <div class="shop-categories" id="shopCategories" role="group" aria-label="상품 카테고리"></div>
+          <div class="shop-controls">
+            <label class="product-search">
+              <span class="sr-only">상품 검색</span>
+              <input id="productSearch" type="search" placeholder="상품명 검색">
+            </label>
+            <label>
+              <span class="sr-only">상품 정렬</span>
+              <select id="productSort" aria-label="상품 정렬">
+                <option value="featured">추천순</option>
+                <option value="name">상품명순</option>
+                <option value="price-low">낮은 가격순</option>
+                <option value="price-high">높은 가격순</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <p class="product-results" id="productResults" aria-live="polite"></p>
+        <div class="product-grid" id="productGrid"></div>
       </section>
 
       <section class="roadmap-section" id="roadmap">
@@ -217,6 +263,107 @@
         <a href="#top">처음부터 다시 보기 ↑</a>
       </section>
     </main>
+
+    <button class="cart-backdrop" type="button" data-cart-close aria-label="장바구니 닫기" hidden></button>
+    <aside class="cart-drawer" id="cartDrawer" aria-label="장바구니" aria-hidden="true">
+      <div class="cart-header">
+        <div>
+          <p>SHOPPING CART</p>
+          <h2>장바구니</h2>
+        </div>
+        <button type="button" data-cart-close aria-label="장바구니 닫기">×</button>
+      </div>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-summary">
+        <p><span>선택 상품</span><strong id="cartItemCount">0개</strong></p>
+        <p class="cart-total"><span>예상 합계</span><strong id="cartTotal">0원</strong></p>
+        <small>배송비와 설치비는 상품·지역에 따라 상담 후 확정됩니다.</small>
+        <button class="cart-quote-button" id="quoteOpenButton" type="button" disabled>견적서 작성</button>
+        <button class="cart-copy-button" id="cartCopyButton" type="button" disabled>문의 목록 복사</button>
+        <a class="cart-order-button" href="tel:03116887759">전화 주문·견적 문의</a>
+        <p class="cart-feedback" id="cartFeedback" aria-live="polite"></p>
+      </div>
+    </aside>
+
+    <button class="quote-backdrop" type="button" data-quote-close aria-label="견적서 닫기" hidden></button>
+    <section class="quote-modal" id="quoteModal" role="dialog" aria-modal="true" aria-labelledby="quoteTitle" aria-hidden="true">
+      <div class="quote-toolbar">
+        <div>
+          <strong>간이견적서 작성</strong>
+          <small>입력 내용은 이 브라우저에 자동 저장됩니다.</small>
+        </div>
+        <div class="quote-actions">
+          <button type="button" id="quoteCopyButton">견적 내용 복사</button>
+          <button type="button" id="quotePrintButton">인쇄 · PDF</button>
+          <button type="button" data-quote-close aria-label="견적서 닫기">×</button>
+        </div>
+      </div>
+      <div class="quote-scroll">
+        <article class="quote-sheet" id="quoteSheet">
+          <header class="quote-document-header">
+            <div>
+              <p>PRODUCT ESTIMATE</p>
+              <h1 id="quoteTitle">견 적 서</h1>
+            </div>
+            <dl>
+              <div><dt>견적번호</dt><dd id="quoteNumber"></dd></div>
+              <div><dt>작성일</dt><dd id="quoteDate"></dd></div>
+              <div><dt>유효기간</dt><dd>작성일로부터 14일</dd></div>
+            </dl>
+          </header>
+
+          <section class="quote-parties">
+            <div class="quote-customer">
+              <h2>견적 받는 분</h2>
+              <div class="quote-form-grid">
+                <label><span>회사·상호</span><input type="text" data-quote-field="company" placeholder="회사명 또는 상호"></label>
+                <label><span>담당자</span><input type="text" data-quote-field="contact" placeholder="담당자 성함"></label>
+                <label><span>연락처</span><input type="tel" data-quote-field="phone" placeholder="010-0000-0000"></label>
+                <label><span>이메일</span><input type="email" data-quote-field="email" placeholder="name@example.com"></label>
+                <label class="quote-wide"><span>배송·설치 주소</span><input type="text" data-quote-field="address" placeholder="주소를 입력하세요"></label>
+              </div>
+            </div>
+            <div class="quote-supplier">
+              <h2>공급자</h2>
+              <dl>
+                <div><dt>대표이사</dt><dd>김진돌</dd></div>
+                <div><dt>사업자번호</dt><dd>127-38-49368</dd></div>
+                <div><dt>주소</dt><dd>경기도 양주시 감악산로 244번길 117번지</dd></div>
+                <div><dt>문의전화</dt><dd>031-1688-7759</dd></div>
+              </dl>
+            </div>
+          </section>
+
+          <div class="quote-table-wrap">
+            <table class="quote-table">
+              <thead><tr><th>No.</th><th>상품명</th><th>단가</th><th>수량</th><th>금액</th></tr></thead>
+              <tbody id="quoteItems"></tbody>
+            </table>
+          </div>
+
+          <section class="quote-totals">
+            <p><span>선택 상품 수량</span><strong id="quoteItemCount">0개</strong></p>
+            <p><span>상품 합계</span><strong id="quoteTotal">0원</strong></p>
+          </section>
+
+          <label class="quote-request">
+            <span>요청사항</span>
+            <textarea data-quote-field="request" placeholder="배송 일정, 설치 여부, 세금계산서 등 상담이 필요한 내용을 적어주세요."></textarea>
+          </label>
+
+          <div class="quote-notice">
+            <strong>안내사항</strong>
+            <ul>
+              <li>본 문서는 장바구니 상품을 기준으로 자동 작성되는 온라인 간이견적서입니다.</li>
+              <li>배송비·설치비·부가세 적용과 재고는 상담 후 최종 견적에서 확정됩니다.</li>
+              <li>가격 문의 상품은 합계에 포함되지 않으며 별도 상담이 필요합니다.</li>
+            </ul>
+          </div>
+          <p class="quote-signature">위와 같이 견적합니다. <strong>대표이사 김진돌</strong></p>
+          <p class="quote-feedback" id="quoteFeedback" aria-live="polite"></p>
+        </article>
+      </div>
+    </section>
 
     <footer class="site-footer">
       <div class="footer-brand">

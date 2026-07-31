@@ -1,4 +1,5 @@
 import guideMarkdown from '../README.md?raw';
+import { productCategories, products } from './products.js';
 
 const checkboxes = [...document.querySelectorAll('input[data-step]')];
 const progressText = document.querySelector('#progressText');
@@ -11,11 +12,12 @@ const candidateStorageKey = 'sonsecha-candidates-v2';
 let candidateState;
 
 function escapeHtml(value) {
-  return value
+  return String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function renderInline(value) {
@@ -444,6 +446,418 @@ function updateProgress(shouldSave = true) {
   }
 }
 
+const cartStorageKey = 'sonsecha-shop-cart-v1';
+const quoteStorageKey = 'sonsecha-quote-form-v1';
+const shopElements = {
+  categories: document.querySelector('#shopCategories'),
+  search: document.querySelector('#productSearch'),
+  sort: document.querySelector('#productSort'),
+  results: document.querySelector('#productResults'),
+  grid: document.querySelector('#productGrid'),
+  drawer: document.querySelector('#cartDrawer'),
+  backdrop: document.querySelector('.cart-backdrop'),
+  items: document.querySelector('#cartItems'),
+  itemCount: document.querySelector('#cartItemCount'),
+  total: document.querySelector('#cartTotal'),
+  copyButton: document.querySelector('#cartCopyButton'),
+  quoteButton: document.querySelector('#quoteOpenButton'),
+  feedback: document.querySelector('#cartFeedback'),
+  quoteModal: document.querySelector('#quoteModal'),
+  quoteBackdrop: document.querySelector('.quote-backdrop'),
+  quoteItems: document.querySelector('#quoteItems'),
+  quoteItemCount: document.querySelector('#quoteItemCount'),
+  quoteTotal: document.querySelector('#quoteTotal'),
+  quoteNumber: document.querySelector('#quoteNumber'),
+  quoteDate: document.querySelector('#quoteDate'),
+  quoteCopyButton: document.querySelector('#quoteCopyButton'),
+  quotePrintButton: document.querySelector('#quotePrintButton'),
+  quoteFeedback: document.querySelector('#quoteFeedback'),
+};
+const categoryLabels = new Map(productCategories.map((category) => [category.id, category.label]));
+const catalogProducts = products
+  .filter((product) => product && product.active !== false)
+  .map((product, index) => ({
+    id: String(product.id || `product-${index + 1}`),
+    name: String(product.name || '이름 없는 상품'),
+    category: categoryLabels.has(product.category) ? product.category : 'all',
+    summary: String(product.summary || ''),
+    price: typeof product.price === 'number' && Number.isFinite(product.price) && product.price >= 0
+      ? product.price
+      : null,
+    image: typeof product.image === 'string' ? product.image : '',
+    badge: typeof product.badge === 'string' ? product.badge : '',
+    inStock: product.inStock !== false,
+    featured: Number.isFinite(Number(product.featured)) ? Number(product.featured) : 0,
+  }));
+const productById = new Map(catalogProducts.map((product) => [product.id, product]));
+let activeShopCategory = 'all';
+let cart = [];
+let quoteDocumentNumber = '';
+
+function formatPrice(price) {
+  return price === null ? '가격 문의' : `${price.toLocaleString('ko-KR')}원`;
+}
+
+function loadCart() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(cartStorageKey) || '[]');
+    if (!Array.isArray(stored)) return [];
+    return stored
+      .filter((item) => productById.has(String(item.productId)))
+      .map((item) => ({
+        productId: String(item.productId),
+        quantity: Math.min(99, Math.max(1, Number.parseInt(item.quantity, 10) || 1)),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+function saveCart() {
+  localStorage.setItem(cartStorageKey, JSON.stringify(cart));
+}
+
+function cartQuantity() {
+  return cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function cartPriceTotal() {
+  return cart.reduce((sum, item) => {
+    const price = productById.get(item.productId)?.price;
+    return sum + (price === null || price === undefined ? 0 : price * item.quantity);
+  }, 0);
+}
+
+function cartHasQuoteProduct() {
+  return cart.some((item) => productById.get(item.productId)?.price === null);
+}
+
+function updateCartBadges() {
+  const quantity = cartQuantity();
+  document.querySelectorAll('[data-cart-count]').forEach((badge) => {
+    badge.textContent = String(quantity);
+    badge.closest('button')?.classList.toggle('has-items', quantity > 0);
+  });
+}
+
+function productCard(product) {
+  const media = product.image
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">`
+    : '<span class="product-placeholder-mark" aria-hidden="true">水</span>';
+  const stockLabel = product.inStock ? '장바구니 담기' : '품절';
+  return `
+    <article class="product-card">
+      <div class="product-media">
+        ${media}
+        ${product.badge ? `<span class="product-badge">${escapeHtml(product.badge)}</span>` : ''}
+      </div>
+      <div class="product-copy">
+        <span class="product-category">${escapeHtml(categoryLabels.get(product.category) || '기타')}</span>
+        <h3>${escapeHtml(product.name)}</h3>
+        <p>${escapeHtml(product.summary)}</p>
+        <div class="product-buy-row">
+          <strong>${formatPrice(product.price)}</strong>
+          <button type="button" data-add-product="${escapeHtml(product.id)}"${product.inStock ? '' : ' disabled'}>${stockLabel}</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function visibleProducts() {
+  const query = shopElements.search.value.trim().toLocaleLowerCase('ko-KR');
+  const filtered = catalogProducts.filter((product) => {
+    const matchesCategory = activeShopCategory === 'all' || product.category === activeShopCategory;
+    const matchesQuery = !query || `${product.name} ${product.summary}`.toLocaleLowerCase('ko-KR').includes(query);
+    return matchesCategory && matchesQuery;
+  });
+  return filtered.sort((a, b) => {
+    if (shopElements.sort.value === 'name') return a.name.localeCompare(b.name, 'ko-KR');
+    if (shopElements.sort.value === 'price-low') return (a.price ?? Infinity) - (b.price ?? Infinity);
+    if (shopElements.sort.value === 'price-high') return (b.price ?? -1) - (a.price ?? -1);
+    return b.featured - a.featured;
+  });
+}
+
+function renderProducts() {
+  const visible = visibleProducts();
+  shopElements.results.textContent = catalogProducts.length
+    ? `전체 ${catalogProducts.length}개 상품 중 ${visible.length}개 표시`
+    : '상품 등록 전 · 쇼핑몰 기능 준비 완료';
+  if (visible.length) {
+    shopElements.grid.innerHTML = visible.map(productCard).join('');
+    return;
+  }
+  const isEmptyCatalog = catalogProducts.length === 0;
+  shopElements.grid.innerHTML = `
+    <div class="product-empty">
+      <span class="product-empty-mark" aria-hidden="true">水</span>
+      <p>${isEmptyCatalog ? 'COMING SOON' : 'NO RESULTS'}</p>
+      <h3>${isEmptyCatalog ? '판매 상품을 준비하고 있습니다.' : '조건에 맞는 상품이 없습니다.'}</h3>
+      <small>${isEmptyCatalog ? '상품 등록 단계에서 사진·가격·설명을 순차적으로 공개하겠습니다.' : '다른 카테고리나 검색어를 선택해 주세요.'}</small>
+      ${isEmptyCatalog ? '<a href="tel:03116887759">제품 상담 031-1688-7759</a>' : ''}
+    </div>
+  `;
+}
+
+function addToCart(productId) {
+  if (!productById.has(productId)) return;
+  const existing = cart.find((item) => item.productId === productId);
+  if (existing) existing.quantity = Math.min(99, existing.quantity + 1);
+  else cart.push({ productId, quantity: 1 });
+  saveCart();
+  renderCart();
+  openCart();
+}
+
+function changeCartQuantity(productId, change) {
+  const item = cart.find((cartItem) => cartItem.productId === productId);
+  if (!item) return;
+  item.quantity += change;
+  if (item.quantity < 1) cart = cart.filter((cartItem) => cartItem.productId !== productId);
+  else item.quantity = Math.min(99, item.quantity);
+  saveCart();
+  renderCart();
+}
+
+function renderCart() {
+  if (!cart.length) {
+    shopElements.items.innerHTML = `
+      <div class="cart-empty">
+        <span aria-hidden="true">水</span>
+        <strong>장바구니가 비어 있습니다.</strong>
+        <p>필요한 상품을 담으면 수량과 예상 합계를 이곳에서 확인할 수 있습니다.</p>
+      </div>
+    `;
+  } else {
+    shopElements.items.innerHTML = cart.map((item) => {
+      const product = productById.get(item.productId);
+      const linePrice = product.price === null ? null : product.price * item.quantity;
+      return `
+        <article class="cart-item" data-cart-product="${escapeHtml(product.id)}">
+          <div class="cart-item-media">${product.image ? `<img src="${escapeHtml(product.image)}" alt="">` : '<span aria-hidden="true">水</span>'}</div>
+          <div class="cart-item-copy">
+            <strong>${escapeHtml(product.name)}</strong>
+            <small>${formatPrice(product.price)}</small>
+            <div class="quantity-control" aria-label="${escapeHtml(product.name)} 수량">
+              <button type="button" data-cart-action="decrease" aria-label="수량 줄이기">−</button>
+              <span>${item.quantity}</span>
+              <button type="button" data-cart-action="increase" aria-label="수량 늘리기">+</button>
+            </div>
+          </div>
+          <div class="cart-item-price">
+            <strong>${formatPrice(linePrice)}</strong>
+            <button type="button" data-cart-action="remove">삭제</button>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+  const total = cartPriceTotal();
+  const hasQuoteProduct = cartHasQuoteProduct();
+  shopElements.itemCount.textContent = `${cartQuantity()}개`;
+  shopElements.total.textContent = `${total.toLocaleString('ko-KR')}원${hasQuoteProduct ? ' + 별도 견적' : ''}`;
+  shopElements.copyButton.disabled = cart.length === 0;
+  shopElements.quoteButton.disabled = cart.length === 0;
+  updateCartBadges();
+}
+
+function openCart() {
+  shopElements.backdrop.hidden = false;
+  shopElements.drawer.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('cart-open');
+  requestAnimationFrame(() => {
+    shopElements.backdrop.classList.add('visible');
+    shopElements.drawer.classList.add('open');
+    shopElements.drawer.querySelector('[data-cart-close]')?.focus();
+  });
+}
+
+function closeCart() {
+  shopElements.backdrop.classList.remove('visible');
+  shopElements.drawer.classList.remove('open');
+  shopElements.drawer.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('cart-open');
+  setTimeout(() => { shopElements.backdrop.hidden = true; }, 240);
+}
+
+async function copyCartInquiry() {
+  if (!cart.length) return;
+  const lines = [
+    '[손세차장 제품 문의]',
+    ...cart.map((item) => {
+      const product = productById.get(item.productId);
+      return `- ${product.name} / ${item.quantity}개 / ${formatPrice(product.price)}`;
+    }),
+    `예상 합계: ${shopElements.total.textContent}`,
+  ];
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    shopElements.feedback.textContent = '문의 목록을 복사했습니다. 상담 시 붙여넣어 주세요.';
+  } catch {
+    shopElements.feedback.textContent = '복사하지 못했습니다. 상품 목록을 화면에서 확인해 주세요.';
+  }
+}
+
+function makeQuoteNumber() {
+  const now = new Date();
+  const date = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now).replaceAll('-', '');
+  return `Q-${date}-${String(now.getTime()).slice(-5)}`;
+}
+
+function loadQuoteForm() {
+  const stored = readStoredObject(quoteStorageKey);
+  document.querySelectorAll('[data-quote-field]').forEach((field) => {
+    field.value = typeof stored[field.dataset.quoteField] === 'string'
+      ? stored[field.dataset.quoteField]
+      : '';
+  });
+}
+
+function saveQuoteForm() {
+  const values = {};
+  document.querySelectorAll('[data-quote-field]').forEach((field) => {
+    values[field.dataset.quoteField] = field.value;
+  });
+  localStorage.setItem(quoteStorageKey, JSON.stringify(values));
+}
+
+function quoteFieldValue(name) {
+  return document.querySelector(`[data-quote-field="${name}"]`)?.value.trim() || '';
+}
+
+function renderQuote() {
+  if (!quoteDocumentNumber) quoteDocumentNumber = makeQuoteNumber();
+  shopElements.quoteNumber.textContent = quoteDocumentNumber;
+  shopElements.quoteDate.textContent = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+  shopElements.quoteItems.innerHTML = cart.map((item, index) => {
+    const product = productById.get(item.productId);
+    const linePrice = product.price === null ? null : product.price * item.quantity;
+    return `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(product.name)}</td>
+        <td>${formatPrice(product.price)}</td>
+        <td>${item.quantity}</td>
+        <td>${formatPrice(linePrice)}</td>
+      </tr>
+    `;
+  }).join('');
+  shopElements.quoteItemCount.textContent = `${cartQuantity()}개`;
+  shopElements.quoteTotal.textContent = `${cartPriceTotal().toLocaleString('ko-KR')}원${cartHasQuoteProduct() ? ' + 별도 견적' : ''}`;
+}
+
+function openQuote() {
+  if (!cart.length) return;
+  renderQuote();
+  closeCart();
+  shopElements.quoteBackdrop.hidden = false;
+  shopElements.quoteModal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('quote-open');
+  requestAnimationFrame(() => {
+    shopElements.quoteBackdrop.classList.add('visible');
+    shopElements.quoteModal.classList.add('open');
+    shopElements.quoteModal.querySelector('[data-quote-field]')?.focus();
+  });
+}
+
+function closeQuote() {
+  shopElements.quoteBackdrop.classList.remove('visible');
+  shopElements.quoteModal.classList.remove('open');
+  shopElements.quoteModal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('quote-open');
+  setTimeout(() => { shopElements.quoteBackdrop.hidden = true; }, 240);
+}
+
+async function copyQuote() {
+  const customer = [quoteFieldValue('company'), quoteFieldValue('contact')].filter(Boolean).join(' / ') || '미입력';
+  const contact = [quoteFieldValue('phone'), quoteFieldValue('email')].filter(Boolean).join(' / ') || '미입력';
+  const lines = [
+    `[간이견적서 ${quoteDocumentNumber}]`,
+    `받는 분: ${customer}`,
+    `연락처: ${contact}`,
+    `배송·설치 주소: ${quoteFieldValue('address') || '미입력'}`,
+    '',
+    ...cart.map((item, index) => {
+      const product = productById.get(item.productId);
+      const linePrice = product.price === null ? null : product.price * item.quantity;
+      return `${index + 1}. ${product.name} / ${item.quantity}개 / ${formatPrice(linePrice)}`;
+    }),
+    '',
+    `상품 합계: ${shopElements.quoteTotal.textContent}`,
+    `요청사항: ${quoteFieldValue('request') || '없음'}`,
+    '문의전화: 031-1688-7759',
+  ];
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    shopElements.quoteFeedback.textContent = '견적 내용을 복사했습니다.';
+  } catch {
+    shopElements.quoteFeedback.textContent = '견적 내용을 복사하지 못했습니다.';
+  }
+}
+
+function printQuote() {
+  document.body.classList.add('printing-quote');
+  window.print();
+}
+
+function initializeShop() {
+  shopElements.categories.innerHTML = productCategories.map((category) => `
+    <button type="button" class="${category.id === 'all' ? 'active' : ''}" data-product-category="${escapeHtml(category.id)}">
+      ${escapeHtml(category.label)}
+    </button>
+  `).join('');
+  shopElements.categories.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-product-category]');
+    if (!button) return;
+    activeShopCategory = button.dataset.productCategory;
+    shopElements.categories.querySelector('.active')?.classList.remove('active');
+    button.classList.add('active');
+    renderProducts();
+  });
+  shopElements.search.addEventListener('input', renderProducts);
+  shopElements.sort.addEventListener('change', renderProducts);
+  shopElements.grid.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-add-product]');
+    if (button) addToCart(button.dataset.addProduct);
+  });
+  shopElements.items.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-cart-action]');
+    const item = button?.closest('[data-cart-product]');
+    if (!button || !item) return;
+    if (button.dataset.cartAction === 'increase') changeCartQuantity(item.dataset.cartProduct, 1);
+    if (button.dataset.cartAction === 'decrease') changeCartQuantity(item.dataset.cartProduct, -1);
+    if (button.dataset.cartAction === 'remove') {
+      cart = cart.filter((cartItem) => cartItem.productId !== item.dataset.cartProduct);
+      saveCart();
+      renderCart();
+    }
+  });
+  document.querySelectorAll('[data-cart-open]').forEach((button) => button.addEventListener('click', openCart));
+  document.querySelectorAll('[data-cart-close]').forEach((button) => button.addEventListener('click', closeCart));
+  shopElements.copyButton.addEventListener('click', copyCartInquiry);
+  shopElements.quoteButton.addEventListener('click', openQuote);
+  document.querySelectorAll('[data-quote-close]').forEach((button) => button.addEventListener('click', closeQuote));
+  document.querySelectorAll('[data-quote-field]').forEach((field) => field.addEventListener('input', saveQuoteForm));
+  shopElements.quoteCopyButton.addEventListener('click', copyQuote);
+  shopElements.quotePrintButton.addEventListener('click', printQuote);
+  window.addEventListener('afterprint', () => document.body.classList.remove('printing-quote'));
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (shopElements.quoteModal.classList.contains('open')) closeQuote();
+    else if (shopElements.drawer.classList.contains('open')) closeCart();
+  });
+  cart = loadCart();
+  loadQuoteForm();
+  saveCart();
+  renderProducts();
+  renderCart();
+}
+
 checkboxes.forEach((box) => {
   box.addEventListener('change', () => {
     box.closest('.step-card').classList.toggle('completed', box.checked);
@@ -506,3 +920,4 @@ candidateState = loadCandidateState();
 saveCandidateState();
 hydrateDetailChecks();
 loadCandidateData();
+initializeShop();
