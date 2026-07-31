@@ -5,6 +5,8 @@ const progressText = document.querySelector('#progressText');
 const progressBar = document.querySelector('#progressBar');
 const storageKey = 'sonsecha-roadmap-progress';
 const detailStorageKey = 'sonsecha-detail-checks-v1';
+const detailNotesStorageKey = 'sonsecha-detail-notes-v1';
+const candidateStorageKey = 'sonsecha-candidate-v1';
 
 function escapeHtml(value) {
   return value
@@ -138,8 +140,61 @@ function updateDetailGroup(group) {
   status.innerHTML = `<span>세부 체크</span><strong>${completed} / ${boxes.length}</strong>`;
 }
 
+function readStoredObject(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function resizeNote(note) {
+  note.style.height = 'auto';
+  note.style.height = `${Math.max(note.scrollHeight, 72)}px`;
+}
+
+function injectCandidateFields(group) {
+  if (!group.closest('.step-card')?.querySelector('input[data-step="1"]')) return;
+  const saved = readStoredObject(candidateStorageKey);
+  const fields = document.createElement('div');
+  fields.className = 'candidate-fields';
+  fields.innerHTML = `
+    <div class="candidate-heading">
+      <span>MY CANDIDATE</span>
+      <strong>검토할 후보지</strong>
+      <small>입력 내용은 이 브라우저에 자동 저장됩니다.</small>
+    </div>
+    <label>
+      <span>후보지 이름</span>
+      <input type="text" data-candidate-field="name" placeholder="예: 후보지 1" value="${escapeHtml(saved.name || '')}">
+    </label>
+    <label class="address-field">
+      <span>도로명주소 · 지번</span>
+      <input type="text" data-candidate-field="address" placeholder="예: 서울시 ○○구 ○○로 12 / ○○동 123-4" value="${escapeHtml(saved.address || '')}">
+    </label>
+    <p class="local-save-state" aria-live="polite">이 기기에 저장됨</p>
+  `;
+  const guide = group.querySelector('.guide-content');
+  if (guide) guide.before(fields);
+
+  fields.querySelectorAll('[data-candidate-field]').forEach((input) => {
+    input.addEventListener('input', () => {
+      const values = {};
+      fields.querySelectorAll('[data-candidate-field]').forEach((field) => {
+        values[field.dataset.candidateField] = field.value;
+      });
+      localStorage.setItem(candidateStorageKey, JSON.stringify(values));
+      const state = fields.querySelector('.local-save-state');
+      state.textContent = '저장됨 ✓';
+      clearTimeout(input.saveTimer);
+      input.saveTimer = setTimeout(() => { state.textContent = '이 기기에 저장됨'; }, 1200);
+    });
+  });
+}
+
 function hydrateDetailChecks() {
   const saved = new Set(JSON.parse(localStorage.getItem(detailStorageKey) || '[]'));
+  const savedNotes = readStoredObject(detailNotesStorageKey);
   const groups = [...document.querySelectorAll('.step-detail, .field-panel')];
 
   groups.forEach((group, groupIndex) => {
@@ -156,18 +211,41 @@ function hydrateDetailChecks() {
           <span class="detail-checkmark" aria-hidden="true"></span>
           <span class="detail-check-copy">${original}</span>
         </label>
+        <div class="detail-note-wrap">
+          <label for="note-${id}">이 항목 메모</label>
+          <textarea id="note-${id}" class="detail-note" data-detail-note="${id}" placeholder="확인한 내용, 담당자 답변, 날짜 등을 적어두세요.">${escapeHtml(savedNotes[id] || '')}</textarea>
+          <span class="note-save-state" aria-live="polite">자동 저장</span>
+        </div>
       `;
       const box = item.querySelector('input');
+      const note = item.querySelector('[data-detail-note]');
       box.checked = saved.has(id);
       item.classList.toggle('checked', box.checked);
+      item.classList.toggle('note-open', box.checked || Boolean(note.value));
+      resizeNote(note);
       box.addEventListener('change', () => {
         item.classList.toggle('checked', box.checked);
+        item.classList.toggle('note-open', box.checked || Boolean(note.value));
+        if (box.checked) setTimeout(() => note.focus(), 80);
         const active = [...document.querySelectorAll('input[data-detail-check]:checked')]
           .map((checked) => checked.dataset.detailCheck);
         localStorage.setItem(detailStorageKey, JSON.stringify(active));
         updateDetailGroup(group);
       });
+      note.addEventListener('input', () => {
+        const notes = readStoredObject(detailNotesStorageKey);
+        if (note.value.trim()) notes[id] = note.value;
+        else delete notes[id];
+        localStorage.setItem(detailNotesStorageKey, JSON.stringify(notes));
+        item.classList.toggle('note-open', box.checked || Boolean(note.value));
+        resizeNote(note);
+        const state = item.querySelector('.note-save-state');
+        state.textContent = '저장됨 ✓';
+        clearTimeout(note.saveTimer);
+        note.saveTimer = setTimeout(() => { state.textContent = '자동 저장'; }, 1200);
+      });
     });
+    injectCandidateFields(group);
     updateDetailGroup(group);
   });
 }
@@ -227,7 +305,14 @@ document.querySelector('#resetButton').addEventListener('click', () => {
     box.checked = false;
     box.closest('li')?.classList.remove('checked');
   });
+  document.querySelectorAll('[data-detail-note]').forEach((note) => {
+    note.value = '';
+    note.closest('li')?.classList.remove('note-open');
+  });
+  document.querySelectorAll('[data-candidate-field]').forEach((field) => { field.value = ''; });
   localStorage.removeItem(detailStorageKey);
+  localStorage.removeItem(detailNotesStorageKey);
+  localStorage.removeItem(candidateStorageKey);
   document.querySelectorAll('.step-detail, .field-panel').forEach(updateDetailGroup);
   updateProgress();
 });

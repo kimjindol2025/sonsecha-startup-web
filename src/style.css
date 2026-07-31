@@ -129,6 +129,34 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
   border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
 .guide-content li.checked .detail-check-copy { color: #8794a8; text-decoration: line-through; text-decoration-thickness: 1px; }
+.detail-note-wrap {
+  display: none; position: relative; margin: 7px 0 14px 24px; padding: 12px;
+  background: #f7f9fc; border: 1px solid #dce4ef; border-radius: 6px;
+}
+.guide-content li.note-open .detail-note-wrap { display: block; }
+.detail-note-wrap > label { display: block; margin-bottom: 7px; color: var(--ink); font-size: 11px; font-weight: 800; }
+.detail-note {
+  display: block; width: 100%; min-height: 72px; resize: none; padding: 11px 12px 24px;
+  color: var(--ink); background: white; border: 1px solid #bbc8d9; border-radius: 4px;
+  font: 14px/1.55 Pretendard, "Noto Sans KR", sans-serif;
+}
+.detail-note:focus { outline: 3px solid rgba(20,87,255,.14); border-color: var(--blue); }
+.note-save-state { position: absolute; right: 20px; bottom: 17px; color: #8190a5; font-size: 10px; font-weight: 700; }
+.candidate-fields {
+  display: grid; grid-template-columns: .7fr 1.3fr; gap: 12px;
+  margin: 4px 0 20px; padding: 22px; background: var(--ink); color: white; border-radius: 7px;
+}
+.candidate-heading { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; }
+.candidate-heading > span { grid-row: 1 / 3; padding: 5px 8px; color: #b9d0ff; border: 1px solid rgba(255,255,255,.25); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.candidate-heading strong { font-size: 19px; }
+.candidate-heading small { color: #aebbd0; font-size: 11px; }
+.candidate-fields > label span { display: block; margin-bottom: 6px; color: #c8d3e4; font-size: 11px; font-weight: 700; }
+.candidate-fields input {
+  width: 100%; height: 44px; padding: 0 12px; color: var(--ink); background: white;
+  border: 2px solid transparent; border-radius: 4px; font: inherit;
+}
+.candidate-fields input:focus { outline: none; border-color: #78a3ff; }
+.local-save-state { grid-column: 1 / -1; margin: 0; color: #8db1ff !important; font-size: 10px !important; text-align: right; }
 .guide-content blockquote { margin: 16px 0; padding: 18px 22px; color: var(--ink); background: #fff8f2; border-left: 4px solid var(--orange); }
 .guide-content hr { margin: 24px 0; border: 0; border-top: 1px solid var(--line); }
 
@@ -179,6 +207,8 @@ footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px
   .step-card { grid-template-columns: 30px 45px 1fr 34px; gap: 10px; }
   .step-card p { display: block; margin: 8px 0 0; }
   .step-detail { grid-column: 1 / 5; }
+  .candidate-fields { grid-template-columns: 1fr; }
+  .candidate-heading, .local-save-state { grid-column: 1; }
   .document-grid { grid-template-columns: 1fr; }
   .field-guide-section { padding: 80px 6vw; }
   .field-guide-grid { grid-template-columns: 1fr; }
