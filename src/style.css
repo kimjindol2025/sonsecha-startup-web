@@ -20,6 +20,7 @@ body { margin: 0; min-width: 320px; background: var(--paper); }
 button, a { font: inherit; }
 a { color: inherit; text-decoration: none; }
 button { color: inherit; }
+button, input, textarea, a { -webkit-tap-highlight-color: transparent; }
 
 .site-header {
   height: 76px; padding: 0 5vw; display: flex; align-items: center; justify-content: space-between;
@@ -85,9 +86,9 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .step-card.completed { opacity: .55; }
 .step-card.completed h3 { text-decoration: line-through; }
 .step-card label { cursor: pointer; }
-.step-card input { position: absolute; opacity: 0; }
+.step-card > label > input[data-step] { position: absolute; opacity: 0; }
 .checkmark { display: block; width: 28px; height: 28px; border: 2px solid #a5b0c2; border-radius: 50%; }
-.step-card input:checked + .checkmark { background: var(--blue); border-color: var(--blue); box-shadow: inset 0 0 0 6px white; }
+.step-card > label > input[data-step]:checked + .checkmark { background: var(--blue); border-color: var(--blue); box-shadow: inset 0 0 0 6px white; }
 .step-number { color: #9ba9bc; font-family: "Gowun Batang"; font-size: 30px; }
 .phase-tag { display: inline-block; margin-bottom: 7px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
 .step-card h3 { display: inline; margin: 0 16px 0 0; font-size: 24px; }
@@ -152,6 +153,7 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .candidate-heading small { color: #aebbd0; font-size: 11px; }
 .candidate-fields > label span { display: block; margin-bottom: 6px; color: #c8d3e4; font-size: 11px; font-weight: 700; }
 .candidate-fields input {
+  position: static; opacity: 1;
   width: 100%; height: 44px; padding: 0 12px; color: var(--ink); background: white;
   border: 2px solid transparent; border-radius: 4px; font: inherit;
 }
@@ -195,10 +197,25 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px 5vw; color: var(--muted); font-size: 12px; background: #e9e5de; }
 
 @media (max-width: 860px) {
-  nav { display: none; }
+  html { scroll-padding-top: 118px; }
+  .site-header {
+    height: auto; min-height: 68px; padding: 10px 6vw 0;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  }
+  nav {
+    grid-column: 1 / -1; width: calc(100% + 12vw); margin: 9px -6vw 0;
+    padding: 0 6vw; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    border-top: 1px solid var(--line);
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav a {
+    min-height: 42px; padding: 0 13px; display: inline-flex; align-items: center;
+    white-space: nowrap; color: var(--muted); font-size: 13px;
+  }
+  nav a:active { color: var(--blue); background: rgba(20,87,255,.07); }
   .hero { grid-template-columns: 1fr; }
-  .hero-copy { padding: 76px 6vw 60px; }
-  .hero-visual { min-height: 480px; }
+  .hero-copy { padding: 64px 6vw 56px; }
+  .hero-visual { min-height: 440px; }
   .rule-strip { grid-template-columns: 1fr; }
   .rule-strip div { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.15); }
   .roadmap-section, .documents-section, .risk-section { padding: 80px 6vw; }
@@ -217,18 +234,92 @@ footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px
 }
 
 @media (max-width: 520px) {
-  .site-header { height: 64px; padding: 0 4vw; }
-  .brand span:last-child { display: none; }
-  .print-button { padding: 8px 13px; }
-  h1 { font-size: 46px; }
-  .hero-description { font-size: 16px; }
+  html { scroll-padding-top: 105px; }
+  body { overflow-x: hidden; }
+  .site-header { min-height: 58px; padding: 8px 20px 0; grid-template-columns: 1fr; }
+  .brand { min-width: 0; gap: 10px; font-size: 14px; }
+  .brand-mark { width: 34px; height: 34px; flex: 0 0 34px; }
+  .brand span:last-child { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .print-button { display: none; }
+  nav { width: calc(100% + 40px); margin: 8px -20px 0; padding: 0 12px; gap: 2px; }
+  nav a { min-height: 40px; padding: 0 12px; }
+  .hero-copy { padding: 48px 20px 44px; }
+  .eyebrow { margin-bottom: 16px; font-size: 10px; line-height: 1.5; }
+  h1 { font-size: clamp(40px, 12vw, 48px); line-height: 1.06; word-break: keep-all; }
+  h1 em { white-space: nowrap; }
+  .hero-description { margin: 26px 0 30px; font-size: 16px; line-height: 1.7; word-break: keep-all; }
   .hero-actions { align-items: flex-start; flex-direction: column; }
-  .hero-visual { min-height: 390px; }
-  .building { height: 68%; }
-  .sun { width: 220px; height: 220px; }
-  .step-card { grid-template-columns: 28px 36px 1fr 30px; }
-  .step-card h3 { font-size: 20px; }
-  .step-number { font-size: 22px; }
+  .primary-button {
+    width: 100%; min-height: 56px; justify-content: space-between; padding: 15px 20px;
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+  .text-button { min-height: 44px; padding: 8px 0; }
+  .hero-visual { min-height: 320px; }
+  .building { left: 8%; right: 8%; bottom: 42px; height: 68%; border-width: 4px; box-shadow: 10px 10px 0 rgba(20,87,255,.25); }
+  .sign { top: -30px; padding: 10px 17px; border-width: 4px; font-size: 19px; }
+  .awning { border-width: 4px; background-size: 80px 100%; }
+  .bay, .car, .window { border-width: 4px; }
+  .sun { top: 32px; width: 190px; height: 190px; }
+  .water-line { height: 44px; }
+  .rule-strip div { padding: 20px; gap: 1px 15px; }
+  .rule-strip span { font-size: 27px; }
+  .rule-strip strong { font-size: 15px; }
+  .rule-strip small { font-size: 11px; }
+  .roadmap-section, .documents-section, .risk-section, .field-guide-section { padding: 64px 20px; }
+  .section-heading { gap: 24px; margin-bottom: 34px; }
+  .section-heading h2, .risk-copy h2 { font-size: 36px; word-break: keep-all; }
+  .progress-card { min-width: 0; padding: 15px; }
+  .phase-tabs {
+    width: calc(100% + 40px); margin: 0 -20px 18px; padding: 0 20px 6px;
+    scroll-padding-inline: 20px; scrollbar-width: none;
+  }
+  .phase-tabs::-webkit-scrollbar { display: none; }
+  .phase-tabs button { min-height: 44px; padding: 10px 17px; }
+  .step-card {
+    grid-template-columns: 40px minmax(0, 1fr) 44px; gap: 4px 10px;
+    align-items: start; min-height: 0; padding: 22px 0;
+  }
+  .step-card:hover { padding-left: 0; }
+  .step-card > label {
+    grid-column: 1; grid-row: 2; width: 40px; height: 44px;
+    display: grid; place-items: center;
+  }
+  .checkmark { width: 26px; height: 26px; }
+  .step-number { grid-column: 1; grid-row: 1; align-self: center; text-align: center; font-size: 23px; line-height: 1; }
+  .step-card > div:nth-of-type(2) { grid-column: 2; grid-row: 1 / 3; min-width: 0; }
+  .step-card h3 { display: block; margin: 0; font-size: 20px; line-height: 1.3; word-break: keep-all; }
+  .step-card p { margin-top: 9px; font-size: 14px; line-height: 1.65; word-break: keep-all; }
+  .detail-toggle {
+    grid-column: 3; grid-row: 1 / 3; width: 44px; height: 44px;
+    font-size: 24px;
+  }
+  .step-detail { grid-column: 1 / -1; padding-top: 16px; overflow-wrap: anywhere; }
+  .detail-progress { margin-bottom: 14px; }
+  .guide-content h3 { line-height: 1.45; }
+  .guide-content ul, .guide-content ol { padding-left: 18px; }
+  .guide-content li { margin: 9px 0; }
+  .detail-check-item { grid-template-columns: 26px minmax(0, 1fr); gap: 8px; margin-left: -4px; padding: 7px 4px; }
+  .detail-checkmark { width: 20px; height: 20px; }
+  .detail-note-wrap { margin-left: 0; padding: 10px; }
+  .detail-note { min-height: 96px; font-size: 16px; }
+  .candidate-fields { gap: 14px; margin-bottom: 18px; padding: 18px 14px; }
+  .candidate-heading { grid-template-columns: 1fr; gap: 6px; }
+  .candidate-heading > span { grid-row: auto; justify-self: start; }
+  .candidate-heading strong { font-size: 18px; }
+  .candidate-fields input { height: 48px; font-size: 16px; }
+  .document-grid { gap: 14px; }
+  .document-grid article, .field-panel { padding: 24px 20px; }
+  .document-grid h3 { font-size: 22px; }
+  .field-guide-grid { gap: 14px; }
+  .field-panel .guide-content h2 { font-size: 25px; }
+  .one-line-summary { margin-top: 14px; padding: 28px 20px; }
+  .one-line-summary .guide-content h2 { font-size: 25px; }
+  .risk-section { gap: 34px; }
+  .risk-list li { grid-template-columns: 42px 1fr; gap: 12px; padding: 22px 0; }
+  .risk-list strong { font-size: 19px; }
+  .final-cta { padding: 64px 20px; }
+  .final-cta h2 { font-size: 32px; word-break: keep-all; }
+  footer { padding: 28px 20px; }
 }
 
 @media print {
