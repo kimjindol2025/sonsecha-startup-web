@@ -12,6 +12,7 @@
   summary: '목록에 표시할 짧은 설명',
   price: 25000,
   image: '/products/상품이미지.webp',
+  shopUrl: 'https://k002.com/mall/m_mall_detail.php?ps_goid=상품번호',
   badge: 'BEST',
   inStock: true,
   featured: 10,
@@ -23,6 +24,11 @@
 - 품절 상품은 `inStock: false`, 임시 비공개 상품은 `active: false`로 설정한다.
 - `featured` 숫자가 클수록 추천순에서 먼저 표시된다.
 - 상품 이미지는 가급적 같은 비율의 WebP 파일로 준비하고 `public/products/`에 둔다.
+- 기존 `k002.com` 상품은 `shopUrl`에 상세페이지 주소를 넣어 `공식몰 상세` 버튼으로 연결한다.
+
+## k002.com 샘플 상품
+
+2026-07-31 KST 기준 `k002.com` 메인에 공개된 상품 8개를 샘플로 등록했다. 상품명·가격·이미지와 상세페이지는 기존 공식몰의 공개 정보를 기준으로 한다. 기존 쇼핑몰에서 가격·판매상태가 바뀌어도 이 정적 데이터에는 자동 반영되지 않으므로 정식 운영 전 반드시 대조해야 한다.
 
 ## 현재 주문 흐름
 

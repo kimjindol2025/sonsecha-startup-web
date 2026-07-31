@@ -485,6 +485,9 @@ const catalogProducts = products
       ? product.price
       : null,
     image: typeof product.image === 'string' ? product.image : '',
+    shopUrl: typeof product.shopUrl === 'string' && /^https?:\/\//.test(product.shopUrl)
+      ? product.shopUrl
+      : '',
     badge: typeof product.badge === 'string' ? product.badge : '',
     inStock: product.inStock !== false,
     featured: Number.isFinite(Number(product.featured)) ? Number(product.featured) : 0,
@@ -557,7 +560,10 @@ function productCard(product) {
         <p>${escapeHtml(product.summary)}</p>
         <div class="product-buy-row">
           <strong>${formatPrice(product.price)}</strong>
-          <button type="button" data-add-product="${escapeHtml(product.id)}"${product.inStock ? '' : ' disabled'}>${stockLabel}</button>
+          <div class="product-buy-actions">
+            ${product.shopUrl ? `<a href="${escapeHtml(product.shopUrl)}" target="_blank" rel="noopener noreferrer">공식몰 상세</a>` : ''}
+            <button type="button" data-add-product="${escapeHtml(product.id)}"${product.inStock ? '' : ' disabled'}>${stockLabel}</button>
+          </div>
         </div>
       </div>
     </article>
@@ -858,6 +864,22 @@ function initializeShop() {
   renderCart();
 }
 
+function syncSiteView() {
+  const isShopView = globalThis.location.hash === '#shop';
+  document.body.classList.toggle('shop-view', isShopView);
+  document.body.classList.toggle('guide-view', !isShopView);
+  document.querySelectorAll('[data-view-tab]').forEach((tab) => {
+    const active = tab.dataset.viewTab === (isShopView ? 'shop' : 'guide');
+    tab.classList.toggle('active', active);
+    if (active) tab.setAttribute('aria-current', 'page');
+    else tab.removeAttribute('aria-current');
+  });
+  document.title = isShopView
+    ? '제품몰 · 손세차장 창업 로드맵'
+    : '손세차장 창업 로드맵';
+  if (isShopView) requestAnimationFrame(() => globalThis.scrollTo({ top: 0, behavior: 'auto' }));
+}
+
 checkboxes.forEach((box) => {
   box.addEventListener('change', () => {
     box.closest('.step-card').classList.toggle('completed', box.checked);
@@ -915,6 +937,8 @@ document.querySelector('#resetButton').addEventListener('click', () => {
 });
 
 document.querySelector('#printButton').addEventListener('click', () => window.print());
+globalThis.addEventListener('hashchange', syncSiteView);
+syncSiteView();
 hydrateGuide();
 candidateState = loadCandidateState();
 saveCandidateState();
