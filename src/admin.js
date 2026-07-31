@@ -14,6 +14,7 @@ const elements = {
   sectionTabs: document.querySelectorAll('[data-admin-section]'),
   contentPanel: document.querySelector('#contentPanel'),
   productPanel: document.querySelector('#productPanel'),
+  analyticsPanel: document.querySelector('#analyticsPanel'),
   contentForm: document.querySelector('#contentForm'),
   contentGroups: document.querySelector('#contentFieldGroups'),
   contentFeedback: document.querySelector('#contentFeedback'),
@@ -24,6 +25,19 @@ const elements = {
   count: document.querySelector('#adminProductCount'),
   activeCount: document.querySelector('#adminActiveCount'),
   soldOutCount: document.querySelector('#adminSoldOutCount'),
+  analyticsRange: document.querySelector('#analyticsRange'),
+  analyticsRefresh: document.querySelector('#analyticsRefresh'),
+  analyticsSearch: document.querySelector('#analyticsSearch'),
+  analyticsToday: document.querySelector('#analyticsToday'),
+  analyticsWeek: document.querySelector('#analyticsWeek'),
+  analyticsMonth: document.querySelector('#analyticsMonth'),
+  analyticsLifetime: document.querySelector('#analyticsLifetime'),
+  analyticsPeriodTotal: document.querySelector('#analyticsPeriodTotal'),
+  analyticsChart: document.querySelector('#analyticsChart'),
+  analyticsDevices: document.querySelector('#analyticsDevices'),
+  analyticsEvents: document.querySelector('#analyticsEvents'),
+  analyticsEmpty: document.querySelector('#analyticsEmpty'),
+  analyticsFeedback: document.querySelector('#analyticsFeedback'),
   form: document.querySelector('#productForm'),
   formButton: document.querySelector('#saveProductButton'),
   mode: document.querySelector('#editorMode'),
@@ -37,6 +51,7 @@ const elements = {
 let products = [];
 let selectedId = '';
 let contentFields = [];
+let analytics = null;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -78,20 +93,125 @@ function showLogin(message = '') {
 async function showDashboard() {
   elements.loginView.hidden = true;
   elements.dashboard.hidden = false;
-  await Promise.all([loadContent(), loadProducts()]);
+  await Promise.all([loadContent(), loadProducts(), loadAnalytics()]);
   switchAdminSection('content');
 }
 
 function switchAdminSection(section) {
-  const showProducts = section === 'products';
-  elements.contentPanel.hidden = showProducts;
-  elements.productPanel.hidden = !showProducts;
-  elements.newProduct.hidden = !showProducts;
+  elements.contentPanel.hidden = section !== 'content';
+  elements.productPanel.hidden = section !== 'products';
+  elements.analyticsPanel.hidden = section !== 'analytics';
+  elements.newProduct.hidden = section !== 'products';
   elements.sectionTabs.forEach((button) => {
     const active = button.dataset.adminSection === section;
     button.classList.toggle('active', active);
     button.setAttribute('aria-selected', String(active));
   });
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('ko-KR');
+}
+
+function formatDateTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(date);
+}
+
+function formatDay(value) {
+  const [, month, day] = String(value).split('-');
+  return `${Number(month)}/${Number(day)}`;
+}
+
+const analyticsKindLabels = {
+  banner: '배너',
+  cart: '장바구니',
+  check: '체크',
+  control: '버튼',
+  custom: '기타',
+  details: '상세',
+  field: '입력칸',
+  filter: '필터',
+  link: '링크',
+  phone: '전화',
+  product: '상품',
+  select: '선택',
+};
+
+function visibleAnalyticsEvents() {
+  const query = elements.analyticsSearch.value.trim().toLocaleLowerCase('ko-KR');
+  const events = Array.isArray(analytics?.events) ? analytics.events : [];
+  return events.filter((item) => !query
+    || `${item.label} ${item.section} ${analyticsKindLabels[item.kind] || item.kind}`.toLocaleLowerCase('ko-KR').includes(query));
+}
+
+function renderAnalyticsEvents() {
+  const events = visibleAnalyticsEvents();
+  elements.analyticsEvents.innerHTML = events.map((item) => `
+    <tr>
+      <td><strong>${escapeHtml(item.label)}</strong>${item.href ? `<small>${escapeHtml(item.href)}</small>` : ''}</td>
+      <td>${escapeHtml(item.section)}</td>
+      <td><span class="analytics-kind">${escapeHtml(analyticsKindLabels[item.kind] || item.kind)}</span></td>
+      <td><b>${formatNumber(item.period)}</b></td>
+      <td>${formatNumber(item.total)}</td>
+      <td>${escapeHtml(formatDateTime(item.lastClickedAt))}</td>
+    </tr>
+  `).join('');
+  elements.analyticsEmpty.hidden = events.length > 0;
+}
+
+function renderAnalytics() {
+  const totals = analytics?.totals || {};
+  elements.analyticsToday.textContent = formatNumber(totals.today);
+  elements.analyticsWeek.textContent = formatNumber(totals.last7);
+  elements.analyticsMonth.textContent = formatNumber(totals.last30);
+  elements.analyticsLifetime.textContent = formatNumber(totals.lifetime);
+  elements.analyticsPeriodTotal.textContent = `${formatNumber(totals.period)}회`;
+
+  const days = Array.isArray(analytics?.days) ? analytics.days : [];
+  const maximum = Math.max(1, ...days.map((day) => Number(day.total || 0)));
+  elements.analyticsChart.innerHTML = days.map((day) => `
+    <div class="chart-column" title="${escapeHtml(day.date)} · ${formatNumber(day.total)}회">
+      <strong>${formatNumber(day.total)}</strong>
+      <span><i style="height:${Math.max(4, Math.round((Number(day.total || 0) / maximum) * 100))}%"></i></span>
+      <small>${escapeHtml(formatDay(day.date))}</small>
+    </div>
+  `).join('');
+  requestAnimationFrame(() => { elements.analyticsChart.scrollLeft = elements.analyticsChart.scrollWidth; });
+
+  const devices = analytics?.devices || {};
+  const deviceItems = [
+    ['mobile', '모바일'], ['tablet', '태블릿'], ['desktop', 'PC'], ['unknown', '기타'],
+  ];
+  const deviceTotal = Math.max(1, deviceItems.reduce((sum, [key]) => sum + Number(devices[key] || 0), 0));
+  elements.analyticsDevices.innerHTML = deviceItems.map(([key, label]) => {
+    const value = Number(devices[key] || 0);
+    const percentage = Math.round((value / deviceTotal) * 100);
+    return `<div><p><span>${label}</span><strong>${formatNumber(value)} · ${percentage}%</strong></p><i><b style="width:${percentage}%"></b></i></div>`;
+  }).join('');
+  renderAnalyticsEvents();
+}
+
+async function loadAnalytics() {
+  elements.analyticsRefresh.disabled = true;
+  elements.analyticsFeedback.textContent = '집계 불러오는 중…';
+  try {
+    const payload = await api(`/api/admin/analytics?range=${encodeURIComponent(elements.analyticsRange.value)}`);
+    analytics = payload.analytics || null;
+    renderAnalytics();
+    elements.analyticsFeedback.textContent = analytics?.updatedAt
+      ? `최근 집계 ${formatDateTime(analytics.updatedAt)}`
+      : '아직 집계된 클릭이 없습니다.';
+  } catch (error) {
+    if (error.status === 401) showLogin('세션이 만료됐습니다. 다시 접속해 주세요.');
+    else elements.analyticsFeedback.textContent = error.message;
+  } finally {
+    elements.analyticsRefresh.disabled = false;
+  }
 }
 
 function renderContentFields(content) {
@@ -250,6 +370,10 @@ elements.logout.addEventListener('click', async () => {
 elements.sectionTabs.forEach((button) => {
   button.addEventListener('click', () => switchAdminSection(button.dataset.adminSection));
 });
+
+elements.analyticsRange.addEventListener('change', loadAnalytics);
+elements.analyticsRefresh.addEventListener('click', loadAnalytics);
+elements.analyticsSearch.addEventListener('input', renderAnalyticsEvents);
 
 elements.contentForm.addEventListener('submit', async (event) => {
   event.preventDefault();

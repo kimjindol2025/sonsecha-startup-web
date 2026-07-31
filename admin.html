@@ -51,6 +51,7 @@
         <div class="admin-mode-tabs" role="tablist" aria-label="관리 항목">
           <button class="active" type="button" data-admin-section="content" role="tab" aria-selected="true">메인페이지 글</button>
           <button type="button" data-admin-section="products" role="tab" aria-selected="false">상품 관리</button>
+          <button type="button" data-admin-section="analytics" role="tab" aria-selected="false">클릭 분석</button>
         </div>
 
         <section class="content-panel" id="contentPanel">
@@ -129,6 +130,65 @@
 
           </section>
         </div>
+        </section>
+
+        <section class="analytics-panel" id="analyticsPanel" hidden>
+          <div class="analytics-heading">
+            <div>
+              <p>PRIVACY-FIRST ANALYTICS</p>
+              <h2>항목별 클릭 분석</h2>
+              <span>개인정보 없이 어떤 메뉴·체크·상품·링크를 눌렀는지 집계합니다.</span>
+            </div>
+            <div class="analytics-controls">
+              <label>
+                <span>조회 기간</span>
+                <select id="analyticsRange">
+                  <option value="7">최근 7일</option>
+                  <option value="30" selected>최근 30일</option>
+                  <option value="90">최근 90일</option>
+                  <option value="365">최근 1년</option>
+                </select>
+              </label>
+              <button type="button" id="analyticsRefresh">새로고침</button>
+            </div>
+          </div>
+
+          <div class="analytics-summary">
+            <article><span>오늘</span><strong id="analyticsToday">0</strong><small>클릭</small></article>
+            <article><span>최근 7일</span><strong id="analyticsWeek">0</strong><small>클릭</small></article>
+            <article><span>최근 30일</span><strong id="analyticsMonth">0</strong><small>클릭</small></article>
+            <article><span>누적</span><strong id="analyticsLifetime">0</strong><small>클릭</small></article>
+          </div>
+
+          <div class="analytics-grid">
+            <article class="analytics-card">
+              <div class="analytics-card-title">
+                <div><span>CLICK TREND</span><h3>날짜별 클릭</h3></div>
+                <strong id="analyticsPeriodTotal">0회</strong>
+              </div>
+              <div class="analytics-chart" id="analyticsChart"></div>
+            </article>
+            <article class="analytics-card">
+              <div class="analytics-card-title"><div><span>DEVICE</span><h3>기기별 누적</h3></div></div>
+              <div class="device-stats" id="analyticsDevices"></div>
+              <p class="analytics-privacy">방문자 이름, 전화번호, IP 주소, 작성한 메모는 저장하지 않습니다.</p>
+            </article>
+          </div>
+
+          <article class="analytics-card analytics-events-card">
+            <div class="analytics-card-title events-title">
+              <div><span>ALL CLICKABLE ITEMS</span><h3>클릭 항목 순위</h3></div>
+              <label class="analytics-search"><span class="sr-only">클릭 항목 검색</span><input id="analyticsSearch" type="search" placeholder="항목명·위치 검색"></label>
+            </div>
+            <div class="analytics-table-wrap">
+              <table class="analytics-table">
+                <thead><tr><th>항목</th><th>위치</th><th>종류</th><th>조회기간</th><th>누적</th><th>최근 클릭</th></tr></thead>
+                <tbody id="analyticsEvents"></tbody>
+              </table>
+              <p class="analytics-empty" id="analyticsEmpty" hidden>선택한 기간에 집계된 클릭이 없습니다.</p>
+            </div>
+            <p class="analytics-feedback" id="analyticsFeedback" aria-live="polite"></p>
+          </article>
         </section>
 
         <form class="password-change" id="passwordForm">

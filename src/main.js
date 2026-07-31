@@ -1,4 +1,5 @@
 import guideMarkdown from '../README.md?raw';
+import { installClickAnalytics } from './analytics.js';
 import { defaultSiteContent } from './content.js';
 import { productCategories, products } from './products.js';
 
@@ -991,6 +992,7 @@ document.querySelector('#resetButton').addEventListener('click', () => {
 document.querySelector('#printButton').addEventListener('click', () => window.print());
 globalThis.addEventListener('hashchange', syncSiteView);
 syncSiteView();
+installClickAnalytics();
 initializeSiteContent();
 hydrateGuide();
 candidateState = loadCandidateState();
