@@ -43,7 +43,9 @@ function sectionFor(element) {
   if (element.closest('header')) return '상단 메뉴';
   if (element.closest('footer')) return '하단 정보';
   if (element.closest('.roadmap-shop-banner')) return '창업절차 상품 배너';
-  return globalThis.location.hash.startsWith('#shop') ? '제품몰' : '창업가이드';
+  if (globalThis.location.hash.startsWith('#shop')) return '제품몰';
+  if (globalThis.location.hash === '#plan') return '사업계획서';
+  return '창업가이드';
 }
 
 function productName(element) {

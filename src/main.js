@@ -1,5 +1,6 @@
 import guideMarkdown from '../README.md?raw';
 import { installClickAnalytics } from './analytics.js';
+import { initializeBusinessPlan } from './business-plan.js';
 import { initializeConsultations } from './consultations.js';
 import { defaultSiteContent } from './content.js';
 import { productCategories, products } from './products.js';
@@ -18,6 +19,7 @@ const candidateStatusLabels = {
   conditional: '조건부 가능',
   blocked: '불가',
 };
+let businessPlanApp = null;
 const stepOneCheckGroups = [
   {
     id: 'online',
@@ -1283,22 +1285,28 @@ async function initializeShop() {
 function syncSiteView() {
   const productId = productDetailIdFromHash();
   const isShopView = globalThis.location.hash === '#shop' || productId !== null;
+  const isPlanView = globalThis.location.hash === '#plan';
   document.body.classList.toggle('shop-view', isShopView);
-  document.body.classList.toggle('guide-view', !isShopView);
+  document.body.classList.toggle('plan-view', isPlanView);
+  document.body.classList.toggle('guide-view', !isShopView && !isPlanView);
   document.querySelectorAll('[data-view-tab]').forEach((tab) => {
-    const active = tab.dataset.viewTab === (isShopView ? 'shop' : 'guide');
+    const activeView = isShopView ? 'shop' : isPlanView ? 'plan' : 'guide';
+    const active = tab.dataset.viewTab === activeView;
     tab.classList.toggle('active', active);
     if (active) tab.setAttribute('aria-current', 'page');
     else tab.removeAttribute('aria-current');
   });
   renderShopRoute(productId);
+  if (isPlanView) businessPlanApp?.activate();
   const detailProduct = productId === null ? null : productById.get(productId);
   document.title = detailProduct
     ? `${detailProduct.name} · 손세차장 제품몰`
     : isShopView
       ? '제품몰 · 손세차장 창업 로드맵'
-    : '손세차장 창업 로드맵';
-  if (isShopView) requestAnimationFrame(() => globalThis.scrollTo({ top: 0, behavior: 'auto' }));
+      : isPlanView
+        ? '나의 사업계획서 · 손세차장 창업 로드맵'
+      : '손세차장 창업 로드맵';
+  if (isShopView || isPlanView) requestAnimationFrame(() => globalThis.scrollTo({ top: 0, behavior: 'auto' }));
 }
 
 const feedbackElements = {
@@ -1373,6 +1381,7 @@ function feedbackDeviceType() {
 function suggestedFeedbackArea() {
   if (document.body.classList.contains('quote-open') || document.body.classList.contains('cart-open')) return '장바구니·견적';
   if (globalThis.location.hash === '#shop') return '제품몰';
+  if (globalThis.location.hash === '#plan') return '사업계획서';
   const center = document.elementFromPoint(globalThis.innerWidth / 2, globalThis.innerHeight / 2);
   if (center?.closest('#roadmap')) return '12단계 절차';
   if (center?.closest('#field-guide')) return '후보지 체크';
@@ -1520,6 +1529,10 @@ initializeConsultations({
     candidate,
     candidateState.candidates.findIndex((item) => item.id === candidate.id),
   ),
+});
+businessPlanApp = initializeBusinessPlan({
+  getCandidateState: () => candidateState,
+  candidateDisplayName,
 });
 const firstStepCard = document.querySelector('input[data-step="1"]')?.closest('.step-card');
 const activeCandidate = getActiveCandidate();
