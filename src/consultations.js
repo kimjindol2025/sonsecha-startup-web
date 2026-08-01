@@ -215,6 +215,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     }));
     const notes = sharing.notes ? Object.entries(candidate.detailNotes || {}).filter(([, text]) => String(text).trim()).map(([id, text]) => ({
       id,
+      step: checks.find((item) => item.id === id)?.step || id.split('-')[0],
       label: checks.find((item) => item.id === id)?.label || id,
       text,
     })) : [];
@@ -293,9 +294,13 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         <fieldset class="consultation-options"><legend>공유할 정보</legend>
           <label><input type="checkbox" name="shareAddress"><span><strong>주소</strong><small>선택해야만 서버로 전송됩니다.</small></span></label>
           <label><input type="checkbox" name="sharePlan"><span><strong>세차장 형태·베이 수</strong><small>선택 후보지별 입력 내용을 공유합니다.</small></span></label>
-          <label><input type="checkbox" name="shareNotes"><span><strong>메모·담당기관 문의 기록</strong><small>선택 후보지의 작성 메모 ${notesCount}개</small></span></label>
+          <label class="consultation-notes-option"><input type="checkbox" name="shareNotes"><span><strong>1~12단계 메모·담당기관 문의 기록</strong><small data-share-notes-count>작성된 단계별 메모 ${notesCount}개 · 선택하면 단계별로 묶어 요청서에 전달됩니다.</small></span></label>
           <label><input type="checkbox" name="sharePhotos"><span><strong>선택 사진</strong><small>아래에서 사진별로 다시 선택합니다.</small></span></label>
         </fieldset>
+        <section class="consultation-stage-review">
+          <header><div><strong>1~12단계 기록 확인</strong><span>관리자가 다시 묻지 않도록 단계별 판정과 작성 메모를 전송 전에 확인하세요.</span></div><b data-stage-share-state>메모 공유 선택 필요</b></header>
+          <div data-stage-review></div>
+        </section>
         <section class="consultation-photo-picker">
           <div><strong>사진 선택</strong><span>JPG·PNG·WebP, 원본 10MB 이하, 후보지별 최대 10장</span></div>
           <label class="consultation-photo-target"><span>사진을 저장할 후보지</span><select data-photo-candidate>${selectedCandidates.map((candidate) => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidateDisplayName(candidate))}</option>`).join('')}</select></label>
@@ -310,6 +315,33 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     const form = body.querySelector('[data-consultation-form]');
     const grid = form.querySelector('[data-photo-grid]');
     const rerenderPhotos = () => { grid.innerHTML = selectedPhotoMarkup(); };
+    const renderStageReview = () => {
+      const stepDefinitions = [...document.querySelectorAll('.step-card')].map((card) => {
+        const id = card.querySelector('input[data-step]')?.dataset.step || '';
+        return { id, label: card.querySelector('h3')?.textContent.trim() || `${id}단계` };
+      });
+      const checkLabels = new Map([...document.querySelectorAll('input[data-detail-check]')].map((box) => [
+        box.dataset.detailCheck,
+        box.closest('li')?.querySelector('.detail-check-copy')?.textContent.trim() || box.dataset.detailCheck,
+      ]));
+      const selected = candidates.filter((candidate) => selectedCandidateIds.has(candidate.id));
+      const noteSharing = form.elements.shareNotes.checked;
+      const totalNotes = selected.reduce((sum, candidate) => sum + Object.values(candidate.detailNotes || {}).filter((text) => String(text).trim()).length, 0);
+      form.querySelector('[data-share-notes-count]').textContent = `작성된 단계별 메모 ${totalNotes}개 · 선택하면 단계별로 묶어 요청서에 전달됩니다.`;
+      const shareState = form.querySelector('[data-stage-share-state]');
+      shareState.textContent = noteSharing ? `메모 ${totalNotes}개 요청서 포함` : '메모 공유 선택 필요';
+      shareState.classList.toggle('included', noteSharing);
+      form.querySelector('[data-stage-review]').innerHTML = selected.map((candidate, candidateIndex) => {
+        const notes = Object.entries(candidate.detailNotes || {}).filter(([, text]) => String(text).trim()).map(([id, text]) => ({
+          id, step: id.split('-')[0], label: checkLabels.get(id) || id, text,
+        }));
+        return `<details class="consultation-stage-candidate"${candidateIndex === 0 ? ' open' : ''}><summary><span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>12단계 ${(candidate.stepChecks || []).length}/12 · 메모 ${notes.length}개</small></span><b>${noteSharing ? '전송 포함' : '메모 제외'}</b></summary><div>${stepDefinitions.map((step) => {
+          const stepNotes = notes.filter((note) => note.step === step.id);
+          const status = (candidate.stepChecks || []).includes(step.id) ? '완료' : candidateStatusLabels[candidate.stepStatuses?.[step.id] || 'unreviewed'];
+          return `<article><header><span>${escapeHtml(step.id)}단계 · ${escapeHtml(step.label)}</span><b>${escapeHtml(status)}</b></header><section>${stepNotes.map((note) => `<p><strong>${escapeHtml(note.label)}</strong><span>${escapeHtml(note.text)}</span></p>`).join('') || '<em>작성된 메모 없음</em>'}</section></article>`;
+        }).join('')}</div></details>`;
+      }).join('') || '<p class="consultation-empty">검토받을 후보지를 선택해 주세요.</p>';
+    };
     const renderPhotoTargets = () => {
       const selected = candidates.filter((candidate) => selectedCandidateIds.has(candidate.id));
       form.querySelector('[data-photo-candidate]').innerHTML = selected.map((candidate) => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidateDisplayName(candidate))}</option>`).join('');
@@ -324,6 +356,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
       renderPhotoTargets();
       await refreshPhotos();
       rerenderPhotos();
+      renderStageReview();
     });
     form.querySelector('[data-candidate-all]').addEventListener('change', async (event) => {
       form.querySelectorAll('[data-candidate-select]').forEach((box) => {
@@ -334,7 +367,10 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
       renderPhotoTargets();
       await refreshPhotos();
       rerenderPhotos();
+      renderStageReview();
     });
+    form.elements.shareNotes.addEventListener('change', renderStageReview);
+    renderStageReview();
     form.querySelector('[data-photo-input]').addEventListener('change', async (event) => {
       const feedback = form.querySelector('[data-consultation-feedback]');
       const files = [...event.target.files];
@@ -400,7 +436,10 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
               <dl><div><dt>세부 진행률</dt><dd>${candidate.progress.completed} / ${candidate.progress.total}</dd></div><div><dt>종합 상태</dt><dd>${escapeHtml(candidateStatusLabels[candidate.overallStatus])}</dd></div><div><dt>미확인</dt><dd>${candidate.progress.unchecked}개</dd></div></dl>
             </div>
             ${candidate.plan ? `<div class="preview-block"><h3>예상 형태</h3><p>${escapeHtml(candidate.plan.washType || '미입력')} · ${escapeHtml(candidate.plan.bayCount || '베이 수 미입력')}</p></div>` : ''}
-            <details class="preview-block" open><summary>12단계 상태 · ${candidate.steps.length}단계</summary><ul>${candidate.steps.map((step) => `<li><span>${escapeHtml(step.label)}</span><b>${step.completed ? '완료' : escapeHtml(candidateStatusLabels[step.status])}</b></li>`).join('')}</ul></details>
+            <details class="preview-block" open><summary>12단계 상태·메모 · ${candidate.steps.length}단계 / 메모 ${candidate.notes.length}개</summary><ul class="step-note-preview">${candidate.steps.map((step) => {
+              const stepNotes = candidate.notes.filter((note) => note.step === step.id);
+              return `<li><div><span>${escapeHtml(step.label)}</span><b>${step.completed ? '완료' : escapeHtml(candidateStatusLabels[step.status])}</b></div>${candidate.sharing.notes ? `<section>${stepNotes.map((note) => `<p><strong>${escapeHtml(note.label)}</strong><span>${escapeHtml(note.text)}</span></p>`).join('') || '<em>작성된 메모 없음</em>'}</section>` : '<section><em>메모 공유 안 함</em></section>'}</li>`;
+            }).join('')}</ul></details>
             <details class="preview-block"><summary>미확인 세부항목 · ${unconfirmed.length}개</summary><ul>${unconfirmed.map((item) => `<li>${escapeHtml(item.label)}</li>`).join('') || '<li>없음</li>'}</ul></details>
             ${candidate.sharing.notes ? `<details class="preview-block"><summary>공유 메모 · ${candidate.notes.length}개</summary><ul>${candidate.notes.map((note) => `<li><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></li>`).join('') || '<li>작성된 메모 없음</li>'}</ul></details>` : ''}
           </section>`;

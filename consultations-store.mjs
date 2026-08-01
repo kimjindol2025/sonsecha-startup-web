@@ -61,11 +61,15 @@ function validateCandidateSnapshot(input, inheritedSharing = {}) {
     status: ['unreviewed', 'possible', 'conditional', 'blocked'].includes(item?.status) ? item.status : 'unreviewed',
   })) : [];
   const notes = sharing.notes === true && Array.isArray(input.notes)
-    ? input.notes.slice(0, 120).map((item) => ({
-      id: cleanText(item?.id, 40, true),
-      label: cleanText(item?.label, 300, true),
-      text: cleanText(item?.text, 4000, true),
-    }))
+    ? input.notes.slice(0, 120).map((item) => {
+      const id = cleanText(item?.id, 40, true);
+      return {
+        id,
+        step: cleanText(item?.step, 40) || id.split('-')[0],
+        label: cleanText(item?.label, 300, true),
+        text: cleanText(item?.text, 4000, true),
+      };
+    })
     : [];
   return {
     candidateRef: cleanText(input.candidateRef, 160),

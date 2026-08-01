@@ -87,8 +87,12 @@ await click(`[data-candidate-select][value="${candidateC}"]`);
 await click(`[data-candidate-select][value="${candidateA}"]`);
 await click(`[data-candidate-select][value="${candidateB}"]`);
 await waitFor('document.querySelectorAll("[data-candidate-select]:checked").length === 2');
+await waitFor('document.querySelectorAll(".consultation-stage-candidate").length === 2');
+assert.equal(await evaluate(`document.querySelector('.consultation-stage-review').textContent.includes('A 기존 메모 보존 확인')`), true);
+assert.equal(await evaluate(`document.querySelector('[data-stage-share-state]').textContent`), '메모 공유 선택 필요');
 await click('[name="shareAddress"]');
 await click('[name="shareNotes"]');
+assert.match(await evaluate(`document.querySelector('[data-stage-share-state]').textContent`), /요청서 포함/);
 if (photoPath) {
   await setValue('[data-photo-candidate]', candidateB);
   const documentNode = await command('DOM.getDocument');
@@ -102,6 +106,8 @@ await evaluate(`document.querySelector('[data-consultation-form]').requestSubmit
 await waitFor('document.querySelector("[data-consent]")');
 assert.equal(await evaluate(`document.querySelectorAll('.consultation-candidate-preview').length`), 2);
 assert.equal(await evaluate(`document.querySelector('.consultation-preview').textContent.includes('브라우저 후보지 C 제외')`), false);
+assert.equal(await evaluate(`document.querySelector('.consultation-preview').textContent.includes('A 기존 메모 보존 확인')`), true);
+assert.equal(await evaluate(`document.querySelectorAll('.step-note-preview').length`), 2);
 await click('[data-send]');
 assert.match(await evaluate(`document.querySelector('[data-send-status]').textContent`), /동의/);
 await click('[data-consent]');
@@ -127,6 +133,7 @@ if (adminPassword) {
   await waitFor('document.querySelector("[data-admin-reply-form]")');
   assert.equal(await evaluate(`document.querySelectorAll('.consultation-admin-candidate').length`), 2);
   assert.equal(await evaluate(`document.querySelector('.consultation-admin-detail').textContent.includes('브라우저 후보지 C 제외')`), false);
+  assert.equal(await evaluate(`document.querySelector('.consultation-admin-detail').textContent.includes('A 기존 메모 보존 확인')`), true);
   await setValue('[data-admin-reply-form] select[name="context"]', `${candidateA}:1-0`);
   await setValue('[data-admin-reply-form] textarea[name="body"]', '브라우저 관리자 답변 A');
   await evaluate(`document.querySelector('[data-admin-reply-form]').requestSubmit()`);

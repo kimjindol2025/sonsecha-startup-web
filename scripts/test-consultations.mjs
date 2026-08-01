@@ -104,6 +104,7 @@ assert.equal(bundle.payload.consultation.snapshot.candidates.length, 2);
 assert.equal(bundle.payload.consultation.snapshot.candidateCount, 2);
 assert.equal(bundle.payload.consultation.snapshot.candidates[0].steps.length, 12);
 assert.equal(bundle.payload.consultation.snapshot.candidates[1].notes[0].text, '복수 후보지 B 전용 메모');
+assert.equal(bundle.payload.consultation.snapshot.candidates[1].notes[0].step, '1');
 assert.equal(JSON.stringify(bundle.payload.consultation.snapshot).includes('candidate-unselected'), false);
 
 const bundlePhoto = await call(`/api/consultations/${bundle.payload.consultation.receipt}/photos`, {
@@ -171,5 +172,6 @@ const bundleView = await call(`/api/consultations/${bundle.payload.consultation.
 assert.equal(bundleView.payload.consultation.snapshot.candidates[0].candidateName, '복수 후보지 A');
 assert.equal(bundleView.payload.consultation.snapshot.candidates[1].candidateName, '복수 후보지 B');
 assert.equal(bundleView.payload.consultation.attachments[0].candidateRef, 'candidate-multi-a');
+assert.equal(bundleView.payload.consultation.snapshot.candidates[0].notes[0].step, '1');
 
 console.log('consultation smoke: PASS');

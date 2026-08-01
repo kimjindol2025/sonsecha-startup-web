@@ -657,10 +657,36 @@ body.consultation-open { overflow: hidden; }
 .consultation-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 0; padding: 0; border: 0; }
 .consultation-options legend { width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: 800; }
 .consultation-options label { min-width: 0; display: flex; align-items: flex-start; gap: 10px; padding: 14px; background: #f2f6fc; border: 1px solid #c5d1e0; cursor: pointer; }
+.consultation-options .consultation-notes-option { background: #fff8df; border-color: #d7b85b; }
 .consultation-options input, .consultation-consent input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
 .consultation-options strong, .consultation-options small { display: block; }
 .consultation-options strong { font-size: 11px; }
 .consultation-options small { margin-top: 5px; color: var(--muted); font-size: 8px; line-height: 1.5; }
+.consultation-stage-review { min-width: 0; border: 1px solid #aebed1; }
+.consultation-stage-review > header { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; color: white; background: #183455; }
+.consultation-stage-review > header strong, .consultation-stage-review > header span { display: block; }
+.consultation-stage-review > header strong { font-size: 12px; }
+.consultation-stage-review > header span { margin-top: 4px; color: #b9c9dc; font-size: 8px; line-height: 1.5; }
+.consultation-stage-review > header > b { flex: 0 0 auto; padding: 7px 9px; color: #7c4e00; background: #fff0bd; font-size: 8px; }
+.consultation-stage-review > header > b.included { color: #174d2c; background: #c8f0d4; }
+.consultation-stage-review > div { display: grid; gap: 9px; padding: 10px; background: #edf2f8; }
+.consultation-stage-candidate { min-width: 0; background: white; border: 1px solid #c2cfde; }
+.consultation-stage-candidate > summary { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 12px 14px; cursor: pointer; }
+.consultation-stage-candidate > summary span, .consultation-stage-candidate > summary strong, .consultation-stage-candidate > summary small { min-width: 0; display: block; }
+.consultation-stage-candidate > summary strong { font-size: 11px; }
+.consultation-stage-candidate > summary small { margin-top: 4px; color: var(--muted); font-size: 8px; }
+.consultation-stage-candidate > summary > b { color: #9a5e00; font-size: 8px; white-space: nowrap; }
+.consultation-stage-candidate[open] > summary { color: #173967; background: #e8f0ff; }
+.consultation-stage-candidate > div { display: grid; gap: 7px; padding: 10px; border-top: 1px solid #cbd6e4; }
+.consultation-stage-candidate article { min-width: 0; border: 1px solid #d5deea; }
+.consultation-stage-candidate article > header { display: flex; justify-content: space-between; gap: 12px; padding: 9px 10px; background: #f0f4f9; }
+.consultation-stage-candidate article > header span, .consultation-stage-candidate article > header b { font-size: 9px; }
+.consultation-stage-candidate article > header b { color: var(--blue); white-space: nowrap; }
+.consultation-stage-candidate article > section { display: grid; gap: 6px; padding: 8px 10px; }
+.consultation-stage-candidate article p { display: grid; gap: 4px; margin: 0; padding: 8px; background: #fff8df; border-left: 3px solid #d4ad35; }
+.consultation-stage-candidate article p strong { font-size: 8px; }
+.consultation-stage-candidate article p span { color: #405269; font-size: 9px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.consultation-stage-candidate article em { color: var(--muted); font-size: 8px; font-style: normal; }
 .consultation-photo-picker { display: grid; gap: 12px; padding: 16px; border: 1px solid #c5d1e0; }
 .consultation-photo-picker > div:first-child { display: flex; justify-content: space-between; gap: 12px; }
 .consultation-photo-picker > div:first-child strong { font-size: 12px; }
@@ -710,6 +736,13 @@ body.consultation-open { overflow: hidden; }
 .preview-block li { display: flex; justify-content: space-between; gap: 15px; padding: 9px 10px; background: #f3f6fb; font-size: 10px; line-height: 1.5; }
 .preview-block li b { color: var(--blue); white-space: nowrap; }
 .preview-block li p { width: 100%; margin: 5px 0 0; color: var(--muted); white-space: pre-wrap; }
+.step-note-preview li { display: block; }
+.step-note-preview li > div { display: flex; justify-content: space-between; gap: 12px; }
+.step-note-preview li > section { display: grid; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #d8e1ec; }
+.step-note-preview li > section p { display: grid; gap: 4px; margin: 0; padding: 8px; color: var(--ink); background: white; }
+.step-note-preview li > section p strong { font-size: 9px; }
+.step-note-preview li > section p span { color: #42536a; font-size: 10px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.step-note-preview li > section em { color: var(--muted); font-size: 8px; font-style: normal; }
 .consultation-consent { display: flex; align-items: flex-start; gap: 11px; padding: 16px; color: #243a59; background: #e9f0ff; border: 1px solid #9bb7f0; font-size: 11px; font-weight: 700; line-height: 1.6; cursor: pointer; }
 .consultation-send-status { min-height: 18px; margin: -5px 0 0; color: #a22e2e; font-size: 10px; text-align: right; }
 .receipt-card strong { font-size: 24px; letter-spacing: .04em; }
@@ -749,6 +782,8 @@ body.consultation-open { overflow: hidden; }
   .consultation-steps span, .consultation-steps strong { padding: 9px 4px; font-size: 8px; }
   .consultation-options { grid-template-columns: 1fr; }
   .consultation-candidate-picker > div { grid-template-columns: 1fr; }
+  .consultation-stage-review > header { align-items: flex-start; flex-direction: column; }
+  .consultation-stage-review > header > b { width: 100%; text-align: center; }
   .consultation-photo-picker > div:first-child { flex-direction: column; }
   .consultation-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .consultation-question textarea, .conversation-form textarea { font-size: 16px; }
