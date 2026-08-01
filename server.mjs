@@ -3,6 +3,7 @@ import { randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto
 import { chmod, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { createConsultationStore } from './consultations-store.mjs';
 import { contentFields, defaultSiteContent } from './src/content.js';
 import { products as baselineProducts } from './src/products.js';
 
@@ -21,6 +22,7 @@ const sessions = new Map();
 const loginAttempts = new Map();
 const analyticsAttempts = new Map();
 const feedbackAttempts = new Map();
+const consultationAttempts = new Map();
 const allowedCategories = new Set(['chemical', 'tool', 'equipment', 'safety']);
 const allowedFeedbackKinds = new Set(['helpful', 'problem', 'idea', 'other']);
 const allowedFeedbackStatuses = new Set(['new', 'reviewing', 'done']);
@@ -61,12 +63,22 @@ function sendError(response, statusCode, message) {
   sendJson(response, statusCode, { error: message });
 }
 
-async function readJsonBody(request) {
+function sendBinary(response, statusCode, data, mime) {
+  response.writeHead(statusCode, securityHeaders({
+    'content-type': mime,
+    'content-length': data.length,
+    'cache-control': 'private, no-store',
+    'content-disposition': 'inline',
+  }));
+  response.end(data);
+}
+
+async function readJsonBody(request, maximum = 1_000_000) {
   const chunks = [];
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 1_000_000) throw new Error('BODY_TOO_LARGE');
+    if (size > maximum) throw new Error('BODY_TOO_LARGE');
     chunks.push(chunk);
   }
   if (!chunks.length) return {};
@@ -86,6 +98,7 @@ async function writeJsonAtomic(pathname, value) {
 }
 
 await mkdir(dataRoot, { recursive: true });
+const consultationStore = await createConsultationStore(dataRoot);
 const feedbackDatabase = new DatabaseSync(feedbackDataPath);
 feedbackDatabase.exec(`
   PRAGMA journal_mode = DELETE;
@@ -322,6 +335,18 @@ function feedbackAllowed(address) {
   return current.count <= 5;
 }
 
+function consultationAllowed(address) {
+  const now = Date.now();
+  const current = consultationAttempts.get(address);
+  if (!current || current.resetAt <= now) {
+    if (consultationAttempts.size > 10_000) consultationAttempts.clear();
+    consultationAttempts.set(address, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    return true;
+  }
+  current.count += 1;
+  return current.count <= 8;
+}
+
 function validateFeedback(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_FEEDBACK');
   const kind = cleanText(input.kind, 20, true);
@@ -517,6 +542,62 @@ async function handleApi(request, response, url) {
     return sendJson(response, 201, { received: true, id: Number(result.lastInsertRowid) });
   }
 
+  if (request.method === 'POST' && url.pathname === '/api/consultations') {
+    const address = requestAddress(request);
+    if (!consultationAllowed(address)) return sendError(response, 429, '상담 요청은 한 시간에 8건까지 만들 수 있습니다. 잠시 후 다시 시도해 주세요.');
+    const result = await consultationStore.create(await readJsonBody(request));
+    return sendJson(response, 201, { ...result, emailDelivery: 'queued' });
+  }
+
+  const publicConsultationMatch = url.pathname.match(/^\/api\/consultations\/([A-Z0-9-]+)$/);
+  if (request.method === 'GET' && publicConsultationMatch) {
+    const consultation = consultationStore.getPublic(publicConsultationMatch[1], request.headers['x-consultation-key']);
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없거나 접근키가 맞지 않습니다.');
+    return sendJson(response, 200, { consultation });
+  }
+
+  const publicMessageMatch = url.pathname.match(/^\/api\/consultations\/([A-Z0-9-]+)\/messages$/);
+  if (request.method === 'POST' && publicMessageMatch) {
+    const consultation = consultationStore.addMessage(
+      publicMessageMatch[1], request.headers['x-consultation-key'], 'user', await readJsonBody(request),
+    );
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없거나 접근키가 맞지 않습니다.');
+    consultationStore.setEmailResult(publicMessageMatch[1], 'queued', '새 사용자 메시지 이메일 발송 대기');
+    return sendJson(response, 201, { consultation, emailDelivery: 'queued' });
+  }
+
+  const publicSeenMatch = url.pathname.match(/^\/api\/consultations\/([A-Z0-9-]+)\/seen$/);
+  if (request.method === 'POST' && publicSeenMatch) {
+    const consultation = consultationStore.markSeen(publicSeenMatch[1], request.headers['x-consultation-key']);
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없거나 접근키가 맞지 않습니다.');
+    return sendJson(response, 200, { consultation });
+  }
+
+  const publicPhotoCollectionMatch = url.pathname.match(/^\/api\/consultations\/([A-Z0-9-]+)\/photos$/);
+  if (request.method === 'POST' && publicPhotoCollectionMatch) {
+    const consultation = await consultationStore.addAttachment(
+      publicPhotoCollectionMatch[1], request.headers['x-consultation-key'], await readJsonBody(request, 5_000_000),
+    );
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없거나 접근키가 맞지 않습니다.');
+    return sendJson(response, 201, { consultation });
+  }
+
+  const publicPhotoMatch = url.pathname.match(/^\/api\/consultations\/([A-Z0-9-]+)\/photos\/(\d+)$/);
+  if (publicPhotoMatch && request.method === 'GET') {
+    const photo = await consultationStore.attachment(
+      publicPhotoMatch[1], Number(publicPhotoMatch[2]), request.headers['x-consultation-key'], false,
+    );
+    if (!photo) return sendError(response, 404, '사진을 찾을 수 없습니다.');
+    return sendBinary(response, 200, photo.data, photo.attachment.mime);
+  }
+  if (publicPhotoMatch && request.method === 'DELETE') {
+    const removed = await consultationStore.deleteAttachment(
+      publicPhotoMatch[1], Number(publicPhotoMatch[2]), request.headers['x-consultation-key'], false,
+    );
+    if (!removed) return sendError(response, 404, '사진을 찾을 수 없습니다.');
+    return sendJson(response, 200, { removed: true });
+  }
+
   if (request.method === 'POST' && url.pathname === '/api/admin/login') {
     const address = requestAddress(request);
     if (loginBlocked(address)) return sendError(response, 429, '10분 후에 다시 시도해 주세요.');
@@ -559,6 +640,42 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'GET' && url.pathname === '/api/admin/feedback') {
     return sendJson(response, 200, feedbackSummary());
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/admin/consultations') {
+    return sendJson(response, 200, { consultations: consultationStore.list() });
+  }
+
+  const adminConsultationMatch = url.pathname.match(/^\/api\/admin\/consultations\/([A-Z0-9-]+)$/);
+  if (request.method === 'GET' && adminConsultationMatch) {
+    const consultation = consultationStore.getAdmin(adminConsultationMatch[1]);
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없습니다.');
+    return sendJson(response, 200, { consultation });
+  }
+  if (request.method === 'PATCH' && adminConsultationMatch) {
+    const body = await readJsonBody(request);
+    const consultation = consultationStore.updateStatus(adminConsultationMatch[1], cleanText(body.status, 30, true));
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없습니다.');
+    return sendJson(response, 200, { consultation });
+  }
+
+  const adminMessageMatch = url.pathname.match(/^\/api\/admin\/consultations\/([A-Z0-9-]+)\/messages$/);
+  if (request.method === 'POST' && adminMessageMatch) {
+    const consultation = consultationStore.addMessage(adminMessageMatch[1], '', 'admin', await readJsonBody(request));
+    if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없습니다.');
+    return sendJson(response, 201, { consultation });
+  }
+
+  const adminPhotoMatch = url.pathname.match(/^\/api\/admin\/consultations\/([A-Z0-9-]+)\/photos\/(\d+)$/);
+  if (adminPhotoMatch && request.method === 'GET') {
+    const photo = await consultationStore.attachment(adminPhotoMatch[1], Number(adminPhotoMatch[2]), '', true);
+    if (!photo) return sendError(response, 404, '사진을 찾을 수 없습니다.');
+    return sendBinary(response, 200, photo.data, photo.attachment.mime);
+  }
+  if (adminPhotoMatch && request.method === 'DELETE') {
+    const removed = await consultationStore.deleteAttachment(adminPhotoMatch[1], Number(adminPhotoMatch[2]), '', true);
+    if (!removed) return sendError(response, 404, '사진을 찾을 수 없습니다.');
+    return sendJson(response, 200, { removed: true });
   }
 
   const feedbackMatch = url.pathname.match(/^\/api\/admin\/feedback\/(\d+)$/);
@@ -650,7 +767,10 @@ const server = createServer(async (request, response) => {
   } catch (error) {
     if (error.message === 'BODY_TOO_LARGE') return sendError(response, 413, '요청 크기가 너무 큽니다.');
     if (error.message === 'INVALID_JSON') return sendError(response, 400, 'JSON 형식을 확인해 주세요.');
-    if (['REQUIRED_FIELD', 'FIELD_TOO_LONG', 'INVALID_URL', 'INVALID_PRICE', 'INVALID_FEATURED', 'INVALID_CATEGORY', 'INVALID_CONTENT', 'INVALID_ANALYTICS', 'INVALID_FEEDBACK'].includes(error.message)) {
+    if (error.message === 'CONSENT_REQUIRED') return sendError(response, 400, '공유 동의 후 전송할 수 있습니다.');
+    if (error.message === 'PHOTO_LIMIT') return sendError(response, 400, '사진은 상담 건당 10장까지 보낼 수 있습니다.');
+    if (error.message === 'PHOTO_SHARING_DISABLED') return sendError(response, 400, '사진 공유를 선택하지 않은 상담 건입니다.');
+    if (['REQUIRED_FIELD', 'FIELD_TOO_LONG', 'INVALID_URL', 'INVALID_PRICE', 'INVALID_FEATURED', 'INVALID_CATEGORY', 'INVALID_CONTENT', 'INVALID_ANALYTICS', 'INVALID_FEEDBACK', 'INVALID_CONSULTATION', 'INVALID_PHOTO'].includes(error.message)) {
       return sendError(response, 400, '입력값을 확인해 주세요.');
     }
     console.error('[server]', error);
@@ -665,6 +785,7 @@ server.listen(port, '0.0.0.0', () => {
 function shutdown() {
   server.close(() => {
     feedbackDatabase.close();
+    consultationStore.close();
     process.exit(0);
   });
   setTimeout(() => process.exit(1), 5000).unref();

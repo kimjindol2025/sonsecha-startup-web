@@ -1,0 +1,479 @@
+const recordStorageKey = 'sonsecha-consultations-v1';
+const statusLabels = {
+  received: '접수', reviewing: '확인 중', more_info: '추가자료 요청',
+  answered: '답변 완료', connected: '상담 연결', closed: '종료',
+};
+const candidateStatusLabels = {
+  unreviewed: '미확인', possible: '가능', conditional: '조건부 가능', blocked: '불가',
+};
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(date);
+}
+
+function readRecords() {
+  try {
+    const value = JSON.parse(localStorage.getItem(recordStorageKey) || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  } catch { return {}; }
+}
+
+function saveRecords(records) {
+  localStorage.setItem(recordStorageKey, JSON.stringify(records));
+}
+
+function openPhotoDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('sonsecha-consultation-photos', 1);
+    request.onupgradeneeded = () => {
+      const store = request.result.createObjectStore('photos', { keyPath: 'id' });
+      store.createIndex('candidateId', 'candidateId');
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function photoTransaction(mode, action) {
+  const database = await openPhotoDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction('photos', mode);
+    const result = action(transaction.objectStore('photos'));
+    transaction.oncomplete = () => { database.close(); resolve(result?.result); };
+    transaction.onerror = () => { database.close(); reject(transaction.error); };
+  });
+}
+
+async function saveLocalPhoto(candidateId, file) {
+  const id = `${candidateId}:${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+  await photoTransaction('readwrite', (store) => store.put({ id, candidateId, name: file.name, type: file.type, blob: file, createdAt: new Date().toISOString() }));
+}
+
+async function listLocalPhotos(candidateId) {
+  const database = await openPhotoDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction('photos', 'readonly');
+    const request = transaction.objectStore('photos').index('candidateId').getAll(candidateId);
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => database.close();
+  });
+}
+
+async function deleteLocalPhoto(id) {
+  await photoTransaction('readwrite', (store) => store.delete(id));
+}
+
+async function request(path, options = {}, key = '') {
+  const response = await fetch(path, {
+    cache: 'no-store', credentials: 'same-origin', ...options,
+    headers: {
+      ...(options.body ? { 'content-type': 'application/json' } : {}),
+      ...(key ? { 'x-consultation-key': key } : {}),
+      ...options.headers,
+    },
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+  return payload;
+}
+
+async function imagePayload(photo) {
+  const bitmap = await createImageBitmap(photo.blob, { imageOrientation: 'from-image' });
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext('2d', { alpha: false }).drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+  if (!blob) throw new Error('사진을 변환하지 못했습니다.');
+  const data = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1]);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+  return { name: photo.name.replace(/\.[^.]+$/, '') + '.webp', mime: 'image/webp', data };
+}
+
+export function initializeConsultations({ getState, getActiveCandidate, saveCandidateState, candidateDisplayName }) {
+  const panel = document.querySelector('.candidate-fields');
+  if (!panel) return;
+  let photoItems = [];
+  let currentRecord = null;
+
+  const actions = document.createElement('div');
+  actions.className = 'consultation-actions';
+  actions.innerHTML = `
+    <button type="button" class="consultation-create" data-consultation-create>상담용 자료 만들기</button>
+    <button type="button" class="consultation-history" data-consultation-history>상태·대화 보기</button>
+    <div class="consultation-candidate-status" data-consultation-status></div>
+    <details class="consultation-saved-notes" data-consultation-notes></details>
+  `;
+  panel.append(actions);
+
+  const backdrop = document.createElement('button');
+  backdrop.type = 'button';
+  backdrop.className = 'consultation-backdrop';
+  backdrop.hidden = true;
+  backdrop.setAttribute('aria-label', '상담 창 닫기');
+  const modal = document.createElement('section');
+  modal.className = 'consultation-modal';
+  modal.hidden = true;
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'consultationTitle');
+  modal.innerHTML = `
+    <header class="consultation-modal-header">
+      <div><p>DAEHAN ENG CONSULTATION</p><h2 id="consultationTitle">후보지 상담자료</h2><span>선택하고 확인한 자료만 전송됩니다.</span></div>
+      <button type="button" data-consultation-close aria-label="닫기">×</button>
+    </header>
+    <div class="consultation-body" data-consultation-body></div>
+  `;
+  document.body.append(backdrop, modal);
+  const body = modal.querySelector('[data-consultation-body]');
+
+  function recordsForActive() {
+    const records = readRecords();
+    return Array.isArray(records[getActiveCandidate().id]) ? records[getActiveCandidate().id] : [];
+  }
+
+  function latestRecord() { return recordsForActive().at(-1) || null; }
+
+  function renderPanel() {
+    const record = latestRecord();
+    actions.querySelector('[data-consultation-history]').disabled = !record;
+    actions.querySelector('[data-consultation-status]').innerHTML = record
+      ? `<span>최근 접수</span><strong>${escapeHtml(record.receipt)}</strong><em>${escapeHtml(statusLabels[record.status] || record.status || '접수')}</em>`
+      : '<span>아직 전송한 상담자료가 없습니다.</span>';
+    const notes = Array.isArray(getActiveCandidate().consultationNotes) ? getActiveCandidate().consultationNotes : [];
+    const noteBox = actions.querySelector('[data-consultation-notes]');
+    noteBox.hidden = !notes.length;
+    noteBox.innerHTML = notes.length ? `<summary>상담 답변 메모 · ${notes.length}개</summary><div>${notes.map((note) => `
+      <article><small>${escapeHtml(note.source)} · ${escapeHtml(note.receipt)} · ${formatDate(note.addedAt)}</small><strong>${escapeHtml(note.contextLabel)}</strong><p>${escapeHtml(note.text)}</p></article>
+    `).join('')}</div>` : '';
+  }
+
+  function openModal() {
+    backdrop.hidden = false;
+    modal.hidden = false;
+    document.body.classList.add('consultation-open');
+    requestAnimationFrame(() => { backdrop.classList.add('visible'); modal.classList.add('open'); });
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    backdrop.classList.remove('visible');
+    document.body.classList.remove('consultation-open');
+    setTimeout(() => { modal.hidden = true; backdrop.hidden = true; }, 220);
+  }
+
+  function snapshotFromForm(form) {
+    const candidate = getActiveCandidate();
+    const sharing = {
+      address: form.elements.shareAddress.checked,
+      plan: form.elements.sharePlan.checked,
+      notes: form.elements.shareNotes.checked,
+      photos: form.elements.sharePhotos.checked && photoItems.some((item) => item.selected),
+    };
+    const steps = [...document.querySelectorAll('.step-card')].map((card) => {
+      const id = card.querySelector('input[data-step]')?.dataset.step || '';
+      return {
+        id,
+        label: card.querySelector('h3')?.textContent.trim() || `${id}단계`,
+        completed: candidate.stepChecks.includes(id),
+        status: candidate.stepStatuses[id] || 'unreviewed',
+      };
+    });
+    const checks = [...document.querySelectorAll('input[data-detail-check]')].map((box) => ({
+      id: box.dataset.detailCheck,
+      step: box.dataset.detailCheck.split('-')[0],
+      label: box.closest('li')?.querySelector('.detail-check-copy')?.textContent.trim() || box.dataset.detailCheck,
+      completed: candidate.detailChecks.includes(box.dataset.detailCheck),
+    }));
+    const notes = sharing.notes ? Object.entries(candidate.detailNotes).filter(([, text]) => String(text).trim()).map(([id, text]) => ({
+      id,
+      label: checks.find((item) => item.id === id)?.label || id,
+      text,
+    })) : [];
+    const completed = checks.filter((item) => item.completed).length;
+    return {
+      candidateName: candidateDisplayName(candidate),
+      address: sharing.address ? candidate.address : '',
+      plan: sharing.plan ? { washType: candidate.washType || '', bayCount: candidate.bayCount || '' } : null,
+      overallStatus: candidate.status,
+      progress: { completed, total: checks.length, unchecked: checks.length - completed },
+      steps,
+      checks,
+      notes,
+      sharing,
+    };
+  }
+
+  function selectedPhotoMarkup() {
+    if (!photoItems.length) return '<p class="consultation-empty">선택한 사진이 없습니다.</p>';
+    return photoItems.map((photo) => `
+      <article class="consultation-photo${photo.selected ? ' selected' : ''}" data-photo-id="${escapeHtml(photo.id)}">
+        <img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.name)} 미리보기">
+        <label><input type="checkbox" data-photo-select ${photo.selected ? 'checked' : ''}><span>전송 선택</span></label>
+        <button type="button" data-photo-remove>삭제</button>
+        <small>${escapeHtml(photo.name)}</small>
+      </article>
+    `).join('');
+  }
+
+  async function renderCreate() {
+    const candidate = getActiveCandidate();
+    photoItems.forEach((item) => URL.revokeObjectURL(item.url));
+    photoItems = (await listLocalPhotos(candidate.id).catch(() => [])).map((item) => ({ ...item, url: URL.createObjectURL(item.blob), selected: true }));
+    body.innerHTML = `
+      <form class="consultation-share-form" data-consultation-form>
+        <nav class="consultation-steps" aria-label="상담자료 만들기 순서"><strong>1. 공유 선택</strong><span>2. 미리보기</span><span>3. 동의·전송</span></nav>
+        <div class="consultation-site-summary"><span>현재 후보지</span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>${escapeHtml(candidate.address || '주소 미입력')}</small></div>
+        <fieldset class="consultation-options"><legend>공유할 정보</legend>
+          <label><input type="checkbox" name="shareAddress"><span><strong>주소</strong><small>선택해야만 서버로 전송됩니다.</small></span></label>
+          <label><input type="checkbox" name="sharePlan"><span><strong>세차장 형태·베이 수</strong><small>${escapeHtml(candidate.washType || '형태 미입력')} · ${escapeHtml(candidate.bayCount || '베이 수 미입력')}</small></span></label>
+          <label><input type="checkbox" name="shareNotes"><span><strong>메모·담당기관 문의 기록</strong><small>체크항목에 작성한 메모 ${Object.keys(candidate.detailNotes).length}개</small></span></label>
+          <label><input type="checkbox" name="sharePhotos"><span><strong>선택 사진</strong><small>아래에서 사진별로 다시 선택합니다.</small></span></label>
+        </fieldset>
+        <section class="consultation-photo-picker">
+          <div><strong>사진 선택</strong><span>JPG·PNG·WebP, 원본 10MB 이하, 최대 10장</span></div>
+          <label class="consultation-file-button">+ 사진 고르기<input type="file" accept="image/jpeg,image/png,image/webp" multiple data-photo-input></label>
+          <p class="photo-privacy-warning">사람 얼굴·차량번호가 보이지 않는지 확인하세요. 전송본은 브라우저에서 다시 생성해 EXIF 위치정보를 제거합니다.</p>
+          <div class="consultation-photo-grid" data-photo-grid>${selectedPhotoMarkup()}</div>
+        </section>
+        <label class="consultation-question"><span>상담 질문 *</span><textarea name="question" maxlength="3000" rows="5" required placeholder="후보지에서 가장 먼저 검토받고 싶은 내용을 적어주세요."></textarea></label>
+        <div class="consultation-footer"><p data-consultation-feedback></p><button type="submit">전송 내용 미리보기</button></div>
+      </form>
+    `;
+    const form = body.querySelector('[data-consultation-form]');
+    const grid = form.querySelector('[data-photo-grid]');
+    const rerenderPhotos = () => { grid.innerHTML = selectedPhotoMarkup(); };
+    form.querySelector('[data-photo-input]').addEventListener('change', async (event) => {
+      const feedback = form.querySelector('[data-consultation-feedback]');
+      const files = [...event.target.files];
+      if (photoItems.length + files.length > 10) { feedback.textContent = '사진은 최대 10장까지 선택할 수 있습니다.'; return; }
+      for (const file of files) {
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10_000_000) {
+          feedback.textContent = `${file.name}: 형식 또는 10MB 용량 제한을 확인해 주세요.`;
+          continue;
+        }
+        await saveLocalPhoto(candidate.id, file);
+      }
+      photoItems.forEach((item) => URL.revokeObjectURL(item.url));
+      photoItems = (await listLocalPhotos(candidate.id)).map((item) => ({ ...item, url: URL.createObjectURL(item.blob), selected: true }));
+      rerenderPhotos();
+      event.target.value = '';
+    });
+    grid.addEventListener('change', (event) => {
+      const card = event.target.closest('[data-photo-id]');
+      const photo = photoItems.find((item) => item.id === card?.dataset.photoId);
+      if (photo) photo.selected = event.target.checked;
+      card?.classList.toggle('selected', Boolean(event.target.checked));
+    });
+    grid.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-photo-remove]');
+      const card = button?.closest('[data-photo-id]');
+      if (!card) return;
+      const photo = photoItems.find((item) => item.id === card.dataset.photoId);
+      if (photo) URL.revokeObjectURL(photo.url);
+      await deleteLocalPhoto(card.dataset.photoId);
+      photoItems = photoItems.filter((item) => item.id !== card.dataset.photoId);
+      rerenderPhotos();
+    });
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      if (form.elements.sharePhotos.checked && !photoItems.some((item) => item.selected)) {
+        form.querySelector('[data-consultation-feedback]').textContent = '사진 공유를 선택했다면 전송할 사진을 한 장 이상 골라주세요.';
+        return;
+      }
+      renderPreview(snapshotFromForm(form), form.elements.question.value);
+    });
+  }
+
+  function renderPreview(snapshot, question) {
+    const unconfirmed = snapshot.checks.filter((item) => !item.completed);
+    body.innerHTML = `
+      <div class="consultation-preview">
+        <nav class="consultation-steps" aria-label="상담자료 만들기 순서"><span>1. 공유 선택</span><strong>2. 미리보기</strong><span>3. 동의·전송</span></nav>
+        <section class="preview-card"><span>후보지</span><h3>${escapeHtml(snapshot.candidateName)}</h3>
+          ${snapshot.sharing.address ? `<p>${escapeHtml(snapshot.address || '주소 미입력')}</p>` : '<p>주소 공유 안 함</p>'}
+          <dl><div><dt>진행률</dt><dd>${snapshot.progress.completed} / ${snapshot.progress.total}</dd></div><div><dt>종합 상태</dt><dd>${escapeHtml(candidateStatusLabels[snapshot.overallStatus])}</dd></div><div><dt>미확인</dt><dd>${snapshot.progress.unchecked}개</dd></div></dl>
+        </section>
+        ${snapshot.plan ? `<section class="preview-block"><h3>예상 형태</h3><p>${escapeHtml(snapshot.plan.washType || '미입력')} · ${escapeHtml(snapshot.plan.bayCount || '베이 수 미입력')}</p></section>` : ''}
+        <details class="preview-block" open><summary>단계별 상태 · ${snapshot.steps.length}단계</summary><ul>${snapshot.steps.map((step) => `<li><span>${escapeHtml(step.label)}</span><b>${step.completed ? '완료' : escapeHtml(candidateStatusLabels[step.status])}</b></li>`).join('')}</ul></details>
+        <details class="preview-block"><summary>미확인 세부항목 · ${unconfirmed.length}개</summary><ul>${unconfirmed.map((item) => `<li>${escapeHtml(item.label)}</li>`).join('') || '<li>없음</li>'}</ul></details>
+        ${snapshot.sharing.notes ? `<details class="preview-block"><summary>공유 메모 · ${snapshot.notes.length}개</summary><ul>${snapshot.notes.map((note) => `<li><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></li>`).join('') || '<li>작성된 메모 없음</li>'}</ul></details>` : ''}
+        <section class="preview-block"><h3>선택 사진 · ${photoItems.filter((item) => item.selected).length}장</h3><div class="consultation-photo-grid">${photoItems.filter((item) => item.selected).map((photo) => `<article class="consultation-photo selected"><img src="${escapeHtml(photo.url)}" alt=""><small>${escapeHtml(photo.name)}</small></article>`).join('') || '<p class="consultation-empty">사진 공유 안 함</p>'}</div></section>
+        <section class="preview-block"><h3>상담 질문</h3><p>${escapeHtml(question)}</p></section>
+        <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 정보, 진행상태, 메모와 사진을 대한이엔지에 전달하는 것에 동의합니다.</span></label>
+        <p class="consultation-send-status" data-send-status></p>
+        <div class="consultation-footer"><button type="button" class="secondary" data-preview-back>다시 선택</button><button type="button" data-send>동의 후 전송</button></div>
+      </div>
+    `;
+    body.querySelector('[data-preview-back]').addEventListener('click', renderCreate);
+    body.querySelector('[data-send]').addEventListener('click', async (event) => {
+      const consent = body.querySelector('[data-consent]');
+      const status = body.querySelector('[data-send-status]');
+      if (!consent.checked) { status.textContent = '공유 동의 체크 후 전송할 수 있습니다.'; consent.focus(); return; }
+      event.target.disabled = true;
+      status.textContent = '상담 건을 접수하는 중…';
+      try {
+        const candidate = getActiveCandidate();
+        const payload = await request('/api/consultations', {
+          method: 'POST',
+          body: JSON.stringify({ clientCandidateRef: candidate.id, snapshot, question, consent: true }),
+        });
+        const record = {
+          receipt: payload.consultation.receipt,
+          accessKey: payload.accessKey,
+          candidateId: candidate.id,
+          status: payload.consultation.status,
+          createdAt: payload.consultation.createdAt,
+        };
+        const records = readRecords();
+        records[candidate.id] = [...(Array.isArray(records[candidate.id]) ? records[candidate.id] : []), record];
+        saveRecords(records);
+        currentRecord = record;
+        const selected = photoItems.filter((item) => item.selected);
+        const failures = [];
+        for (let index = 0; index < selected.length; index += 1) {
+          status.textContent = `접수 완료 · 사진 ${index + 1}/${selected.length} 전송 중…`;
+          try {
+            const photoPayload = await imagePayload(selected[index]);
+            await request(`/api/consultations/${record.receipt}/photos`, { method: 'POST', body: JSON.stringify(photoPayload) }, record.accessKey);
+            await deleteLocalPhoto(selected[index].id);
+          } catch (error) { failures.push(`${selected[index].name}: ${error.message}`); }
+        }
+        renderConversation(payload.consultation, failures);
+        renderPanel();
+      } catch (error) {
+        status.textContent = error.message;
+        event.target.disabled = false;
+      }
+    });
+  }
+
+  function saveReplyToCandidate(message) {
+    const candidate = getState().candidates.find((item) => item.id === currentRecord?.candidateId);
+    if (!candidate) return false;
+    candidate.consultationNotes = Array.isArray(candidate.consultationNotes) ? candidate.consultationNotes : [];
+    if (candidate.consultationNotes.some((item) => item.sourceMessageId === message.id)) return false;
+    candidate.consultationNotes.push({
+      id: crypto.randomUUID?.() || `memo-${Date.now()}`,
+      source: '대한이엔지 상담 답변', sourceMessageId: message.id, receipt: currentRecord.receipt,
+      contextLabel: message.contextLabel || '전체 상담', text: message.body, createdAt: message.createdAt,
+      addedAt: new Date().toISOString(),
+    });
+    saveCandidateState();
+    renderPanel();
+    return true;
+  }
+
+  function renderConversation(consultation, uploadFailures = []) {
+    currentRecord.status = consultation.status;
+    const records = readRecords();
+    const list = records[currentRecord.candidateId] || [];
+    const stored = list.find((item) => item.receipt === currentRecord.receipt);
+    if (stored) stored.status = consultation.status;
+    saveRecords(records);
+    const adminMessages = consultation.messages.filter((message) => message.sender === 'admin');
+    const applied = new Set((getActiveCandidate().consultationNotes || []).map((item) => item.sourceMessageId));
+    body.innerHTML = `
+      <div class="consultation-room">
+        <nav class="consultation-steps"><strong>접수 ${escapeHtml(consultation.receipt)}</strong><span>${escapeHtml(statusLabels[consultation.status] || consultation.status)}</span></nav>
+        <section class="receipt-card"><span>접수번호</span><strong>${escapeHtml(consultation.receipt)}</strong><small>${formatDate(consultation.createdAt)} · 새로고침 후에도 이 기기에서 확인 가능</small></section>
+        ${uploadFailures.length ? `<div class="upload-failures"><strong>사진 일부 전송 실패</strong><p>${uploadFailures.map(escapeHtml).join('<br>')}</p><button type="button" data-retry-photos>남은 사진 재시도</button></div>` : ''}
+        ${consultation.attachments.length ? `<section class="shared-photo-list"><strong>전송된 사진 · ${consultation.attachments.length}장</strong><div>${consultation.attachments.map((photo) => `<article data-shared-photo="${photo.id}"><span>${escapeHtml(photo.name)}</span><small>${Math.max(1, Math.round(photo.size / 1024)).toLocaleString('ko-KR')}KB</small><button type="button" data-delete-shared-photo>첨부 삭제</button></article>`).join('')}</div></section>` : ''}
+        <div class="conversation-list" data-message-list>
+          <article class="message admin"><small>접수 안내 · ${formatDate(consultation.createdAt)}</small><p>상담 요청이 접수됐습니다. 이 대화방에서 검토 상태와 답변을 확인할 수 있습니다.</p></article>
+          ${consultation.messages.map((message) => `
+            <article class="message ${escapeHtml(message.sender)}" data-message-id="${message.id}">
+              <small>${message.sender === 'admin' ? '대한이엔지' : '사용자'}${message.contextLabel ? ` · ${escapeHtml(message.contextLabel)}` : ''} · ${formatDate(message.createdAt)}</small>
+              <p>${escapeHtml(message.body)}</p>
+              ${message.sender === 'admin' ? `<button type="button" data-apply-reply="${message.id}" ${applied.has(message.id) ? 'disabled' : ''}>${applied.has(message.id) ? '후보지 메모에 반영됨' : '답변을 후보지 메모에 반영'}</button>` : ''}
+            </article>
+          `).join('')}
+        </div>
+        <form class="conversation-form" data-message-form><label><span>추가 질문</span><textarea name="body" maxlength="4000" rows="3" required placeholder="추가로 확인할 내용을 남겨주세요."></textarea></label><button type="submit">메시지 보내기</button><p data-message-status></p></form>
+        ${adminMessages.length ? `<p class="conversation-seen">관리자 답변 ${adminMessages.length}개 · 후보지 메모에는 사용자가 선택한 답변만 추가됩니다.</p>` : ''}
+      </div>
+    `;
+    request(`/api/consultations/${currentRecord.receipt}/seen`, { method: 'POST', body: '{}' }, currentRecord.accessKey).catch(() => {});
+    body.querySelector('[data-message-list]').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-apply-reply]');
+      if (!button) return;
+      const message = consultation.messages.find((item) => item.id === Number(button.dataset.applyReply));
+      if (message && saveReplyToCandidate(message)) { button.disabled = true; button.textContent = '후보지 메모에 반영됨'; }
+    });
+    body.querySelector('[data-message-form]').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const status = form.querySelector('[data-message-status]');
+      const button = form.querySelector('button');
+      button.disabled = true;
+      status.textContent = '전송 중…';
+      try {
+        const payload = await request(`/api/consultations/${currentRecord.receipt}/messages`, {
+          method: 'POST', body: JSON.stringify({ body: form.elements.body.value }),
+        }, currentRecord.accessKey);
+        renderConversation(payload.consultation);
+      } catch (error) { status.textContent = error.message; button.disabled = false; }
+    });
+    body.querySelector('[data-retry-photos]')?.addEventListener('click', async () => {
+      const pending = (await listLocalPhotos(currentRecord.candidateId)).map((item) => ({ ...item, selected: true }));
+      const failures = [];
+      for (const photo of pending) {
+        try {
+          await request(`/api/consultations/${currentRecord.receipt}/photos`, { method: 'POST', body: JSON.stringify(await imagePayload(photo)) }, currentRecord.accessKey);
+          await deleteLocalPhoto(photo.id);
+        } catch (error) { failures.push(`${photo.name}: ${error.message}`); }
+      }
+      const refreshed = await request(`/api/consultations/${currentRecord.receipt}`, {}, currentRecord.accessKey);
+      renderConversation(refreshed.consultation, failures);
+    });
+    body.querySelector('.shared-photo-list')?.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-delete-shared-photo]');
+      const photo = button?.closest('[data-shared-photo]');
+      if (!photo || !globalThis.confirm('전송된 첨부사진을 이 상담 건에서 삭제할까요?')) return;
+      button.disabled = true;
+      try {
+        await request(`/api/consultations/${currentRecord.receipt}/photos/${photo.dataset.sharedPhoto}`, { method: 'DELETE' }, currentRecord.accessKey);
+        const refreshed = await request(`/api/consultations/${currentRecord.receipt}`, {}, currentRecord.accessKey);
+        renderConversation(refreshed.consultation);
+      } catch (error) { globalThis.alert(error.message); button.disabled = false; }
+    });
+  }
+
+  async function openHistory() {
+    currentRecord = latestRecord();
+    if (!currentRecord) return;
+    openModal();
+    body.innerHTML = '<p class="consultation-loading">상담 상태와 대화를 불러오는 중…</p>';
+    try {
+      const payload = await request(`/api/consultations/${currentRecord.receipt}`, {}, currentRecord.accessKey);
+      renderConversation(payload.consultation);
+      renderPanel();
+    } catch (error) { body.innerHTML = `<p class="consultation-error">${escapeHtml(error.message)}</p>`; }
+  }
+
+  actions.querySelector('[data-consultation-create]').addEventListener('click', async () => { openModal(); await renderCreate(); });
+  actions.querySelector('[data-consultation-history]').addEventListener('click', openHistory);
+  backdrop.addEventListener('click', closeModal);
+  modal.querySelector('[data-consultation-close]').addEventListener('click', closeModal);
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal(); });
+  window.addEventListener('sonsecha:candidate-changed', renderPanel);
+  renderPanel();
+}

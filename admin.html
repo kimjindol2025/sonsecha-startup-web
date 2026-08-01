@@ -52,6 +52,7 @@
           <button class="active" type="button" data-admin-section="content" role="tab" aria-selected="true">메인페이지 글</button>
           <button type="button" data-admin-section="products" role="tab" aria-selected="false">상품 관리</button>
           <button type="button" data-admin-section="analytics" role="tab" aria-selected="false">클릭 분석</button>
+          <button type="button" data-admin-section="consultations" role="tab" aria-selected="false">후보지 검토 요청</button>
           <button type="button" data-admin-section="feedback" role="tab" aria-selected="false">사용자 피드백</button>
         </div>
 
@@ -190,6 +191,44 @@
             </div>
             <p class="analytics-feedback" id="analyticsFeedback" aria-live="polite"></p>
           </article>
+        </section>
+
+        <section class="consultation-admin" id="consultationPanel" hidden>
+          <div class="consultation-admin-heading">
+            <div>
+              <p>CANDIDATE REVIEW REQUESTS</p>
+              <h2>후보지 검토 요청</h2>
+              <span>사용자가 승인해 전송한 자료와 상담 건별 대화를 확인합니다.</span>
+            </div>
+            <button type="button" id="consultationRefresh">새로고침</button>
+          </div>
+          <div class="consultation-admin-summary">
+            <article><span>접수</span><strong id="consultationReceivedCount">0</strong></article>
+            <article><span>확인 중</span><strong id="consultationReviewingCount">0</strong></article>
+            <article><span>추가자료</span><strong id="consultationMoreInfoCount">0</strong></article>
+            <article><span>답변 완료</span><strong id="consultationAnsweredCount">0</strong></article>
+          </div>
+          <div class="consultation-admin-tools">
+            <label><span class="sr-only">처리 상태</span>
+              <select id="consultationStatusFilter">
+                <option value="all">모든 상태</option>
+                <option value="received">접수</option>
+                <option value="reviewing">확인 중</option>
+                <option value="more_info">추가자료 요청</option>
+                <option value="answered">답변 완료</option>
+                <option value="connected">상담 연결</option>
+                <option value="closed">종료</option>
+              </select>
+            </label>
+            <label><span class="sr-only">상담 검색</span><input id="consultationSearch" type="search" placeholder="접수번호·후보지명·질문 검색"></label>
+          </div>
+          <div class="consultation-admin-grid">
+            <div class="consultation-admin-list" id="consultationList"></div>
+            <article class="consultation-admin-detail" id="consultationDetail">
+              <p class="consultation-admin-empty">검토할 상담 건을 선택하세요.</p>
+            </article>
+          </div>
+          <p class="consultation-admin-status" id="consultationAdminStatus" aria-live="polite"></p>
         </section>
 
         <section class="feedback-board" id="feedbackPanel" hidden>

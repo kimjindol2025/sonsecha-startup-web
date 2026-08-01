@@ -1,5 +1,6 @@
 import guideMarkdown from '../README.md?raw';
 import { installClickAnalytics } from './analytics.js';
+import { initializeConsultations } from './consultations.js';
 import { defaultSiteContent } from './content.js';
 import { productCategories, products } from './products.js';
 
@@ -11,6 +12,145 @@ const detailStorageKey = 'sonsecha-detail-checks-v1';
 const detailNotesStorageKey = 'sonsecha-detail-notes-v1';
 const legacyCandidateStorageKey = 'sonsecha-candidate-v1';
 const candidateStorageKey = 'sonsecha-candidates-v2';
+const candidateStatusLabels = {
+  unreviewed: '미확인',
+  possible: '가능',
+  conditional: '조건부 가능',
+  blocked: '불가',
+};
+const stepOneCheckGroups = [
+  {
+    id: 'online',
+    title: '온라인에서 먼저 확인',
+    description: '토지이음·정부24 등에서 서류와 기본 조건을 확인합니다.',
+    itemIndexes: [0, 1, 2, 3, 7, 15],
+    links: [
+      {
+        label: '토지이음',
+        detail: '토지이용계획 확인',
+        href: 'https://www.eum.go.kr/web/am/amMain.jsp',
+      },
+      {
+        label: '정부24',
+        detail: '건축물대장 열람',
+        href: 'https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098&tp_seq=03',
+      },
+      {
+        label: '인터넷등기소',
+        detail: '등기사항증명서 확인',
+        href: 'https://www.iros.go.kr/',
+      },
+    ],
+  },
+  {
+    id: 'field',
+    title: '현장에서 확인',
+    description: '배수·진입로·공급 설비와 주변 여건을 직접 확인합니다.',
+    itemIndexes: [4, 5, 6, 8, 9, 16, 17, 18],
+  },
+  {
+    id: 'department',
+    title: '관할 부서에 확인',
+    description: '주소와 운영계획을 제시하고 담당 부서의 답변을 남깁니다.',
+    itemIndexes: [10, 11, 12, 13, 14, 19],
+  },
+];
+const onlineUsageGuides = {
+  '1-0': {
+    kicker: '토지이음',
+    title: '토지이용계획상 용도지역 확인',
+    description: '후보지의 지번을 기준으로 용도지역과 함께 지정된 지역·지구를 확인합니다.',
+    links: [{ label: '토지이음 열기', href: 'https://www.eum.go.kr/web/am/amMain.jsp' }],
+    steps: [
+      '후보지의 정확한 지번을 준비합니다.',
+      '토지이음에서 주소 또는 지번으로 토지를 검색합니다.',
+      '검색 결과의 토지이용계획 화면을 엽니다.',
+      '지역·지구등 지정여부에서 용도지역과 중첩된 지역·지구를 확인합니다.',
+    ],
+    checks: ['용도지역 명칭', '중첩 지정된 지역·지구', '열람한 지번과 실제 후보지의 일치 여부'],
+    record: '용도지역·지역지구 명칭, 확인일, 화면 또는 토지이용계획확인서 파일을 남기세요.',
+    caution: '용도지역만으로 세차장 가능 여부를 확정하지 말고 관할 도시계획·건축 부서에 주소를 제시해 확인해야 합니다.',
+  },
+  '1-1': {
+    kicker: '정부24',
+    title: '건축물대장상 현재 용도 확인',
+    description: '건축물대장에서 건물 전체와 실제 사용할 층·호의 현재 용도를 확인합니다.',
+    links: [{ label: '정부24 건축물대장 열기', href: 'https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098&tp_seq=03' }],
+    steps: [
+      '후보지의 도로명주소와 지번, 건물 동·층·호를 준비합니다.',
+      '정부24에서 건축물대장 등본(초본) 발급·열람 서비스를 엽니다.',
+      '일반건축물인지 집합건축물인지 확인해 맞는 대장을 선택합니다.',
+      '주용도와 층별개요에서 실제 사용할 공간의 용도를 찾습니다.',
+    ],
+    checks: ['건축물대장 종류', '건물의 주용도', '사용할 층·호의 용도와 면적'],
+    record: '대장 종류, 주용도, 층·호별 용도·면적, 발급일과 파일명을 메모하세요.',
+    caution: '대장에 적힌 현재 용도와 세차장으로 사용할 수 있는지는 별도 판단입니다. 용도변경 필요 여부를 건축사와 관할 건축 부서에 확인하세요.',
+  },
+  '1-2': {
+    kicker: '정부24',
+    title: '위반건축물 표시 여부 확인',
+    description: '같은 건축물대장에서 위반건축물 표시와 변동사항을 함께 확인합니다.',
+    links: [{ label: '정부24 건축물대장 열기', href: 'https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098&tp_seq=03' }],
+    steps: [
+      '후보지 주소로 최신 건축물대장을 열람하거나 발급합니다.',
+      '대장 첫 화면의 위반건축물 표시 여부를 확인합니다.',
+      '변동사항과 층별 현황에서 무단 증축·용도변경 관련 기록을 확인합니다.',
+      '표시가 있거나 내용이 불명확하면 관할 건축 부서에 위반 내용과 해소 조건을 문의합니다.',
+    ],
+    checks: ['위반건축물 표시 유무', '위반 내용과 대상 공간', '해소 여부 또는 담당 부서 답변'],
+    record: '표시 유무, 위반 내용, 담당 부서·담당자·답변일을 메모하세요.',
+    caution: '위반 표시가 있으면 계약이나 공사를 먼저 진행하지 말고 해소 가능 여부와 책임 주체를 서면으로 확인하는 것이 안전합니다.',
+  },
+  '1-3': {
+    kicker: '인터넷등기소',
+    title: '건물과 토지의 소유자 확인',
+    description: '토지와 건물의 등기사항증명서를 각각 확인해 계약 상대방과 소유자가 일치하는지 봅니다.',
+    links: [{ label: '인터넷등기소 열기', href: 'https://www.iros.go.kr/' }],
+    steps: [
+      '후보지의 정확한 지번과 건물 주소를 준비합니다.',
+      '인터넷등기소에서 부동산 등기 열람·발급 메뉴를 엽니다.',
+      '토지와 건물을 각각 검색해 등기사항증명서를 열람합니다.',
+      '소유권에 관한 사항에서 현재 소유자와 계약 상대방의 일치 여부를 확인합니다.',
+    ],
+    checks: ['토지 소유자', '건물 소유자', '임대인과 소유자의 일치 여부', '대리계약이면 위임장과 대리권'],
+    record: '개인식별번호를 옮겨 적지 말고 소유자 일치·불일치, 발급일과 확인한 문서만 기록하세요.',
+    caution: '등기 열람·발급에는 수수료나 인증 절차가 필요할 수 있습니다. 권리관계 해석이 필요하면 공인중개사나 법률 전문가에게 확인하세요.',
+  },
+  '1-7': {
+    kicker: '토지이음',
+    title: '지구단위계획·경관지구 등 행위제한 확인',
+    description: '용도지역 외에 후보지에 겹쳐 지정된 계획·지구·구역과 관련 행위제한을 확인합니다.',
+    links: [{ label: '토지이음 열기', href: 'https://www.eum.go.kr/web/am/amMain.jsp' }],
+    steps: [
+      '후보지 지번으로 토지이용계획을 엽니다.',
+      '지역·지구등 지정여부에 지구단위계획구역, 경관지구 등 추가 지정이 있는지 확인합니다.',
+      '관련 고시·도면·조례 연결 정보가 있으면 세차장·자동차 관련 시설의 제한 내용을 찾습니다.',
+      '내용이 복잡하거나 자료가 연결되지 않으면 관할 도시계획·경관·건축 부서에 주소와 운영계획을 제시합니다.',
+    ],
+    checks: ['추가 지역·지구·구역 명칭', '관련 고시·계획·조례', '건축·용도·외관·진입 관련 제한'],
+    record: '지정 명칭, 근거 고시·조례, 담당 부서 답변과 확인일을 메모하세요.',
+    caution: '인터넷 열람 내용만으로 행위 가능 여부를 확정하지 말고 해당 계획을 담당하는 관할 부서의 답변을 남기세요.',
+  },
+  '1-15': {
+    kicker: '서류 확보',
+    title: '확인서·대장·등기사항증명서 확보',
+    description: '검토 근거가 되는 세 가지 서류를 같은 후보지 폴더에 모아 최신 상태로 보관합니다.',
+    links: [
+      { label: '토지이음 열기', href: 'https://www.eum.go.kr/web/am/amMain.jsp' },
+      { label: '정부24 열기', href: 'https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098&tp_seq=03' },
+      { label: '인터넷등기소 열기', href: 'https://www.iros.go.kr/' },
+    ],
+    steps: [
+      '토지이음에서 토지이용계획확인서를 열람·발급하거나 화면을 저장합니다.',
+      '정부24에서 후보지에 맞는 건축물대장을 열람·발급합니다.',
+      '인터넷등기소에서 토지와 건물의 등기사항증명서를 확인합니다.',
+      '세 문서의 주소·지번·동·층·호가 같은 후보지를 가리키는지 대조합니다.',
+    ],
+    checks: ['토지이용계획확인서', '건축물대장', '토지·건물 등기사항증명서', '문서 주소와 후보지의 일치 여부'],
+    record: '후보지명_서류명_발급일 형식으로 저장하고, 메모에는 문서 확인일과 빠진 서류를 남기세요.',
+    caution: '오래된 출력물이나 중개인이 전달한 사본만 믿지 말고 계약 직전에 최신 문서를 다시 확인하세요.',
+  },
+};
 let candidateState;
 let currentSiteContent = { ...defaultSiteContent };
 
@@ -168,11 +308,12 @@ function updateDetailGroup(group) {
   if (!status) {
     status = document.createElement('div');
     status.className = 'detail-progress';
-    const guide = group.querySelector('.guide-content');
-    if (guide) guide.before(status);
+    const anchor = group.querySelector('.step-one-checklist') || group.querySelector('.guide-content');
+    if (anchor) anchor.before(status);
   }
   const completed = boxes.filter((box) => box.checked).length;
   status.innerHTML = `<span>세부 체크</span><strong>${completed} / ${boxes.length}</strong>`;
+  updateStepOneGroupProgress(group);
 }
 
 function readStoredObject(key) {
@@ -206,6 +347,9 @@ function makeCandidate(seed = {}) {
     stepStatuses: seed.stepStatuses && typeof seed.stepStatuses === 'object' ? seed.stepStatuses : {},
     detailChecks: Array.isArray(seed.detailChecks) ? seed.detailChecks : [],
     detailNotes: seed.detailNotes && typeof seed.detailNotes === 'object' ? seed.detailNotes : {},
+    washType: typeof seed.washType === 'string' ? seed.washType : '',
+    bayCount: typeof seed.bayCount === 'string' ? seed.bayCount : '',
+    consultationNotes: Array.isArray(seed.consultationNotes) ? seed.consultationNotes : [],
   };
 }
 
@@ -248,22 +392,53 @@ function candidateDisplayName(candidate, index) {
   return candidate.name.trim() || `후보지 ${index + 1}`;
 }
 
+function stepOneCandidateMetrics(candidate) {
+  const itemIds = [...document.querySelectorAll('[data-detail-check^="1-"]')]
+    .map((box) => box.dataset.detailCheck);
+  const itemIdSet = new Set(itemIds);
+  const completed = candidate.detailChecks.filter((id) => itemIdSet.has(id)).length;
+  const caution = Object.values(candidate.stepStatuses)
+    .filter((status) => status === 'conditional' || status === 'blocked').length;
+  return {
+    completed,
+    total: itemIds.length,
+    unchecked: Math.max(itemIds.length - completed, 0),
+    caution,
+  };
+}
+
 function renderCandidatePanel(fields) {
   const active = getActiveCandidate();
   const list = fields.querySelector('[data-candidate-list]');
-  list.innerHTML = candidateState.candidates.map((candidate, index) => `
-    <button type="button" class="candidate-tab${candidate.id === active.id ? ' active' : ''}" data-candidate-id="${escapeHtml(candidate.id)}">
-      <strong>${escapeHtml(candidateDisplayName(candidate, index))}</strong>
-      <small>${escapeHtml(candidate.address.trim() || '주소 미입력')}</small>
-    </button>
-  `).join('');
+  list.innerHTML = candidateState.candidates.map((candidate, index) => {
+    const selected = candidate.id === active.id;
+    const metrics = stepOneCandidateMetrics(candidate);
+    return `
+      <button type="button" class="candidate-tab${selected ? ' active' : ''}" data-candidate-id="${escapeHtml(candidate.id)}" aria-current="${selected ? 'true' : 'false'}">
+        <span class="candidate-card-head">
+          <strong>${escapeHtml(candidateDisplayName(candidate, index))}</strong>
+          ${selected ? '<em>현재 선택</em>' : ''}
+        </span>
+        <small class="candidate-card-address">${escapeHtml(candidate.address.trim() || '주소 미입력')}</small>
+        <span class="candidate-card-status"><b>종합 상태</b><em>${candidateStatusLabels[candidate.status]}</em></span>
+        <span class="candidate-card-metrics">
+          <span><b>1단계 진행률</b><em>${metrics.completed} / ${metrics.total}</em></span>
+          <span><b>미확인 항목</b><em>${metrics.unchecked}</em></span>
+          <span><b>조건부·부적합</b><em>${metrics.caution}</em></span>
+        </span>
+      </button>
+    `;
+  }).join('');
 
   fields.querySelector('[data-candidate-field="name"]').value = active.name;
   fields.querySelector('[data-candidate-field="address"]').value = active.address;
   fields.querySelector('[data-candidate-field="status"]').value = active.status;
+  fields.querySelector('[data-candidate-field="washType"]').value = active.washType;
+  fields.querySelector('[data-candidate-field="bayCount"]').value = active.bayCount;
   const removeButton = fields.querySelector('[data-candidate-remove]');
   removeButton.disabled = candidateState.candidates.length === 1;
   removeButton.title = removeButton.disabled ? '후보지는 최소 1개가 필요합니다.' : '현재 후보지 삭제';
+  globalThis.dispatchEvent(new CustomEvent('sonsecha:candidate-changed'));
 
   list.querySelectorAll('[data-candidate-id]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -285,6 +460,13 @@ function injectCandidateFields(group) {
       <strong>주소별 독립 체크리스트</strong>
       <small>후보지마다 12단계, 세부 체크, 판정과 메모가 따로 저장됩니다.</small>
     </div>
+    <ol class="candidate-quick-guide" aria-label="후보지 사전 확인 사용 순서">
+      <li><span>1</span>후보지 이름과 주소 입력</li>
+      <li><span>2</span>온라인 서류 확인</li>
+      <li><span>3</span>현장 확인</li>
+      <li><span>4</span>관할 부서 문의</li>
+      <li><span>5</span>단계 판정 및 메모 저장</li>
+    </ol>
     <div class="candidate-toolbar">
       <div class="candidate-list" data-candidate-list></div>
       <button type="button" class="candidate-add" data-candidate-add>+ 후보지 추가</button>
@@ -306,6 +488,14 @@ function injectCandidateFields(group) {
         <option value="blocked">불가</option>
       </select>
     </label>
+    <label>
+      <span>예상 세차장 형태</span>
+      <input type="text" data-candidate-field="washType" placeholder="예: 손세차·디테일링 복합형">
+    </label>
+    <label>
+      <span>예상 베이 수</span>
+      <input type="text" data-candidate-field="bayCount" inputmode="numeric" placeholder="예: 3베이">
+    </label>
     <button type="button" class="candidate-remove" data-candidate-remove>현재 후보지 삭제</button>
     <p class="local-save-state" aria-live="polite">이 기기에 저장됨</p>
   `;
@@ -317,8 +507,8 @@ function injectCandidateFields(group) {
       const active = getActiveCandidate();
       active[input.dataset.candidateField] = input.value;
       saveCandidateState();
-      if (input.dataset.candidateField === 'name' || input.dataset.candidateField === 'address') {
-        renderCandidatePanel(fields);
+      renderCandidatePanel(fields);
+      if (input.tagName !== 'SELECT') {
         input.focus();
         input.setSelectionRange?.(input.value.length, input.value.length);
       }
@@ -377,6 +567,78 @@ function injectStepDecision(group, scope) {
     active.stepStatuses[scope] = event.target.value;
     saveCandidateState();
     group.closest('.step-card').dataset.decision = event.target.value;
+    const fields = document.querySelector('.candidate-fields');
+    if (fields) renderCandidatePanel(fields);
+  });
+}
+
+function organizeStepOneChecklist(group, scope) {
+  if (scope !== '1') return;
+  const guide = group.querySelector('.guide-content');
+  if (!guide) return;
+  const items = [...guide.querySelectorAll('li')];
+  if (items.length !== stepOneCheckGroups.reduce((total, item) => total + item.itemIndexes.length, 0)) return;
+
+  const checklist = document.createElement('div');
+  checklist.className = 'step-one-checklist';
+  checklist.setAttribute('aria-label', '1단계 세부 체크 묶음');
+
+  stepOneCheckGroups.forEach((definition, index) => {
+    const details = document.createElement('details');
+    details.className = 'step-one-check-group';
+    details.dataset.checkGroup = definition.id;
+    details.open = index === 0;
+    details.innerHTML = `
+      <summary>
+        <span class="check-group-copy">
+          <strong>${definition.title}</strong>
+          <small>${definition.description}</small>
+        </span>
+        <span class="check-group-progress" data-group-progress>0 / ${definition.itemIndexes.length}</span>
+      </summary>
+      ${definition.links?.length ? `
+        <div class="online-check-links" aria-label="온라인 서류 확인 사이트">
+          ${definition.links.map((link) => `
+            <a href="${link.href}" target="_blank" rel="noopener noreferrer">
+              <span><strong>${link.label}</strong><small>${link.detail}</small></span>
+              <em>새 창 ↗</em>
+            </a>
+          `).join('')}
+        </div>
+      ` : ''}
+      <ul class="check-group-items"></ul>
+    `;
+    const list = details.querySelector('.check-group-items');
+    definition.itemIndexes.forEach((itemIndex) => list.append(items[itemIndex]));
+    checklist.append(details);
+  });
+
+  guide.querySelectorAll('ul').forEach((list) => {
+    if (!list.children.length) list.hidden = true;
+  });
+
+  const explanation = document.createElement('details');
+  explanation.className = 'step-one-explanation';
+  explanation.innerHTML = `
+    <summary>
+      <strong>설명 자료</strong>
+      <span>필요할 때 펼치기</span>
+    </summary>
+  `;
+  explanation.append(guide);
+
+  group.append(checklist, explanation);
+  const fields = group.querySelector('.candidate-fields');
+  if (fields) group.prepend(fields);
+}
+
+function updateStepOneGroupProgress(group) {
+  group.querySelectorAll('[data-check-group]').forEach((details) => {
+    const boxes = [...details.querySelectorAll('input[data-detail-check]')];
+    const completed = boxes.filter((box) => box.checked).length;
+    const progress = details.querySelector('[data-group-progress]');
+    if (progress) progress.textContent = `${completed} / ${boxes.length}`;
+    details.classList.toggle('group-complete', boxes.length > 0 && completed === boxes.length);
   });
 }
 
@@ -393,12 +655,15 @@ function hydrateDetailChecks() {
     group.querySelectorAll('.guide-content li').forEach((item, itemIndex) => {
       const id = `${scope}-${itemIndex}`;
       const original = item.innerHTML;
+      const usageGuide = onlineUsageGuides[id];
+      item.classList.toggle('has-usage-help', Boolean(usageGuide));
       item.innerHTML = `
         <label class="detail-check-item">
           <input type="checkbox" data-detail-check="${id}">
           <span class="detail-checkmark" aria-hidden="true"></span>
           <span class="detail-check-copy">${original}</span>
         </label>
+        ${usageGuide ? `<button type="button" class="detail-usage-button" data-usage-help="${id}">이용방법</button>` : ''}
         <div class="detail-note-wrap">
           <label for="note-${id}">이 항목 메모</label>
           <textarea id="note-${id}" class="detail-note" data-detail-note="${id}" placeholder="확인한 내용, 담당부서·담당자, 답변일과 근거를 적어두세요."></textarea>
@@ -407,7 +672,9 @@ function hydrateDetailChecks() {
       `;
       const box = item.querySelector('input');
       const note = item.querySelector('[data-detail-note]');
+      const usageButton = item.querySelector('[data-usage-help]');
       resizeNote(note);
+      usageButton?.addEventListener('click', () => openUsageGuide(id, usageButton));
       box.addEventListener('change', () => {
         item.classList.toggle('checked', box.checked);
         item.classList.toggle('note-open', box.checked || Boolean(note.value));
@@ -417,6 +684,8 @@ function hydrateDetailChecks() {
         getActiveCandidate().detailChecks = activeChecks;
         saveCandidateState();
         updateDetailGroup(group);
+        const fields = document.querySelector('.candidate-fields');
+        if (fields) renderCandidatePanel(fields);
       });
       note.addEventListener('input', () => {
         const notes = getActiveCandidate().detailNotes;
@@ -432,6 +701,7 @@ function hydrateDetailChecks() {
       });
     });
     injectCandidateFields(group);
+    organizeStepOneChecklist(group, scope);
     updateDetailGroup(group);
   });
 }
@@ -461,6 +731,8 @@ function loadCandidateData() {
     select.closest('.step-card').dataset.decision = value;
   });
   document.querySelectorAll('.step-detail, .field-panel').forEach(updateDetailGroup);
+  const fields = document.querySelector('.candidate-fields');
+  if (fields) renderCandidatePanel(fields);
   updateProgress(false);
 }
 
@@ -939,6 +1211,60 @@ const feedbackElements = {
   status: document.querySelector('#feedbackFormStatus'),
 };
 
+const usageGuideElements = {
+  modal: document.querySelector('#usageGuideModal'),
+  backdrop: document.querySelector('.usage-guide-backdrop'),
+  close: document.querySelector('#usageGuideCloseButton'),
+  kicker: document.querySelector('#usageGuideKicker'),
+  title: document.querySelector('#usageGuideTitle'),
+  description: document.querySelector('#usageGuideDescription'),
+  links: document.querySelector('#usageGuideLinks'),
+  steps: document.querySelector('#usageGuideSteps'),
+  checks: document.querySelector('#usageGuideChecks'),
+  record: document.querySelector('#usageGuideRecord'),
+  caution: document.querySelector('#usageGuideCaution'),
+};
+let lastUsageGuideTrigger;
+
+function openUsageGuide(id, trigger) {
+  const guide = onlineUsageGuides[id];
+  if (!guide) return;
+  lastUsageGuideTrigger = trigger;
+  usageGuideElements.kicker.textContent = guide.kicker;
+  usageGuideElements.title.textContent = guide.title;
+  usageGuideElements.description.textContent = guide.description;
+  usageGuideElements.links.innerHTML = guide.links.map((link) => `
+    <a href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)} <span>↗</span></a>
+  `).join('');
+  usageGuideElements.steps.innerHTML = guide.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
+  usageGuideElements.checks.innerHTML = guide.checks.map((check) => `<li>${escapeHtml(check)}</li>`).join('');
+  usageGuideElements.record.textContent = guide.record;
+  usageGuideElements.caution.textContent = guide.caution;
+  usageGuideElements.backdrop.hidden = false;
+  usageGuideElements.modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('usage-guide-open');
+  requestAnimationFrame(() => {
+    usageGuideElements.backdrop.classList.add('visible');
+    usageGuideElements.modal.classList.add('open');
+    usageGuideElements.close.focus();
+  });
+}
+
+function closeUsageGuide() {
+  if (!usageGuideElements.modal.classList.contains('open')) return;
+  usageGuideElements.modal.classList.remove('open');
+  usageGuideElements.backdrop.classList.remove('visible');
+  usageGuideElements.modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('usage-guide-open');
+  setTimeout(() => { usageGuideElements.backdrop.hidden = true; }, 220);
+  lastUsageGuideTrigger?.focus();
+}
+
+document.querySelectorAll('[data-usage-guide-close]').forEach((button) => button.addEventListener('click', closeUsageGuide));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeUsageGuide();
+});
+
 function feedbackDeviceType() {
   if (globalThis.matchMedia('(max-width: 600px)').matches) return 'mobile';
   if (globalThis.matchMedia('(max-width: 1024px)').matches) return 'tablet';
@@ -1072,6 +1398,8 @@ document.querySelector('#resetButton').addEventListener('click', () => {
     select.closest('.step-card').dataset.decision = 'unreviewed';
   });
   document.querySelectorAll('.step-detail, .field-panel').forEach(updateDetailGroup);
+  const fields = document.querySelector('.candidate-fields');
+  if (fields) renderCandidatePanel(fields);
   updateProgress();
 });
 
@@ -1085,4 +1413,29 @@ candidateState = loadCandidateState();
 saveCandidateState();
 hydrateDetailChecks();
 loadCandidateData();
+initializeConsultations({
+  getState: () => candidateState,
+  getActiveCandidate,
+  saveCandidateState,
+  candidateDisplayName: (candidate) => candidateDisplayName(
+    candidate,
+    candidateState.candidates.findIndex((item) => item.id === candidate.id),
+  ),
+});
+const firstStepCard = document.querySelector('input[data-step="1"]')?.closest('.step-card');
+const activeCandidate = getActiveCandidate();
+if (
+  firstStepCard
+  && !activeCandidate.name
+  && !activeCandidate.address
+  && !activeCandidate.detailChecks.length
+  && !activeCandidate.stepChecks.length
+) {
+  firstStepCard.classList.add('detail-open');
+  const toggle = firstStepCard.querySelector('.detail-toggle');
+  if (toggle) {
+    toggle.textContent = '−';
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+}
 initializeShop();
