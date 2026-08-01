@@ -216,7 +216,7 @@ kim은 상품 관리에 공개·비공개 버튼을 추가하라고 했다가 �
 
 ## 2026-08-01 후속 체크포인트 · 나머지 공개 상품 상세와 생성 이미지
 
-- 계획 체크포인트: `feat(shop): complete remaining product details`
+- 코드 체크포인트: `8835b69` (`feat(shop): complete remaining product details`)
 - 운영 주소: `https://sonsecha.dclub.kr/#shop`
 
 ### 요청과 범위
