@@ -327,6 +327,10 @@ const candidateDecisionLabels = {
   unreviewed: '미확인', possible: '가능', conditional: '조건부 가능', blocked: '불가',
 };
 
+function consultationCandidates(snapshot) {
+  return Array.isArray(snapshot?.candidates) ? snapshot.candidates : [snapshot || {}];
+}
+
 function visibleConsultations() {
   const status = elements.consultationStatusFilter.value;
   const query = elements.consultationSearch.value.trim().toLocaleLowerCase('ko-KR');
@@ -347,7 +351,7 @@ function renderConsultationList() {
   elements.consultationList.innerHTML = items.length ? items.map((item) => `
     <button type="button" class="consultation-list-item${selectedConsultation?.receipt === item.receipt ? ' active' : ''}" data-consultation-receipt="${escapeHtml(item.receipt)}">
       <span class="consultation-list-head"><strong>${escapeHtml(item.receipt)}</strong><em class="status-${escapeHtml(item.status)}">${escapeHtml(consultationStatusLabels[item.status] || item.status)}</em></span>
-      <b>${escapeHtml(item.candidateName)}</b>
+      <b>${escapeHtml(item.candidateName)}${Number(item.candidateCount || 1) > 1 ? ` · ${Number(item.candidateCount)}곳 비교` : ''}</b>
       <small>${item.addressShared ? escapeHtml(item.address || '주소 미입력') : '주소 공유 안 함'} · ${escapeHtml(formatDateTime(item.createdAt))}</small>
       <span class="consultation-list-metrics"><i>진행 ${Number(item.progress?.completed || 0)}/${Number(item.progress?.total || 0)}</i><i>미확인 ${Number(item.progress?.unchecked || 0)}</i><i>사진 ${Number(item.photoCount || 0)}</i></span>
       <p>${escapeHtml(item.question)}</p>
@@ -362,13 +366,36 @@ function renderConsultationDetail() {
     return;
   }
   const snapshot = consultation.snapshot || {};
-  const checks = Array.isArray(snapshot.checks) ? snapshot.checks : [];
-  const steps = Array.isArray(snapshot.steps) ? snapshot.steps : [];
-  const notes = Array.isArray(snapshot.notes) ? snapshot.notes : [];
-  const contextOptions = checks.map((item) => `<option value="${escapeHtml(item.id)}" data-label="${escapeHtml(item.label)}">${escapeHtml(item.step)}단계 · ${escapeHtml(item.label)}</option>`).join('');
+  const candidates = consultationCandidates(snapshot);
+  const isBundle = Array.isArray(snapshot.candidates);
+  const contextOptions = candidates.map((candidate) => {
+    const checks = Array.isArray(candidate.checks) ? candidate.checks : [];
+    return `<optgroup label="${escapeHtml(candidate.candidateName || '후보지')}">${checks.map((item) => {
+      const value = isBundle ? `${candidate.candidateRef}:${item.id}` : item.id;
+      const label = `${candidate.candidateName || '후보지'} · ${item.step}단계 · ${item.label}`;
+      return `<option value="${escapeHtml(value)}" data-label="${escapeHtml(label)}">${escapeHtml(item.step)}단계 · ${escapeHtml(item.label)}</option>`;
+    }).join('')}</optgroup>`;
+  }).join('');
+  const candidateBlocks = candidates.map((candidate, index) => {
+    const checks = Array.isArray(candidate.checks) ? candidate.checks : [];
+    const steps = Array.isArray(candidate.steps) ? candidate.steps : [];
+    const notes = Array.isArray(candidate.notes) ? candidate.notes : [];
+    const photos = consultation.attachments.filter((photo) => isBundle
+      ? photo.candidateRef === candidate.candidateRef : !photo.candidateRef);
+    return `<article class="consultation-admin-candidate">
+      <header><span>후보지 ${index + 1}</span><h4>${escapeHtml(candidate.candidateName || '후보지')}</h4><small>12단계 자료 · 진행 ${Number(candidate.progress?.completed || 0)}/${Number(candidate.progress?.total || 0)}</small></header>
+      <section class="consultation-detail-block"><h4>공유된 기본정보</h4>
+        <dl><div><dt>주소</dt><dd>${candidate.sharing?.address ? escapeHtml(candidate.address || '미입력') : '공유 안 함'}</dd></div><div><dt>예상 형태</dt><dd>${candidate.plan ? `${escapeHtml(candidate.plan.washType || '미입력')} · ${escapeHtml(candidate.plan.bayCount || '베이 수 미입력')}` : '공유 안 함'}</dd></div><div><dt>종합상태</dt><dd>${escapeHtml(candidateDecisionLabels[candidate.overallStatus] || candidate.overallStatus)}</dd></div></dl>
+      </section>
+      <details class="consultation-detail-block" open><summary>12단계 상태 · ${steps.length}단계</summary><div class="consultation-check-list">${steps.map((step) => `<p><span>${escapeHtml(step.label)}</span><strong>${step.completed ? '완료' : escapeHtml(candidateDecisionLabels[step.status] || step.status)}</strong></p>`).join('')}</div></details>
+      <details class="consultation-detail-block"><summary>세부 체크 · ${checks.length}개</summary><div class="consultation-check-list">${checks.map((item) => `<p><span>${escapeHtml(item.label)}</span><strong>${item.completed ? '완료' : '미확인'}</strong></p>`).join('')}</div></details>
+      <details class="consultation-detail-block"><summary>공유 메모 · ${notes.length}개</summary><div class="consultation-note-list">${notes.map((note) => `<article><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></article>`).join('') || '<p>공유된 메모가 없습니다.</p>'}</div></details>
+      <section class="consultation-detail-block"><h4>선택 사진 · ${photos.length}장</h4><div class="consultation-admin-photos">${photos.map((photo) => `<article data-admin-photo="${photo.id}"><img src="/api/admin/consultations/${encodeURIComponent(consultation.receipt)}/photos/${photo.id}" alt="${escapeHtml(photo.name)}"><small>${escapeHtml(photo.name)}</small><button type="button" data-delete-admin-photo>첨부 삭제</button></article>`).join('') || '<p>공유된 사진이 없습니다.</p>'}</div></section>
+    </article>`;
+  }).join('');
   elements.consultationDetail.innerHTML = `
     <header class="consultation-detail-head">
-      <div><span>${escapeHtml(consultation.receipt)}</span><h3>${escapeHtml(snapshot.candidateName || '후보지')}</h3><small>${escapeHtml(formatDateTime(consultation.createdAt))} · 주소 ${snapshot.sharing?.address ? '공유' : '비공유'}</small></div>
+      <div><span>${escapeHtml(consultation.receipt)}</span><h3>${candidates.length === 1 ? escapeHtml(candidates[0].candidateName || '후보지') : `후보지 ${candidates.length}곳 비교 검토`}</h3><small>${escapeHtml(formatDateTime(consultation.createdAt))} · 12부 전체 자료 · 주소 ${snapshot.sharing?.address ? '공유' : '비공유'}</small></div>
       <label><span>처리상태</span><select data-consultation-status>${Object.entries(consultationStatusLabels).map(([value, label]) => `<option value="${value}"${consultation.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></label>
     </header>
     <div class="consultation-detail-meta">
@@ -377,14 +404,8 @@ function renderConsultationDetail() {
       <p><span>사진</span><strong>${consultation.attachments.length}</strong></p>
       <p><span>사용자 확인</span><strong>${consultation.userConfirmed ? '확인' : '미확인'}</strong></p>
     </div>
-    <section class="consultation-detail-block"><h4>공유된 기본정보</h4>
-      <dl><div><dt>주소</dt><dd>${snapshot.sharing?.address ? escapeHtml(snapshot.address || '미입력') : '공유 안 함'}</dd></div><div><dt>예상 형태</dt><dd>${snapshot.plan ? `${escapeHtml(snapshot.plan.washType || '미입력')} · ${escapeHtml(snapshot.plan.bayCount || '베이 수 미입력')}` : '공유 안 함'}</dd></div><div><dt>종합상태</dt><dd>${escapeHtml(candidateDecisionLabels[snapshot.overallStatus] || snapshot.overallStatus)}</dd></div></dl>
-    </section>
     <section class="consultation-detail-block"><h4>상담 질문</h4><p class="consultation-question-copy">${escapeHtml(consultation.question)}</p></section>
-    <details class="consultation-detail-block" open><summary>단계별 상태 · ${steps.length}단계</summary><div class="consultation-check-list">${steps.map((step) => `<p><span>${escapeHtml(step.label)}</span><strong>${step.completed ? '완료' : escapeHtml(candidateDecisionLabels[step.status] || step.status)}</strong></p>`).join('')}</div></details>
-    <details class="consultation-detail-block"><summary>세부 체크 · ${checks.length}개</summary><div class="consultation-check-list">${checks.map((item) => `<p><span>${escapeHtml(item.label)}</span><strong>${item.completed ? '완료' : '미확인'}</strong></p>`).join('')}</div></details>
-    <details class="consultation-detail-block"><summary>공유 메모 · ${notes.length}개</summary><div class="consultation-note-list">${notes.map((note) => `<article><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></article>`).join('') || '<p>공유된 메모가 없습니다.</p>'}</div></details>
-    <section class="consultation-detail-block"><h4>선택 사진 · ${consultation.attachments.length}장</h4><div class="consultation-admin-photos">${consultation.attachments.map((photo) => `<article data-admin-photo="${photo.id}"><img src="/api/admin/consultations/${encodeURIComponent(consultation.receipt)}/photos/${photo.id}" alt="${escapeHtml(photo.name)}"><small>${escapeHtml(photo.name)}</small><button type="button" data-delete-admin-photo>첨부 삭제</button></article>`).join('') || '<p>공유된 사진이 없습니다.</p>'}</div></section>
+    <section class="consultation-admin-candidates">${candidateBlocks}</section>
     <section class="consultation-detail-block consultation-email-state"><h4>이메일 전달 상태</h4><p><strong>${consultation.emailStatus === 'sent' ? '발송 완료' : consultation.emailStatus === 'failed' ? '발송 실패' : '발송 대기'}</strong><span>${escapeHtml(consultation.emailError || '접수번호와 관리자 링크만 이메일로 알립니다.')}</span></p></section>
     <section class="consultation-chat-admin"><h4>상담 대화방</h4><div class="consultation-admin-messages">${consultation.messages.map((message) => `<article class="${escapeHtml(message.sender)}"><small>${message.sender === 'admin' ? '관리자' : '사용자'}${message.contextLabel ? ` · ${escapeHtml(message.contextLabel)}` : ''} · ${escapeHtml(formatDateTime(message.createdAt))}</small><p>${escapeHtml(message.body)}</p></article>`).join('') || '<p class="consultation-admin-empty">아직 대화가 없습니다.</p>'}</div>
       <form data-admin-reply-form><label><span>답변 위치</span><select name="context"><option value="">전체 상담</option>${contextOptions}</select></label><label class="wide"><span>관리자 답변</span><textarea name="body" maxlength="4000" rows="4" required placeholder="사용자에게 전달할 답변을 입력하세요."></textarea></label><button type="submit">답변 보내기</button><p data-admin-reply-status></p></form>
@@ -417,7 +438,7 @@ function renderConsultationDetail() {
       elements.consultationAdminStatus.textContent = '답변을 상담 대화방에 저장했습니다.';
     } catch (error) { status.textContent = error.message; form.querySelector('button').disabled = false; }
   });
-  elements.consultationDetail.querySelector('.consultation-admin-photos')?.addEventListener('click', async (event) => {
+  elements.consultationDetail.querySelector('.consultation-admin-candidates')?.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-delete-admin-photo]');
     const photo = button?.closest('[data-admin-photo]');
     if (!photo || !globalThis.confirm('이 상담 건에서 첨부사진을 삭제할까요? 삭제 후 복구할 수 없습니다.')) return;

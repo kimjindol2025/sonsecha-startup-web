@@ -45,9 +45,9 @@ function accessMatches(key, row) {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-function validateSnapshot(input) {
+function validateCandidateSnapshot(input, inheritedSharing = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_CONSULTATION');
-  const sharing = input.sharing && typeof input.sharing === 'object' ? input.sharing : {};
+  const sharing = input.sharing && typeof input.sharing === 'object' ? input.sharing : inheritedSharing;
   const checks = Array.isArray(input.checks) ? input.checks.slice(0, 120).map((item) => ({
     id: cleanText(item?.id, 40, true),
     label: cleanText(item?.label, 300, true),
@@ -68,7 +68,7 @@ function validateSnapshot(input) {
     }))
     : [];
   return {
-    version: 1,
+    candidateRef: cleanText(input.candidateRef, 160),
     candidateName: cleanText(input.candidateName, 160, true),
     address: sharing.address === true ? cleanText(input.address, 300) : '',
     plan: sharing.plan === true ? {
@@ -92,6 +92,34 @@ function validateSnapshot(input) {
       photos: sharing.photos === true,
     },
   };
+}
+
+function validateSnapshot(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_CONSULTATION');
+  if (Array.isArray(input.candidates)) {
+    if (!input.candidates.length || input.candidates.length > 10) throw new Error('INVALID_CONSULTATION');
+    const candidates = input.candidates.map((candidate) => validateCandidateSnapshot(candidate, input.sharing));
+    const candidateRefs = new Set(candidates.map((candidate) => candidate.candidateRef));
+    if (candidateRefs.has('') || candidateRefs.size !== candidates.length) throw new Error('INVALID_CONSULTATION');
+    const completed = candidates.reduce((sum, candidate) => sum + candidate.progress.completed, 0);
+    const total = candidates.reduce((sum, candidate) => sum + candidate.progress.total, 0);
+    return {
+      version: 2,
+      candidateName: candidates.length === 1
+        ? candidates[0].candidateName
+        : `${candidates[0].candidateName} 외 ${candidates.length - 1}곳`,
+      candidateCount: candidates.length,
+      candidates,
+      progress: { completed, total, unchecked: Math.max(total - completed, 0) },
+      sharing: {
+        address: candidates.some((candidate) => candidate.sharing.address),
+        plan: candidates.some((candidate) => candidate.sharing.plan),
+        notes: candidates.some((candidate) => candidate.sharing.notes),
+        photos: candidates.some((candidate) => candidate.sharing.photos),
+      },
+    };
+  }
+  return { version: 1, ...validateCandidateSnapshot(input) };
 }
 
 function serializeConsultation(row, messages = [], attachments = []) {
@@ -119,6 +147,7 @@ function serializeConsultation(row, messages = [], attachments = []) {
       name: attachment.original_name,
       mime: attachment.mime,
       size: Number(attachment.size),
+      candidateRef: attachment.candidate_ref || '',
       createdAt: attachment.created_at,
     })),
   };
@@ -164,6 +193,7 @@ export async function createConsultationStore(dataRoot) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       consultation_id INTEGER NOT NULL REFERENCES consultations(id) ON DELETE CASCADE,
       original_name TEXT NOT NULL,
+      candidate_ref TEXT NOT NULL DEFAULT '',
       stored_path TEXT NOT NULL DEFAULT '',
       mime TEXT NOT NULL,
       size INTEGER NOT NULL,
@@ -173,6 +203,10 @@ export async function createConsultationStore(dataRoot) {
     CREATE INDEX IF NOT EXISTS consultation_message_idx ON consultation_messages(consultation_id, created_at, id);
     CREATE INDEX IF NOT EXISTS consultation_attachment_idx ON consultation_attachments(consultation_id, id);
   `);
+  const attachmentColumns = database.prepare('PRAGMA table_info(consultation_attachments)').all();
+  if (!attachmentColumns.some((column) => column.name === 'candidate_ref')) {
+    database.exec("ALTER TABLE consultation_attachments ADD COLUMN candidate_ref TEXT NOT NULL DEFAULT ''");
+  }
   await chmod(databasePath, 0o600);
 
   const getByReceipt = database.prepare('SELECT * FROM consultations WHERE receipt = ?');
@@ -194,7 +228,17 @@ export async function createConsultationStore(dataRoot) {
     async create(input) {
       const snapshot = validateSnapshot(input.snapshot);
       const question = cleanText(input.question, 3000, true);
-      const clientCandidateRef = cleanText(input.clientCandidateRef, 160, true);
+      const clientCandidateRefs = Array.isArray(input.clientCandidateRefs)
+        ? input.clientCandidateRefs.slice(0, 10).map((value) => cleanText(value, 160, true))
+        : [cleanText(input.clientCandidateRef, 160, true)];
+      if (new Set(clientCandidateRefs).size !== clientCandidateRefs.length) throw new Error('INVALID_CONSULTATION');
+      if (snapshot.version === 2) {
+        const snapshotRefs = snapshot.candidates.map((candidate) => candidate.candidateRef);
+        if (snapshotRefs.length !== clientCandidateRefs.length
+          || snapshotRefs.some((reference) => !clientCandidateRefs.includes(reference))) {
+          throw new Error('INVALID_CONSULTATION');
+        }
+      }
       if (input.consent !== true) throw new Error('CONSENT_REQUIRED');
       const receipt = makeReceipt(database);
       const accessKey = randomBytes(32).toString('base64url');
@@ -206,7 +250,7 @@ export async function createConsultationStore(dataRoot) {
           address_shared, snapshot_json, question, consent_at, created_at, updated_at
         ) VALUES (?, ?, ?, ?, 'received', ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        receipt, clientCandidateRef, access.salt, access.hash, snapshot.candidateName,
+        receipt, JSON.stringify(clientCandidateRefs), access.salt, access.hash, snapshot.candidateName,
         snapshot.sharing.address ? 1 : 0, JSON.stringify(snapshot), question, now, now, now,
       );
       return { consultation: detail(getByReceipt.get(receipt)), accessKey };
@@ -237,7 +281,10 @@ export async function createConsultationStore(dataRoot) {
           status: row.status,
           candidateName: row.candidate_name,
           addressShared: Boolean(row.address_shared),
-          address: snapshot.address || '',
+          address: snapshot.version === 2
+            ? snapshot.candidates.filter((candidate) => candidate.sharing.address).map((candidate) => candidate.address).filter(Boolean).join(' · ')
+            : snapshot.address || '',
+          candidateCount: Number(snapshot.candidateCount || 1),
           progress: snapshot.progress || {},
           question: row.question,
           photoCount: Number(row.photo_count),
@@ -262,7 +309,7 @@ export async function createConsultationStore(dataRoot) {
       const row = sender === 'admin' ? getByReceipt.get(receipt) : authorized(receipt, key);
       if (!row) return null;
       const body = cleanText(input.body, 4000, true);
-      const contextId = cleanText(input.contextId, 80);
+      const contextId = cleanText(input.contextId, 240);
       const contextLabel = cleanText(input.contextLabel, 300);
       const now = new Date().toISOString();
       database.prepare(`
@@ -277,7 +324,11 @@ export async function createConsultationStore(dataRoot) {
       const row = authorized(receipt, key);
       if (!row) return null;
       const snapshot = safeJson(row.snapshot_json, {});
-      if (snapshot.sharing?.photos !== true) throw new Error('PHOTO_SHARING_DISABLED');
+      const candidateRef = cleanText(input.candidateRef, 160);
+      const photoCandidate = snapshot.version === 2
+        ? snapshot.candidates?.find((candidate) => candidate.candidateRef === candidateRef)
+        : snapshot;
+      if (!photoCandidate || photoCandidate.sharing?.photos !== true) throw new Error('PHOTO_SHARING_DISABLED');
       const mime = cleanText(input.mime, 40, true);
       const extension = allowedMimes.get(mime);
       if (!extension) throw new Error('INVALID_PHOTO');
@@ -289,13 +340,13 @@ export async function createConsultationStore(dataRoot) {
         || (mime === 'image/png' && data.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
         || (mime === 'image/webp' && data.subarray(0, 4).toString() === 'RIFF' && data.subarray(8, 12).toString() === 'WEBP');
       if (!signatureOk) throw new Error('INVALID_PHOTO');
-      const count = Number(database.prepare('SELECT COUNT(*) AS count FROM consultation_attachments WHERE consultation_id = ?').get(row.id).count);
+      const count = Number(database.prepare('SELECT COUNT(*) AS count FROM consultation_attachments WHERE consultation_id = ? AND candidate_ref = ?').get(row.id, candidateRef).count);
       if (count >= 10) throw new Error('PHOTO_LIMIT');
       const now = new Date().toISOString();
       const result = database.prepare(`
-        INSERT INTO consultation_attachments (consultation_id, original_name, mime, size, created_at)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(row.id, originalName, mime, data.length, now);
+        INSERT INTO consultation_attachments (consultation_id, original_name, candidate_ref, mime, size, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(row.id, originalName, candidateRef, mime, data.length, now);
       const attachmentId = Number(result.lastInsertRowid);
       const directory = resolve(uploadRoot, String(row.id));
       await mkdir(directory, { recursive: true });

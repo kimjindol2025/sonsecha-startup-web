@@ -68,47 +68,52 @@ await click('[data-detail-check="1-0"]');
 await setValue('[data-detail-note="1-0"]', 'A 기존 메모 보존 확인');
 const candidateA = await evaluate(`JSON.parse(localStorage.getItem('sonsecha-candidates-v2')).activeId`);
 
-await click('[data-consultation-create]');
-await waitFor('document.querySelector("[data-consultation-form]")');
-assert.equal(await evaluate(`[...document.querySelectorAll('.consultation-options input')].every((item) => !item.checked)`), true);
-await click('[name="shareNotes"]');
-await setValue('[name="question"]', 'A 후보지 검토 질문입니다.');
-await evaluate(`document.querySelector('[data-consultation-form]').requestSubmit()`);
-await waitFor('document.querySelector("[data-consent]")');
-await click('[data-send]');
-assert.match(await evaluate(`document.querySelector('[data-send-status]').textContent`), /동의/);
-await click('[data-consent]');
-await click('[data-send]');
-await waitFor('document.querySelector(".consultation-room")', 15000);
-const firstRecord = await evaluate(`JSON.parse(localStorage.getItem('sonsecha-consultations-v1'))[${JSON.stringify(candidateA)}][0]`);
-
-await click('[data-consultation-close]');
 await click('[data-candidate-add]');
 await setValue('[data-candidate-field="name"]', '브라우저 후보지 B');
 await setValue('[data-candidate-field="address"]', '공유 승인 주소 B');
+await click('[data-detail-check="2-0"]');
 const candidateB = await evaluate(`JSON.parse(localStorage.getItem('sonsecha-candidates-v2')).activeId`);
 assert.notEqual(candidateA, candidateB);
 
+await click('[data-candidate-add]');
+await setValue('[data-candidate-field="name"]', '브라우저 후보지 C 제외');
+await setValue('[data-candidate-field="address"]', '서버 전송 금지 주소 C');
+const candidateC = await evaluate(`JSON.parse(localStorage.getItem('sonsecha-candidates-v2')).activeId`);
+
 await click('[data-consultation-create]');
 await waitFor('document.querySelector("[data-consultation-form]")');
+assert.equal(await evaluate(`[...document.querySelectorAll('.consultation-options input')].every((item) => !item.checked)`), true);
+await click(`[data-candidate-select][value="${candidateC}"]`);
+await click(`[data-candidate-select][value="${candidateA}"]`);
+await click(`[data-candidate-select][value="${candidateB}"]`);
+await waitFor('document.querySelectorAll("[data-candidate-select]:checked").length === 2');
 await click('[name="shareAddress"]');
+await click('[name="shareNotes"]');
 if (photoPath) {
+  await setValue('[data-photo-candidate]', candidateB);
   const documentNode = await command('DOM.getDocument');
   const inputNode = await command('DOM.querySelector', { nodeId: documentNode.root.nodeId, selector: '[data-photo-input]' });
   await command('DOM.setFileInputFiles', { nodeId: inputNode.nodeId, files: [photoPath] });
   await waitFor('document.querySelectorAll("[data-photo-id]").length === 1', 15000);
   await click('[name="sharePhotos"]');
 }
-await setValue('[name="question"]', 'B 후보지 사진 포함 질문입니다.');
+await setValue('[name="question"]', 'A와 B 후보지 12부 전체 비교 질문입니다.');
 await evaluate(`document.querySelector('[data-consultation-form]').requestSubmit()`);
 await waitFor('document.querySelector("[data-consent]")');
+assert.equal(await evaluate(`document.querySelectorAll('.consultation-candidate-preview').length`), 2);
+assert.equal(await evaluate(`document.querySelector('.consultation-preview').textContent.includes('브라우저 후보지 C 제외')`), false);
+await click('[data-send]');
+assert.match(await evaluate(`document.querySelector('[data-send-status]').textContent`), /동의/);
 await click('[data-consent]');
 await click('[data-send]');
 await waitFor('document.querySelector(".consultation-room")', 20000);
 const browserRecords = await evaluate(`JSON.parse(localStorage.getItem('sonsecha-consultations-v1'))`);
 assert.equal(browserRecords[candidateA].length, 1);
 assert.equal(browserRecords[candidateB].length, 1);
-assert.notEqual(browserRecords[candidateA][0].receipt, browserRecords[candidateB][0].receipt);
+assert.equal(browserRecords[candidateC], undefined);
+assert.equal(browserRecords[candidateA][0].receipt, browserRecords[candidateB][0].receipt);
+assert.deepEqual(browserRecords[candidateA][0].candidateIds, [candidateA, candidateB]);
+const firstRecord = browserRecords[candidateA][0];
 
 if (adminPassword) {
   await navigate(`${base}/admin.html`);
@@ -120,7 +125,9 @@ if (adminPassword) {
   await waitFor(`document.querySelector('[data-consultation-receipt=${JSON.stringify(firstRecord.receipt)}]')`, 10000);
   await click(`[data-consultation-receipt="${firstRecord.receipt}"]`);
   await waitFor('document.querySelector("[data-admin-reply-form]")');
-  await setValue('[data-admin-reply-form] select[name="context"]', '1-0');
+  assert.equal(await evaluate(`document.querySelectorAll('.consultation-admin-candidate').length`), 2);
+  assert.equal(await evaluate(`document.querySelector('.consultation-admin-detail').textContent.includes('브라우저 후보지 C 제외')`), false);
+  await setValue('[data-admin-reply-form] select[name="context"]', `${candidateA}:1-0`);
   await setValue('[data-admin-reply-form] textarea[name="body"]', '브라우저 관리자 답변 A');
   await evaluate(`document.querySelector('[data-admin-reply-form]').requestSubmit()`);
   await waitFor(`document.querySelector('.consultation-admin-messages').textContent.includes('브라우저 관리자 답변 A')`, 10000);
@@ -136,6 +143,8 @@ if (adminPassword) {
   const preserved = await evaluate(`(() => { const state = JSON.parse(localStorage.getItem('sonsecha-candidates-v2')); const candidate = state.candidates.find((item) => item.id === ${JSON.stringify(candidateA)}); return { detail: candidate.detailNotes['1-0'], replies: candidate.consultationNotes.length }; })()`);
   assert.equal(preserved.detail, 'A 기존 메모 보존 확인');
   assert.equal(preserved.replies, 1);
+  const bReplies = await evaluate(`(() => { const state = JSON.parse(localStorage.getItem('sonsecha-candidates-v2')); return state.candidates.find((item) => item.id === ${JSON.stringify(candidateB)}).consultationNotes.length; })()`);
+  assert.equal(bReplies, 0);
   await evaluate('location.reload()');
   await waitFor('document.querySelector("[data-consultation-history]")');
   const refreshed = await evaluate(`(() => { const state = JSON.parse(localStorage.getItem('sonsecha-candidates-v2')); const candidate = state.candidates.find((item) => item.id === ${JSON.stringify(candidateA)}); return { activeId: state.activeId, detail: candidate.detailNotes['1-0'], replies: candidate.consultationNotes.length }; })()`);

@@ -112,11 +112,13 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
   if (!panel) return;
   let photoItems = [];
   let currentRecord = null;
+  let selectedCandidateIds = new Set();
+  let draftQuestion = '';
 
   const actions = document.createElement('div');
   actions.className = 'consultation-actions';
   actions.innerHTML = `
-    <button type="button" class="consultation-create" data-consultation-create>상담용 자료 만들기</button>
+    <button type="button" class="consultation-create" data-consultation-create>후보지 검토 요청서 작성</button>
     <button type="button" class="consultation-history" data-consultation-history>상태·대화 보기</button>
     <div class="consultation-candidate-status" data-consultation-status></div>
     <details class="consultation-saved-notes" data-consultation-notes></details>
@@ -136,7 +138,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
   modal.setAttribute('aria-labelledby', 'consultationTitle');
   modal.innerHTML = `
     <header class="consultation-modal-header">
-      <div><p>DAEHAN ENG CONSULTATION</p><h2 id="consultationTitle">후보지 상담자료</h2><span>선택하고 확인한 자료만 전송됩니다.</span></div>
+      <div><p>CANDIDATE REVIEW REQUEST</p><h2 id="consultationTitle">후보지 검토 요청서</h2><span>선택하고 확인한 자료만 대한이엔지에 전달됩니다.</span></div>
       <button type="button" data-consultation-close aria-label="닫기">×</button>
     </header>
     <div class="consultation-body" data-consultation-body></div>
@@ -179,36 +181,46 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     setTimeout(() => { modal.hidden = true; backdrop.hidden = true; }, 220);
   }
 
-  function snapshotFromForm(form) {
-    const candidate = getActiveCandidate();
+  function snapshotCandidates(snapshot) {
+    return Array.isArray(snapshot?.candidates) ? snapshot.candidates : [snapshot || {}];
+  }
+
+  function recordCandidateIds(record) {
+    return Array.isArray(record?.candidateIds) && record.candidateIds.length
+      ? record.candidateIds : [record?.candidateId].filter(Boolean);
+  }
+
+  function candidateSnapshot(candidate, form) {
     const sharing = {
       address: form.elements.shareAddress.checked,
       plan: form.elements.sharePlan.checked,
       notes: form.elements.shareNotes.checked,
-      photos: form.elements.sharePhotos.checked && photoItems.some((item) => item.selected),
+      photos: form.elements.sharePhotos.checked
+        && photoItems.some((item) => item.candidateId === candidate.id && item.selected),
     };
     const steps = [...document.querySelectorAll('.step-card')].map((card) => {
       const id = card.querySelector('input[data-step]')?.dataset.step || '';
       return {
         id,
         label: card.querySelector('h3')?.textContent.trim() || `${id}단계`,
-        completed: candidate.stepChecks.includes(id),
-        status: candidate.stepStatuses[id] || 'unreviewed',
+        completed: (candidate.stepChecks || []).includes(id),
+        status: candidate.stepStatuses?.[id] || 'unreviewed',
       };
     });
     const checks = [...document.querySelectorAll('input[data-detail-check]')].map((box) => ({
       id: box.dataset.detailCheck,
       step: box.dataset.detailCheck.split('-')[0],
       label: box.closest('li')?.querySelector('.detail-check-copy')?.textContent.trim() || box.dataset.detailCheck,
-      completed: candidate.detailChecks.includes(box.dataset.detailCheck),
+      completed: (candidate.detailChecks || []).includes(box.dataset.detailCheck),
     }));
-    const notes = sharing.notes ? Object.entries(candidate.detailNotes).filter(([, text]) => String(text).trim()).map(([id, text]) => ({
+    const notes = sharing.notes ? Object.entries(candidate.detailNotes || {}).filter(([, text]) => String(text).trim()).map(([id, text]) => ({
       id,
       label: checks.find((item) => item.id === id)?.label || id,
       text,
     })) : [];
     const completed = checks.filter((item) => item.completed).length;
     return {
+      candidateRef: candidate.id,
       candidateName: candidateDisplayName(candidate),
       address: sharing.address ? candidate.address : '',
       plan: sharing.plan ? { washType: candidate.washType || '', bayCount: candidate.bayCount || '' } : null,
@@ -221,6 +233,26 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     };
   }
 
+  function snapshotFromForm(form) {
+    const candidates = getState().candidates
+      .filter((candidate) => selectedCandidateIds.has(candidate.id))
+      .map((candidate) => candidateSnapshot(candidate, form));
+    const completed = candidates.reduce((sum, candidate) => sum + candidate.progress.completed, 0);
+    const total = candidates.reduce((sum, candidate) => sum + candidate.progress.total, 0);
+    return {
+      version: 2,
+      candidates,
+      candidateCount: candidates.length,
+      progress: { completed, total, unchecked: Math.max(0, total - completed) },
+      sharing: {
+        address: form.elements.shareAddress.checked,
+        plan: form.elements.sharePlan.checked,
+        notes: form.elements.shareNotes.checked,
+        photos: form.elements.sharePhotos.checked && photoItems.some((item) => item.selected),
+      },
+    };
+  }
+
   function selectedPhotoMarkup() {
     if (!photoItems.length) return '<p class="consultation-empty">선택한 사진이 없습니다.</p>';
     return photoItems.map((photo) => `
@@ -228,51 +260,95 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         <img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.name)} 미리보기">
         <label><input type="checkbox" data-photo-select ${photo.selected ? 'checked' : ''}><span>전송 선택</span></label>
         <button type="button" data-photo-remove>삭제</button>
+        <b>${escapeHtml(photo.candidateName || '후보지')}</b>
         <small>${escapeHtml(photo.name)}</small>
       </article>
     `).join('');
   }
 
   async function renderCreate() {
-    const candidate = getActiveCandidate();
-    photoItems.forEach((item) => URL.revokeObjectURL(item.url));
-    photoItems = (await listLocalPhotos(candidate.id).catch(() => [])).map((item) => ({ ...item, url: URL.createObjectURL(item.blob), selected: true }));
+    const candidates = getState().candidates;
+    if (!selectedCandidateIds.size || !candidates.some((candidate) => selectedCandidateIds.has(candidate.id))) {
+      selectedCandidateIds = new Set([getActiveCandidate().id]);
+    }
+    selectedCandidateIds = new Set(candidates.filter((candidate) => selectedCandidateIds.has(candidate.id)).map((candidate) => candidate.id));
+    const refreshPhotos = async () => {
+      photoItems.forEach((item) => URL.revokeObjectURL(item.url));
+      const groups = await Promise.all(candidates.filter((candidate) => selectedCandidateIds.has(candidate.id)).map(async (candidate) => {
+        const items = await listLocalPhotos(candidate.id).catch(() => []);
+        return items.map((item) => ({ ...item, candidateName: candidateDisplayName(candidate), url: URL.createObjectURL(item.blob), selected: true }));
+      }));
+      photoItems = groups.flat();
+    };
+    await refreshPhotos();
+    const selectedCandidates = candidates.filter((candidate) => selectedCandidateIds.has(candidate.id));
+    const notesCount = selectedCandidates.reduce((sum, candidate) => sum + Object.values(candidate.detailNotes || {}).filter((text) => String(text).trim()).length, 0);
     body.innerHTML = `
       <form class="consultation-share-form" data-consultation-form>
         <nav class="consultation-steps" aria-label="상담자료 만들기 순서"><strong>1. 공유 선택</strong><span>2. 미리보기</span><span>3. 동의·전송</span></nav>
-        <div class="consultation-site-summary"><span>현재 후보지</span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>${escapeHtml(candidate.address || '주소 미입력')}</small></div>
+        <fieldset class="consultation-candidate-picker"><legend>검토받을 후보지 선택 <b data-selected-count>${selectedCandidates.length}곳</b></legend>
+          <label class="candidate-select-all"><input type="checkbox" data-candidate-all ${selectedCandidates.length === candidates.length ? 'checked' : ''}><span><strong>전체 후보지 선택</strong><small>선택한 후보지를 한 접수번호로 함께 비교·검토합니다.</small></span></label>
+          <div data-candidate-list>${candidates.map((candidate) => `<label class="consultation-candidate-choice${selectedCandidateIds.has(candidate.id) ? ' selected' : ''}"><input type="checkbox" value="${escapeHtml(candidate.id)}" data-candidate-select ${selectedCandidateIds.has(candidate.id) ? 'checked' : ''}><span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>${escapeHtml(candidate.address || '주소 미입력')} · 12단계 ${(candidate.stepChecks || []).length}/12</small></span></label>`).join('')}</div>
+        </fieldset>
         <fieldset class="consultation-options"><legend>공유할 정보</legend>
           <label><input type="checkbox" name="shareAddress"><span><strong>주소</strong><small>선택해야만 서버로 전송됩니다.</small></span></label>
-          <label><input type="checkbox" name="sharePlan"><span><strong>세차장 형태·베이 수</strong><small>${escapeHtml(candidate.washType || '형태 미입력')} · ${escapeHtml(candidate.bayCount || '베이 수 미입력')}</small></span></label>
-          <label><input type="checkbox" name="shareNotes"><span><strong>메모·담당기관 문의 기록</strong><small>체크항목에 작성한 메모 ${Object.keys(candidate.detailNotes).length}개</small></span></label>
+          <label><input type="checkbox" name="sharePlan"><span><strong>세차장 형태·베이 수</strong><small>선택 후보지별 입력 내용을 공유합니다.</small></span></label>
+          <label><input type="checkbox" name="shareNotes"><span><strong>메모·담당기관 문의 기록</strong><small>선택 후보지의 작성 메모 ${notesCount}개</small></span></label>
           <label><input type="checkbox" name="sharePhotos"><span><strong>선택 사진</strong><small>아래에서 사진별로 다시 선택합니다.</small></span></label>
         </fieldset>
         <section class="consultation-photo-picker">
-          <div><strong>사진 선택</strong><span>JPG·PNG·WebP, 원본 10MB 이하, 최대 10장</span></div>
+          <div><strong>사진 선택</strong><span>JPG·PNG·WebP, 원본 10MB 이하, 후보지별 최대 10장</span></div>
+          <label class="consultation-photo-target"><span>사진을 저장할 후보지</span><select data-photo-candidate>${selectedCandidates.map((candidate) => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidateDisplayName(candidate))}</option>`).join('')}</select></label>
           <label class="consultation-file-button">+ 사진 고르기<input type="file" accept="image/jpeg,image/png,image/webp" multiple data-photo-input></label>
           <p class="photo-privacy-warning">사람 얼굴·차량번호가 보이지 않는지 확인하세요. 전송본은 브라우저에서 다시 생성해 EXIF 위치정보를 제거합니다.</p>
           <div class="consultation-photo-grid" data-photo-grid>${selectedPhotoMarkup()}</div>
         </section>
-        <label class="consultation-question"><span>상담 질문 *</span><textarea name="question" maxlength="3000" rows="5" required placeholder="후보지에서 가장 먼저 검토받고 싶은 내용을 적어주세요."></textarea></label>
+        <label class="consultation-question"><span>상담 질문 *</span><textarea name="question" maxlength="3000" rows="5" required placeholder="후보지에서 가장 먼저 검토받고 싶은 내용을 적어주세요.">${escapeHtml(draftQuestion)}</textarea></label>
         <div class="consultation-footer"><p data-consultation-feedback></p><button type="submit">전송 내용 미리보기</button></div>
       </form>
     `;
     const form = body.querySelector('[data-consultation-form]');
     const grid = form.querySelector('[data-photo-grid]');
     const rerenderPhotos = () => { grid.innerHTML = selectedPhotoMarkup(); };
+    const renderPhotoTargets = () => {
+      const selected = candidates.filter((candidate) => selectedCandidateIds.has(candidate.id));
+      form.querySelector('[data-photo-candidate]').innerHTML = selected.map((candidate) => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidateDisplayName(candidate))}</option>`).join('');
+      form.querySelector('[data-selected-count]').textContent = `${selected.length}곳`;
+      form.querySelector('[data-candidate-all]').checked = selected.length === candidates.length;
+    };
+    form.querySelector('[data-candidate-list]').addEventListener('change', async (event) => {
+      const input = event.target.closest('[data-candidate-select]');
+      if (!input) return;
+      input.closest('label').classList.toggle('selected', input.checked);
+      selectedCandidateIds = new Set([...form.querySelectorAll('[data-candidate-select]:checked')].map((box) => box.value));
+      renderPhotoTargets();
+      await refreshPhotos();
+      rerenderPhotos();
+    });
+    form.querySelector('[data-candidate-all]').addEventListener('change', async (event) => {
+      form.querySelectorAll('[data-candidate-select]').forEach((box) => {
+        box.checked = event.target.checked;
+        box.closest('label').classList.toggle('selected', box.checked);
+      });
+      selectedCandidateIds = new Set(event.target.checked ? candidates.map((candidate) => candidate.id) : []);
+      renderPhotoTargets();
+      await refreshPhotos();
+      rerenderPhotos();
+    });
     form.querySelector('[data-photo-input]').addEventListener('change', async (event) => {
       const feedback = form.querySelector('[data-consultation-feedback]');
       const files = [...event.target.files];
-      if (photoItems.length + files.length > 10) { feedback.textContent = '사진은 최대 10장까지 선택할 수 있습니다.'; return; }
+      const candidateId = form.querySelector('[data-photo-candidate]').value;
+      if (!candidateId) { feedback.textContent = '사진을 저장할 후보지를 먼저 선택해 주세요.'; return; }
+      if (photoItems.filter((item) => item.candidateId === candidateId).length + files.length > 10) { feedback.textContent = '사진은 후보지별 최대 10장까지 선택할 수 있습니다.'; return; }
       for (const file of files) {
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10_000_000) {
           feedback.textContent = `${file.name}: 형식 또는 10MB 용량 제한을 확인해 주세요.`;
           continue;
         }
-        await saveLocalPhoto(candidate.id, file);
+        await saveLocalPhoto(candidateId, file);
       }
-      photoItems.forEach((item) => URL.revokeObjectURL(item.url));
-      photoItems = (await listLocalPhotos(candidate.id)).map((item) => ({ ...item, url: URL.createObjectURL(item.blob), selected: true }));
+      await refreshPhotos();
       rerenderPhotos();
       event.target.value = '';
     });
@@ -295,6 +371,11 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
+      draftQuestion = form.elements.question.value;
+      if (!selectedCandidateIds.size) {
+        form.querySelector('[data-consultation-feedback]').textContent = '검토받을 후보지를 한 곳 이상 선택해 주세요.';
+        return;
+      }
       if (form.elements.sharePhotos.checked && !photoItems.some((item) => item.selected)) {
         form.querySelector('[data-consultation-feedback]').textContent = '사진 공유를 선택했다면 전송할 사진을 한 장 이상 골라주세요.';
         return;
@@ -304,19 +385,27 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
   }
 
   function renderPreview(snapshot, question) {
-    const unconfirmed = snapshot.checks.filter((item) => !item.completed);
+    const candidates = snapshotCandidates(snapshot);
+    const selectedPhotos = photoItems.filter((photo) => photo.selected
+      && candidates.some((candidate) => candidate.candidateRef === photo.candidateId && candidate.sharing?.photos));
     body.innerHTML = `
       <div class="consultation-preview">
         <nav class="consultation-steps" aria-label="상담자료 만들기 순서"><span>1. 공유 선택</span><strong>2. 미리보기</strong><span>3. 동의·전송</span></nav>
-        <section class="preview-card"><span>후보지</span><h3>${escapeHtml(snapshot.candidateName)}</h3>
-          ${snapshot.sharing.address ? `<p>${escapeHtml(snapshot.address || '주소 미입력')}</p>` : '<p>주소 공유 안 함</p>'}
-          <dl><div><dt>진행률</dt><dd>${snapshot.progress.completed} / ${snapshot.progress.total}</dd></div><div><dt>종합 상태</dt><dd>${escapeHtml(candidateStatusLabels[snapshot.overallStatus])}</dd></div><div><dt>미확인</dt><dd>${snapshot.progress.unchecked}개</dd></div></dl>
-        </section>
-        ${snapshot.plan ? `<section class="preview-block"><h3>예상 형태</h3><p>${escapeHtml(snapshot.plan.washType || '미입력')} · ${escapeHtml(snapshot.plan.bayCount || '베이 수 미입력')}</p></section>` : ''}
-        <details class="preview-block" open><summary>단계별 상태 · ${snapshot.steps.length}단계</summary><ul>${snapshot.steps.map((step) => `<li><span>${escapeHtml(step.label)}</span><b>${step.completed ? '완료' : escapeHtml(candidateStatusLabels[step.status])}</b></li>`).join('')}</ul></details>
-        <details class="preview-block"><summary>미확인 세부항목 · ${unconfirmed.length}개</summary><ul>${unconfirmed.map((item) => `<li>${escapeHtml(item.label)}</li>`).join('') || '<li>없음</li>'}</ul></details>
-        ${snapshot.sharing.notes ? `<details class="preview-block"><summary>공유 메모 · ${snapshot.notes.length}개</summary><ul>${snapshot.notes.map((note) => `<li><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></li>`).join('') || '<li>작성된 메모 없음</li>'}</ul></details>` : ''}
-        <section class="preview-block"><h3>선택 사진 · ${photoItems.filter((item) => item.selected).length}장</h3><div class="consultation-photo-grid">${photoItems.filter((item) => item.selected).map((photo) => `<article class="consultation-photo selected"><img src="${escapeHtml(photo.url)}" alt=""><small>${escapeHtml(photo.name)}</small></article>`).join('') || '<p class="consultation-empty">사진 공유 안 함</p>'}</div></section>
+        <section class="consultation-bundle-summary"><span>한 건으로 접수할 후보지</span><strong>${candidates.length}곳</strong><small>각 후보지의 12단계 자료는 서로 분리되어 전달됩니다.</small></section>
+        ${candidates.map((candidate, index) => {
+          const unconfirmed = candidate.checks.filter((item) => !item.completed);
+          return `<section class="consultation-candidate-preview">
+            <div class="preview-card"><span>후보지 ${index + 1}</span><h3>${escapeHtml(candidate.candidateName)}</h3>
+              ${candidate.sharing.address ? `<p>${escapeHtml(candidate.address || '주소 미입력')}</p>` : '<p>주소 공유 안 함</p>'}
+              <dl><div><dt>세부 진행률</dt><dd>${candidate.progress.completed} / ${candidate.progress.total}</dd></div><div><dt>종합 상태</dt><dd>${escapeHtml(candidateStatusLabels[candidate.overallStatus])}</dd></div><div><dt>미확인</dt><dd>${candidate.progress.unchecked}개</dd></div></dl>
+            </div>
+            ${candidate.plan ? `<div class="preview-block"><h3>예상 형태</h3><p>${escapeHtml(candidate.plan.washType || '미입력')} · ${escapeHtml(candidate.plan.bayCount || '베이 수 미입력')}</p></div>` : ''}
+            <details class="preview-block" open><summary>12단계 상태 · ${candidate.steps.length}단계</summary><ul>${candidate.steps.map((step) => `<li><span>${escapeHtml(step.label)}</span><b>${step.completed ? '완료' : escapeHtml(candidateStatusLabels[step.status])}</b></li>`).join('')}</ul></details>
+            <details class="preview-block"><summary>미확인 세부항목 · ${unconfirmed.length}개</summary><ul>${unconfirmed.map((item) => `<li>${escapeHtml(item.label)}</li>`).join('') || '<li>없음</li>'}</ul></details>
+            ${candidate.sharing.notes ? `<details class="preview-block"><summary>공유 메모 · ${candidate.notes.length}개</summary><ul>${candidate.notes.map((note) => `<li><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></li>`).join('') || '<li>작성된 메모 없음</li>'}</ul></details>` : ''}
+          </section>`;
+        }).join('')}
+        <section class="preview-block"><h3>선택 사진 · ${selectedPhotos.length}장</h3><div class="consultation-photo-grid">${selectedPhotos.map((photo) => `<article class="consultation-photo selected"><img src="${escapeHtml(photo.url)}" alt=""><b>${escapeHtml(photo.candidateName)}</b><small>${escapeHtml(photo.name)}</small></article>`).join('') || '<p class="consultation-empty">사진 공유 안 함</p>'}</div></section>
         <section class="preview-block"><h3>상담 질문</h3><p>${escapeHtml(question)}</p></section>
         <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 정보, 진행상태, 메모와 사진을 대한이엔지에 전달하는 것에 동의합니다.</span></label>
         <p class="consultation-send-status" data-send-status></p>
@@ -331,33 +420,36 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
       event.target.disabled = true;
       status.textContent = '상담 건을 접수하는 중…';
       try {
-        const candidate = getActiveCandidate();
+        const candidateIds = candidates.map((candidate) => candidate.candidateRef);
         const payload = await request('/api/consultations', {
           method: 'POST',
-          body: JSON.stringify({ clientCandidateRef: candidate.id, snapshot, question, consent: true }),
+          body: JSON.stringify({ clientCandidateRefs: candidateIds, snapshot, question, consent: true }),
         });
         const record = {
           receipt: payload.consultation.receipt,
           accessKey: payload.accessKey,
-          candidateId: candidate.id,
+          candidateId: candidateIds[0],
+          candidateIds,
           status: payload.consultation.status,
           createdAt: payload.consultation.createdAt,
         };
         const records = readRecords();
-        records[candidate.id] = [...(Array.isArray(records[candidate.id]) ? records[candidate.id] : []), record];
+        candidateIds.forEach((candidateId) => {
+          records[candidateId] = [...(Array.isArray(records[candidateId]) ? records[candidateId] : []), record];
+        });
         saveRecords(records);
         currentRecord = record;
-        const selected = photoItems.filter((item) => item.selected);
         const failures = [];
-        for (let index = 0; index < selected.length; index += 1) {
-          status.textContent = `접수 완료 · 사진 ${index + 1}/${selected.length} 전송 중…`;
+        for (let index = 0; index < selectedPhotos.length; index += 1) {
+          status.textContent = `접수 완료 · 사진 ${index + 1}/${selectedPhotos.length} 전송 중…`;
           try {
-            const photoPayload = await imagePayload(selected[index]);
+            const photoPayload = { ...(await imagePayload(selectedPhotos[index])), candidateRef: selectedPhotos[index].candidateId };
             await request(`/api/consultations/${record.receipt}/photos`, { method: 'POST', body: JSON.stringify(photoPayload) }, record.accessKey);
-            await deleteLocalPhoto(selected[index].id);
-          } catch (error) { failures.push(`${selected[index].name}: ${error.message}`); }
+            await deleteLocalPhoto(selectedPhotos[index].id);
+          } catch (error) { failures.push(`${selectedPhotos[index].candidateName} · ${selectedPhotos[index].name}: ${error.message}`); }
         }
-        renderConversation(payload.consultation, failures);
+        const refreshed = await request(`/api/consultations/${record.receipt}`, {}, record.accessKey);
+        renderConversation(refreshed.consultation, failures);
         renderPanel();
       } catch (error) {
         status.textContent = error.message;
@@ -366,8 +458,18 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     });
   }
 
+  function replyTargetCandidate(message) {
+    const candidateIds = recordCandidateIds(currentRecord);
+    const contextCandidateId = String(message.contextId || '').includes(':')
+      ? String(message.contextId).split(':')[0] : '';
+    const activeId = getActiveCandidate().id;
+    const targetId = candidateIds.includes(contextCandidateId)
+      ? contextCandidateId : candidateIds.includes(activeId) ? activeId : candidateIds[0];
+    return getState().candidates.find((candidate) => candidate.id === targetId);
+  }
+
   function saveReplyToCandidate(message) {
-    const candidate = getState().candidates.find((item) => item.id === currentRecord?.candidateId);
+    const candidate = replyTargetCandidate(message);
     if (!candidate) return false;
     candidate.consultationNotes = Array.isArray(candidate.consultationNotes) ? candidate.consultationNotes : [];
     if (candidate.consultationNotes.some((item) => item.sourceMessageId === message.id)) return false;
@@ -385,25 +487,29 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
   function renderConversation(consultation, uploadFailures = []) {
     currentRecord.status = consultation.status;
     const records = readRecords();
-    const list = records[currentRecord.candidateId] || [];
-    const stored = list.find((item) => item.receipt === currentRecord.receipt);
-    if (stored) stored.status = consultation.status;
+    recordCandidateIds(currentRecord).forEach((candidateId) => {
+      const stored = (records[candidateId] || []).find((item) => item.receipt === currentRecord.receipt);
+      if (stored) stored.status = consultation.status;
+    });
     saveRecords(records);
     const adminMessages = consultation.messages.filter((message) => message.sender === 'admin');
-    const applied = new Set((getActiveCandidate().consultationNotes || []).map((item) => item.sourceMessageId));
+    const candidates = snapshotCandidates(consultation.snapshot);
+    const candidateNameById = new Map(candidates.map((candidate) => [candidate.candidateRef, candidate.candidateName]));
+    const replyApplied = (message) => (replyTargetCandidate(message)?.consultationNotes || [])
+      .some((item) => item.sourceMessageId === message.id);
     body.innerHTML = `
       <div class="consultation-room">
         <nav class="consultation-steps"><strong>접수 ${escapeHtml(consultation.receipt)}</strong><span>${escapeHtml(statusLabels[consultation.status] || consultation.status)}</span></nav>
         <section class="receipt-card"><span>접수번호</span><strong>${escapeHtml(consultation.receipt)}</strong><small>${formatDate(consultation.createdAt)} · 새로고침 후에도 이 기기에서 확인 가능</small></section>
         ${uploadFailures.length ? `<div class="upload-failures"><strong>사진 일부 전송 실패</strong><p>${uploadFailures.map(escapeHtml).join('<br>')}</p><button type="button" data-retry-photos>남은 사진 재시도</button></div>` : ''}
-        ${consultation.attachments.length ? `<section class="shared-photo-list"><strong>전송된 사진 · ${consultation.attachments.length}장</strong><div>${consultation.attachments.map((photo) => `<article data-shared-photo="${photo.id}"><span>${escapeHtml(photo.name)}</span><small>${Math.max(1, Math.round(photo.size / 1024)).toLocaleString('ko-KR')}KB</small><button type="button" data-delete-shared-photo>첨부 삭제</button></article>`).join('')}</div></section>` : ''}
+        ${consultation.attachments.length ? `<section class="shared-photo-list"><strong>전송된 사진 · ${consultation.attachments.length}장</strong><div>${consultation.attachments.map((photo) => `<article data-shared-photo="${photo.id}"><span>${escapeHtml(candidateNameById.get(photo.candidateRef) || '후보지')} · ${escapeHtml(photo.name)}</span><small>${Math.max(1, Math.round(photo.size / 1024)).toLocaleString('ko-KR')}KB</small><button type="button" data-delete-shared-photo>첨부 삭제</button></article>`).join('')}</div></section>` : ''}
         <div class="conversation-list" data-message-list>
           <article class="message admin"><small>접수 안내 · ${formatDate(consultation.createdAt)}</small><p>상담 요청이 접수됐습니다. 이 대화방에서 검토 상태와 답변을 확인할 수 있습니다.</p></article>
           ${consultation.messages.map((message) => `
             <article class="message ${escapeHtml(message.sender)}" data-message-id="${message.id}">
               <small>${message.sender === 'admin' ? '대한이엔지' : '사용자'}${message.contextLabel ? ` · ${escapeHtml(message.contextLabel)}` : ''} · ${formatDate(message.createdAt)}</small>
               <p>${escapeHtml(message.body)}</p>
-              ${message.sender === 'admin' ? `<button type="button" data-apply-reply="${message.id}" ${applied.has(message.id) ? 'disabled' : ''}>${applied.has(message.id) ? '후보지 메모에 반영됨' : '답변을 후보지 메모에 반영'}</button>` : ''}
+              ${message.sender === 'admin' ? `<button type="button" data-apply-reply="${message.id}" ${replyApplied(message) ? 'disabled' : ''}>${replyApplied(message) ? '후보지 메모에 반영됨' : '답변을 후보지 메모에 반영'}</button>` : ''}
             </article>
           `).join('')}
         </div>
@@ -433,13 +539,18 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
       } catch (error) { status.textContent = error.message; button.disabled = false; }
     });
     body.querySelector('[data-retry-photos]')?.addEventListener('click', async () => {
-      const pending = (await listLocalPhotos(currentRecord.candidateId)).map((item) => ({ ...item, selected: true }));
+      const pendingGroups = await Promise.all(recordCandidateIds(currentRecord).map(async (candidateId) => {
+        const items = await listLocalPhotos(candidateId);
+        const candidate = getState().candidates.find((item) => item.id === candidateId);
+        return items.map((item) => ({ ...item, candidateName: candidate ? candidateDisplayName(candidate) : '후보지', selected: true }));
+      }));
+      const pending = pendingGroups.flat();
       const failures = [];
       for (const photo of pending) {
         try {
-          await request(`/api/consultations/${currentRecord.receipt}/photos`, { method: 'POST', body: JSON.stringify(await imagePayload(photo)) }, currentRecord.accessKey);
+          await request(`/api/consultations/${currentRecord.receipt}/photos`, { method: 'POST', body: JSON.stringify({ ...(await imagePayload(photo)), candidateRef: photo.candidateId }) }, currentRecord.accessKey);
           await deleteLocalPhoto(photo.id);
-        } catch (error) { failures.push(`${photo.name}: ${error.message}`); }
+        } catch (error) { failures.push(`${photo.candidateName} · ${photo.name}: ${error.message}`); }
       }
       const refreshed = await request(`/api/consultations/${currentRecord.receipt}`, {}, currentRecord.accessKey);
       renderConversation(refreshed.consultation, failures);
@@ -469,7 +580,14 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     } catch (error) { body.innerHTML = `<p class="consultation-error">${escapeHtml(error.message)}</p>`; }
   }
 
-  actions.querySelector('[data-consultation-create]').addEventListener('click', async () => { openModal(); await renderCreate(); });
+  async function startCreate() {
+    selectedCandidateIds = new Set([getActiveCandidate().id]);
+    draftQuestion = '';
+    openModal();
+    await renderCreate();
+  }
+  actions.querySelector('[data-consultation-create]').addEventListener('click', startCreate);
+  document.querySelector('#consultationRequestButton')?.addEventListener('click', startCreate);
   actions.querySelector('[data-consultation-history]').addEventListener('click', openHistory);
   backdrop.addEventListener('click', closeModal);
   modal.querySelector('[data-consultation-close]').addEventListener('click', closeModal);

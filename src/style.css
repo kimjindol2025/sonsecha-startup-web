@@ -425,6 +425,13 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 }
 .feedback-launcher > span { font-size: 18px; }
 .feedback-launcher > strong { font-size: 13px; }
+.consultation-launcher {
+  position: fixed; right: 22px; bottom: 84px; z-index: 35; min-height: 52px; display: flex; align-items: center; gap: 9px;
+  padding: 0 18px; color: white; background: var(--ink); border: 2px solid white; border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(11,43,101,.28); cursor: pointer;
+}
+.consultation-launcher > span { font-size: 17px; }
+.consultation-launcher > strong { font-size: 13px; }
 body.feedback-open { overflow: hidden; }
 .usage-guide-backdrop { position: fixed; inset: 0; z-index: 70; padding: 0; background: rgba(8,23,42,.72); border: 0; opacity: 0; transition: opacity .2s; }
 .usage-guide-backdrop.visible { opacity: 1; }
@@ -636,6 +643,17 @@ body.consultation-open { overflow: hidden; }
 .consultation-site-summary span, .receipt-card span { color: #8db1ff; font-size: 9px; font-weight: 800; }
 .consultation-site-summary strong { font-size: 20px; }
 .consultation-site-summary small, .receipt-card small { color: #bcc9da; font-size: 10px; }
+.consultation-candidate-picker { min-width: 0; display: grid; gap: 10px; margin: 0; padding: 16px; background: #f7f9fc; border: 1px solid #b9c7d8; }
+.consultation-candidate-picker legend { width: 100%; font-size: 13px; font-weight: 800; }
+.consultation-candidate-picker legend b { float: right; color: var(--blue); font-size: 11px; }
+.consultation-candidate-picker > label, .consultation-candidate-choice { min-width: 0; display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: white; border: 1px solid #cbd6e4; cursor: pointer; }
+.consultation-candidate-picker > label { background: #eaf1ff; border-color: #9db8ec; }
+.consultation-candidate-picker > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.consultation-candidate-choice.selected { color: #173967; background: #e6efff; border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.consultation-candidate-picker input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+.consultation-candidate-picker span, .consultation-candidate-picker strong, .consultation-candidate-picker small { min-width: 0; display: block; }
+.consultation-candidate-picker strong { font-size: 11px; }
+.consultation-candidate-picker small { margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 8px; line-height: 1.5; text-overflow: ellipsis; white-space: nowrap; }
 .consultation-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 0; padding: 0; border: 0; }
 .consultation-options legend { width: 100%; margin-bottom: 10px; font-size: 12px; font-weight: 800; }
 .consultation-options label { min-width: 0; display: flex; align-items: flex-start; gap: 10px; padding: 14px; background: #f2f6fc; border: 1px solid #c5d1e0; cursor: pointer; }
@@ -647,6 +665,9 @@ body.consultation-open { overflow: hidden; }
 .consultation-photo-picker > div:first-child { display: flex; justify-content: space-between; gap: 12px; }
 .consultation-photo-picker > div:first-child strong { font-size: 12px; }
 .consultation-photo-picker > div:first-child span { color: var(--muted); font-size: 9px; }
+.consultation-photo-target { width: min(360px, 100%); display: grid; gap: 5px; }
+.consultation-photo-target span { font-size: 9px; font-weight: 800; }
+.consultation-photo-target select { width: 100%; min-height: 40px; padding: 0 10px; background: white; border: 1px solid #9eafc4; font-size: 11px; }
 .consultation-file-button { width: fit-content; min-height: 42px; display: grid; place-items: center; padding: 0 15px; color: white; background: var(--blue); font-size: 10px; font-weight: 800; cursor: pointer; }
 .consultation-file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .photo-privacy-warning { margin: 0; padding: 11px 12px; color: #6a4a00; background: #fff5d6; font-size: 9px; line-height: 1.55; }
@@ -657,7 +678,9 @@ body.consultation-open { overflow: hidden; }
 .consultation-photo label { display: flex; align-items: center; gap: 4px; font-size: 8px; font-weight: 800; }
 .consultation-photo label input { width: 16px; height: 16px; margin: 0; accent-color: var(--blue); }
 .consultation-photo button { padding: 2px 5px; color: #a22e2e; background: white; border: 1px solid #d6a4a4; font-size: 8px; cursor: pointer; }
-.consultation-photo small { grid-column: 1 / -1; overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.consultation-photo b, .consultation-photo small { grid-column: 1 / -1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.consultation-photo b { color: var(--blue); font-size: 8px; }
+.consultation-photo small { color: var(--muted); font-size: 8px; }
 .consultation-empty, .consultation-loading, .consultation-error { grid-column: 1 / -1; margin: 0; padding: 20px; color: var(--muted); background: #f3f6fa; font-size: 11px; text-align: center; }
 .consultation-error { color: #a22e2e; }
 .consultation-question, .conversation-form label { display: grid; gap: 7px; }
@@ -676,6 +699,11 @@ body.consultation-open { overflow: hidden; }
 .preview-card dl div { padding: 12px; background: #f3f6fb; }
 .preview-card dt { color: var(--muted); font-size: 8px; }
 .preview-card dd { margin: 5px 0 0; color: var(--blue); font-size: 15px; font-weight: 800; }
+.consultation-bundle-summary { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; align-items: end; padding: 15px 18px; color: white; background: #173456; border-left: 5px solid var(--blue); }
+.consultation-bundle-summary span { color: #a9c2f4; font-size: 9px; font-weight: 800; }
+.consultation-bundle-summary strong { grid-row: 1 / 3; grid-column: 2; font-size: 26px; }
+.consultation-bundle-summary small { color: #c0cddd; font-size: 9px; }
+.consultation-candidate-preview { display: grid; gap: 10px; padding: 12px; background: #edf2f8; border: 1px solid #b8c7d9; }
 .preview-block h3 { margin: 0 0 9px; font-size: 13px; }
 .preview-block summary { font-size: 12px; font-weight: 800; cursor: pointer; }
 .preview-block ul { display: grid; gap: 7px; margin: 13px 0 0; padding: 0; list-style: none; }
@@ -720,6 +748,7 @@ body.consultation-open { overflow: hidden; }
   .consultation-share-form, .consultation-preview, .consultation-room { gap: 14px; padding: 17px 14px 22px; }
   .consultation-steps span, .consultation-steps strong { padding: 9px 4px; font-size: 8px; }
   .consultation-options { grid-template-columns: 1fr; }
+  .consultation-candidate-picker > div { grid-template-columns: 1fr; }
   .consultation-photo-picker > div:first-child { flex-direction: column; }
   .consultation-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .consultation-question textarea, .conversation-form textarea { font-size: 16px; }
@@ -945,6 +974,7 @@ body.consultation-open { overflow: hidden; }
   .site-footer { grid-template-columns: 1fr; gap: 22px; padding: 30px 20px; font-size: 13px; }
   .footer-notice { grid-column: auto; }
   .feedback-launcher { right: 14px; bottom: 14px; min-height: 48px; padding: 0 15px; }
+  .consultation-launcher { right: 14px; bottom: 72px; min-height: 48px; padding: 0 15px; }
   .feedback-modal { width: calc(100% - 20px); max-height: calc(100dvh - 20px); box-shadow: 7px 7px 0 var(--blue); }
   .usage-guide-modal { width: calc(100% - 20px); max-height: calc(100dvh - 20px); box-shadow: 7px 7px 0 var(--blue); }
   .usage-guide-header { padding: 21px 18px 19px; }
@@ -967,7 +997,7 @@ body.consultation-open { overflow: hidden; }
 }
 
 @media print {
-  .site-header, .hero-visual, .hero-actions, .shop-section, .phase-tabs, .detail-toggle, .final-cta, .feedback-launcher, .feedback-backdrop, .feedback-modal, .usage-guide-backdrop, .usage-guide-modal, .cart-backdrop, .cart-drawer { display: none !important; }
+  .site-header, .hero-visual, .hero-actions, .shop-section, .phase-tabs, .detail-toggle, .final-cta, .consultation-launcher, .feedback-launcher, .feedback-backdrop, .feedback-modal, .usage-guide-backdrop, .usage-guide-modal, .cart-backdrop, .cart-drawer { display: none !important; }
   .hero { min-height: auto; display: block; }
   .hero-copy, .roadmap-section, .documents-section, .risk-section { padding: 30px; }
   .step-card { break-inside: avoid; min-height: 100px; }
