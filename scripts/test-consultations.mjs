@@ -67,6 +67,15 @@ const photo = await call(`/api/consultations/${second.payload.consultation.recei
 assert.equal(photo.response.status, 201);
 assert.equal(photo.payload.consultation.attachments.length, 1);
 
+const legacyRetryPhoto = await call(`/api/consultations/${second.payload.consultation.receipt}/photos`, {
+  method: 'POST',
+  headers: { 'x-consultation-key': second.payload.accessKey },
+  body: JSON.stringify({ name: 'legacy-retry.png', mime: 'image/png', data: png, candidateRef: 'candidate-b' }),
+});
+assert.equal(legacyRetryPhoto.response.status, 201);
+assert.equal(legacyRetryPhoto.payload.consultation.attachments.length, 2);
+assert.equal(legacyRetryPhoto.payload.consultation.attachments[1].candidateRef, '');
+
 function fullCandidate(reference, name, completedSteps, marker) {
   const sharing = { address: true, plan: true, notes: true, photos: true };
   const steps = Array.from({ length: 12 }, (_, index) => ({
@@ -167,7 +176,7 @@ const secondView = await call(`/api/consultations/${second.payload.consultation.
 assert.equal(firstView.payload.consultation.snapshot.candidateName, '후보지 A');
 assert.equal(secondView.payload.consultation.snapshot.candidateName, '후보지 B');
 assert.equal(firstView.payload.consultation.attachments.length, 0);
-assert.equal(secondView.payload.consultation.attachments.length, 1);
+assert.equal(secondView.payload.consultation.attachments.length, 2);
 const bundleView = await call(`/api/consultations/${bundle.payload.consultation.receipt}`, { headers: { 'x-consultation-key': bundle.payload.accessKey } });
 assert.equal(bundleView.payload.consultation.snapshot.candidates[0].candidateName, '복수 후보지 A');
 assert.equal(bundleView.payload.consultation.snapshot.candidates[1].candidateName, '복수 후보지 B');

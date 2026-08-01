@@ -332,6 +332,7 @@ export async function createConsultationStore(dataRoot) {
       const photoCandidate = snapshot.version === 2
         ? snapshot.candidates?.find((candidate) => candidate.candidateRef === candidateRef)
         : snapshot;
+      const storedCandidateRef = snapshot.version === 2 ? candidateRef : '';
       if (!photoCandidate || photoCandidate.sharing?.photos !== true) throw new Error('PHOTO_SHARING_DISABLED');
       const mime = cleanText(input.mime, 40, true);
       const extension = allowedMimes.get(mime);
@@ -344,13 +345,13 @@ export async function createConsultationStore(dataRoot) {
         || (mime === 'image/png' && data.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
         || (mime === 'image/webp' && data.subarray(0, 4).toString() === 'RIFF' && data.subarray(8, 12).toString() === 'WEBP');
       if (!signatureOk) throw new Error('INVALID_PHOTO');
-      const count = Number(database.prepare('SELECT COUNT(*) AS count FROM consultation_attachments WHERE consultation_id = ? AND candidate_ref = ?').get(row.id, candidateRef).count);
+      const count = Number(database.prepare('SELECT COUNT(*) AS count FROM consultation_attachments WHERE consultation_id = ? AND candidate_ref = ?').get(row.id, storedCandidateRef).count);
       if (count >= 10) throw new Error('PHOTO_LIMIT');
       const now = new Date().toISOString();
       const result = database.prepare(`
         INSERT INTO consultation_attachments (consultation_id, original_name, candidate_ref, mime, size, created_at)
         VALUES (?, ?, ?, ?, ?, ?)
-      `).run(row.id, originalName, candidateRef, mime, data.length, now);
+      `).run(row.id, originalName, storedCandidateRef, mime, data.length, now);
       const attachmentId = Number(result.lastInsertRowid);
       const directory = resolve(uploadRoot, String(row.id));
       await mkdir(directory, { recursive: true });

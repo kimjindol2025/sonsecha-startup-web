@@ -327,6 +327,10 @@ const candidateDecisionLabels = {
   unreviewed: '미확인', possible: '가능', conditional: '조건부 가능', blocked: '불가',
 };
 
+function consultationStepStatus(step) {
+  return `${step.completed ? '진행 완료' : '진행 미완료'} · 판정 ${candidateDecisionLabels[step.status] || '미확인'}`;
+}
+
 function consultationCandidates(snapshot) {
   return Array.isArray(snapshot?.candidates) ? snapshot.candidates : [snapshot || {}];
 }
@@ -389,7 +393,7 @@ function renderConsultationDetail() {
       </section>
       <details class="consultation-detail-block" open><summary>12단계 상태·메모 · ${steps.length}단계 / 메모 ${notes.length}개</summary><div class="consultation-stage-records">${steps.map((step) => {
         const stepNotes = notes.filter((note) => (note.step || String(note.id || '').split('-')[0]) === step.id);
-        return `<article><header><span>${escapeHtml(step.label)}</span><strong>${step.completed ? '완료' : escapeHtml(candidateDecisionLabels[step.status] || step.status)}</strong></header><div>${candidate.sharing?.notes ? stepNotes.map((note) => `<p><b>${escapeHtml(note.label)}</b><span>${escapeHtml(note.text)}</span></p>`).join('') || '<em>작성된 메모 없음</em>' : '<em>메모 공유 안 함</em>'}</div></article>`;
+        return `<article><header><span>${escapeHtml(step.label)}</span><strong>${escapeHtml(consultationStepStatus(step))}</strong></header><div>${candidate.sharing?.notes ? stepNotes.map((note) => `<p><b>${escapeHtml(note.label)}</b><span>${escapeHtml(note.text)}</span></p>`).join('') || '<em>작성된 메모 없음</em>' : '<em>메모 공유 안 함</em>'}</div></article>`;
       }).join('')}</div></details>
       <details class="consultation-detail-block"><summary>세부 체크 · ${checks.length}개</summary><div class="consultation-check-list">${checks.map((item) => `<p><span>${escapeHtml(item.label)}</span><strong>${item.completed ? '완료' : '미확인'}</strong></p>`).join('')}</div></details>
       <details class="consultation-detail-block"><summary>공유 메모 · ${notes.length}개</summary><div class="consultation-note-list">${notes.map((note) => `<article><strong>${escapeHtml(note.label)}</strong><p>${escapeHtml(note.text)}</p></article>`).join('') || '<p>공유된 메모가 없습니다.</p>'}</div></details>
