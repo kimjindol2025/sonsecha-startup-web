@@ -252,7 +252,7 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .step-detail blockquote { margin: 0; padding: 18px 22px; color: var(--ink); background: white; border-left: 4px solid var(--orange); }
 .roadmap-shop-banner { margin: 18px 0; color: white; background: var(--blue); border: 1px solid #0a42c8; box-shadow: 8px 8px 0 var(--ink); }
 .roadmap-shop-banner[hidden] { display: none; }
-.roadmap-shop-banner > a { display: grid; grid-template-columns: 190px minmax(0, 1fr) auto; gap: 26px; align-items: center; min-height: 150px; padding: 18px 24px 18px 18px; }
+.roadmap-shop-banner > :is(a, button) { display: grid; grid-template-columns: 190px minmax(0, 1fr) auto; gap: 26px; align-items: center; width: 100%; min-height: 150px; padding: 18px 24px 18px 18px; color: inherit; text-align: left; font: inherit; background: transparent; border: 0; cursor: pointer; }
 .roadmap-banner-image { align-self: stretch; display: grid; place-items: center; min-height: 112px; overflow: hidden; background: white; }
 .roadmap-banner-image img { width: 100%; height: 100%; max-height: 130px; object-fit: contain; }
 .roadmap-banner-copy { min-width: 0; }
@@ -916,7 +916,7 @@ body.consultation-open { overflow: hidden; }
   .step-card { grid-template-columns: 30px 45px 1fr 76px; gap: 10px; }
   .step-card p { display: block; margin: 8px 0 0; }
   .step-detail { grid-column: 1 / 5; }
-  .roadmap-shop-banner > a { grid-template-columns: 150px minmax(0, 1fr); gap: 20px; }
+  .roadmap-shop-banner > :is(a, button) { grid-template-columns: 150px minmax(0, 1fr); gap: 20px; }
   .roadmap-shop-banner em { grid-column: 2; justify-self: start; }
   .candidate-fields { grid-template-columns: 1fr; }
   .candidate-heading, .candidate-quick-guide, .candidate-toolbar, .local-save-state { grid-column: 1; }
@@ -1043,7 +1043,7 @@ body.consultation-open { overflow: hidden; }
   }
   .step-detail { grid-column: 1 / -1; padding-top: 16px; overflow-wrap: anywhere; }
   .roadmap-shop-banner { margin: 14px 0 22px; box-shadow: 6px 6px 0 var(--ink); }
-  .roadmap-shop-banner > a { grid-template-columns: 94px minmax(0, 1fr); gap: 14px; min-height: 0; padding: 14px; }
+  .roadmap-shop-banner > :is(a, button) { grid-template-columns: 94px minmax(0, 1fr); gap: 14px; min-height: 0; padding: 14px; }
   .roadmap-banner-image { min-height: 96px; }
   .roadmap-banner-image img { max-height: 102px; }
   .roadmap-banner-copy span { margin-bottom: 5px; font-size: 8px; }

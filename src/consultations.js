@@ -691,7 +691,9 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     await renderCreate();
   }
   actions.querySelector('[data-consultation-create]').addEventListener('click', startCreate);
-  document.querySelector('#consultationRequestButton')?.addEventListener('click', startCreate);
+  document.querySelectorAll('[data-consultation-request]').forEach((button) => {
+    button.addEventListener('click', startCreate);
+  });
   actions.querySelector('[data-consultation-history]').addEventListener('click', openHistory);
   backdrop.addEventListener('click', closeModal);
   modal.querySelector('[data-consultation-close]').addEventListener('click', closeModal);
