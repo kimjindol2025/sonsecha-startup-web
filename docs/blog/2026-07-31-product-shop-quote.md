@@ -143,7 +143,7 @@ K002의 `ps_ctid=01000000` 카테고리 원문을 기준으로 상품 12개의 �
 
 ## 2026-08-01 후속 체크포인트 · 내부 상품 상세 페이지와 상위 3개 콘텐츠
 
-- 계획 커밋: 이 기록을 포함한 `feat(shop): add product details and top product content`
+- 코드 체크포인트: `064027f` (`feat(shop): add product details and top product content`)
 - 운영 주소: `https://sonsecha.dclub.kr/#shop`
 
 ### 요청을 해석한 방식
