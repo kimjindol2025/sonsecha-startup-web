@@ -751,6 +751,8 @@ function updateProgress(shouldSave = true) {
 const cartStorageKey = 'sonsecha-shop-cart-v1';
 const quoteStorageKey = 'sonsecha-quote-form-v1';
 const shopElements = {
+  catalog: document.querySelector('#shopCatalogView'),
+  detail: document.querySelector('#productDetailView'),
   categories: document.querySelector('#shopCategories'),
   search: document.querySelector('#productSearch'),
   sort: document.querySelector('#productSort'),
@@ -785,6 +787,7 @@ function normalizeCatalog(source) {
     name: String(product.name || '이름 없는 상품'),
     category: categoryLabels.has(product.category) ? product.category : 'all',
     summary: String(product.summary || ''),
+    details: String(product.details || ''),
     price: typeof product.price === 'number' && Number.isFinite(product.price) && product.price >= 0
       ? product.price
       : null,
@@ -855,20 +858,21 @@ function productCard(product) {
     ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">`
     : '<span class="product-placeholder-mark" aria-hidden="true">水</span>';
   const stockLabel = product.inStock ? '장바구니 담기' : '품절';
+  const detailHref = `#shop/product/${encodeURIComponent(product.id)}`;
   return `
-    <article class="product-card">
-      <div class="product-media">
+    <article class="product-card" data-product-id="${escapeHtml(product.id)}">
+      <a class="product-media" href="${detailHref}" data-product-detail="${escapeHtml(product.id)}" aria-label="${escapeHtml(product.name)} 상세 보기">
         ${media}
         ${product.badge ? `<span class="product-badge">${escapeHtml(product.badge)}</span>` : ''}
-      </div>
+      </a>
       <div class="product-copy">
         <span class="product-category">${escapeHtml(categoryLabels.get(product.category) || '기타')}</span>
-        <h3>${escapeHtml(product.name)}</h3>
+        <h3><a href="${detailHref}" data-product-detail="${escapeHtml(product.id)}">${escapeHtml(product.name)}</a></h3>
         <p>${escapeHtml(product.summary)}</p>
         <div class="product-buy-row">
           <strong>${formatPrice(product.price)}</strong>
           <div class="product-buy-actions">
-            ${product.shopUrl ? `<a href="${escapeHtml(product.shopUrl)}" target="_blank" rel="noopener noreferrer">공식몰 상세</a>` : ''}
+            <a href="${detailHref}" data-product-detail="${escapeHtml(product.id)}">상세 보기</a>
             <button type="button" data-add-product="${escapeHtml(product.id)}"${product.inStock ? '' : ' disabled'}>${stockLabel}</button>
           </div>
         </div>
@@ -911,6 +915,91 @@ function renderProducts() {
       ${isEmptyCatalog ? '<a href="tel:03116887759">제품 상담 031-1688-7759</a>' : ''}
     </div>
   `;
+}
+
+function productDetailIdFromHash(hash = globalThis.location.hash) {
+  const prefix = '#shop/product/';
+  if (!hash.startsWith(prefix)) return null;
+  try {
+    return decodeURIComponent(hash.slice(prefix.length));
+  } catch {
+    return '';
+  }
+}
+
+function renderDetailParagraphs(value) {
+  const text = String(value || '').trim();
+  if (!text) return '<p>등록된 상세 설명이 없습니다. 제품 구성과 설치 조건은 상담 시 확인해 주세요.</p>';
+  return text.split(/\n{2,}/).map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll('\n', '<br>')}</p>`).join('');
+}
+
+function renderProductDetail(productId) {
+  const product = productById.get(productId);
+  if (!product) {
+    shopElements.detail.innerHTML = `
+      <div class="product-detail-empty">
+        <span aria-hidden="true">水</span>
+        <p>PRODUCT NOT FOUND</p>
+        <h1>공개 중인 상품을 찾을 수 없습니다.</h1>
+        <small>비공개·삭제된 상품이거나 주소가 잘못됐을 수 있습니다.</small>
+        <a href="#shop">제품 목록으로 돌아가기</a>
+      </div>
+    `;
+    return;
+  }
+  const category = categoryLabels.get(product.category) || '기타';
+  const detailText = product.details || product.summary;
+  const related = catalogProducts
+    .filter((item) => item.id !== product.id && item.category === product.category)
+    .sort((a, b) => b.featured - a.featured)
+    .slice(0, 3);
+  const image = product.image
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">`
+    : '<span class="product-detail-placeholder" aria-hidden="true">水</span>';
+  shopElements.detail.innerHTML = `
+    <div class="product-detail-breadcrumb" role="navigation" aria-label="상품 상세 경로">
+      <a href="#shop">제품몰</a><span aria-hidden="true">/</span><strong>${escapeHtml(category)}</strong>
+    </div>
+    <section class="product-detail-hero" data-product-id="${escapeHtml(product.id)}">
+      <div class="product-detail-media">
+        ${image}
+        ${product.badge ? `<span class="product-badge">${escapeHtml(product.badge)}</span>` : ''}
+      </div>
+      <div class="product-detail-copy">
+        <span class="product-category">${escapeHtml(category)}</span>
+        <h1>${escapeHtml(product.name)}</h1>
+        <p class="product-detail-summary">${escapeHtml(product.summary || '상품의 구성과 적용 조건을 상담으로 확인해 주세요.')}</p>
+        <div class="product-detail-price">
+          <span>판매가</span>
+          <strong>${formatPrice(product.price)}</strong>
+          <small class="${product.inStock ? 'available' : 'sold-out'}">${product.inStock ? '장바구니 판매 가능' : '현재 품절'}</small>
+        </div>
+        <div class="product-detail-actions">
+          <button type="button" data-add-product="${escapeHtml(product.id)}"${product.inStock ? '' : ' disabled'}>${product.inStock ? '장바구니 담기' : '품절 상품'}</button>
+          ${product.shopUrl ? `<a href="${escapeHtml(product.shopUrl)}" target="_blank" rel="noopener noreferrer" data-analytics-id="product:official:${escapeHtml(product.id)}" data-analytics-label="공식몰에서 ${escapeHtml(product.name)} 보기">공식몰에서 보기 ↗</a>` : '<a href="tel:03116887759">전화로 문의하기</a>'}
+        </div>
+        <p class="product-detail-caution">배송비·설치비·재고와 현장 적용 가능 여부는 최종 상담에서 확정됩니다.</p>
+      </div>
+    </section>
+    <section class="product-detail-description">
+      <header><p>PRODUCT INFORMATION</p><h2>상품 상세 안내</h2></header>
+      <div>${renderDetailParagraphs(detailText)}</div>
+    </section>
+    <section class="product-detail-guide">
+      <article><span>01</span><strong>현장 조건 확인</strong><p>전기·급수·배수와 설치 공간을 먼저 확인해 주세요.</p></article>
+      <article><span>02</span><strong>견적서 작성</strong><p>장바구니에 수량을 담아 간이견적서를 만들 수 있습니다.</p></article>
+      <article><span>03</span><strong>최종 상담</strong><p>배송·설치·재고 조건은 전화 상담에서 확정합니다.</p></article>
+    </section>
+    ${related.length ? `<section class="product-related"><header><p>RELATED PRODUCTS</p><h2>같은 분류 상품</h2></header><div>${related.map((item) => `<a href="#shop/product/${encodeURIComponent(item.id)}" data-product-detail="${escapeHtml(item.id)}"><span>${item.image ? `<img src="${escapeHtml(item.image)}" alt="">` : '水'}</span><b>${escapeHtml(item.name)}</b><small>${formatPrice(item.price)}</small></a>`).join('')}</div></section>` : ''}
+    <a class="product-detail-back" href="#shop">← 제품 목록으로 돌아가기</a>
+  `;
+}
+
+function renderShopRoute(productId) {
+  const detailOpen = productId !== null;
+  shopElements.catalog.hidden = detailOpen;
+  shopElements.detail.hidden = !detailOpen;
+  if (detailOpen) renderProductDetail(productId);
 }
 
 function addToCart(productId) {
@@ -1152,6 +1241,10 @@ async function initializeShop() {
     const button = event.target.closest('[data-add-product]');
     if (button) addToCart(button.dataset.addProduct);
   });
+  shopElements.detail.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-add-product]');
+    if (button) addToCart(button.dataset.addProduct);
+  });
   shopElements.items.addEventListener('click', (event) => {
     const button = event.target.closest('[data-cart-action]');
     const item = button?.closest('[data-cart-product]');
@@ -1184,10 +1277,12 @@ async function initializeShop() {
   saveCart();
   renderProducts();
   renderCart();
+  syncSiteView();
 }
 
 function syncSiteView() {
-  const isShopView = globalThis.location.hash === '#shop';
+  const productId = productDetailIdFromHash();
+  const isShopView = globalThis.location.hash === '#shop' || productId !== null;
   document.body.classList.toggle('shop-view', isShopView);
   document.body.classList.toggle('guide-view', !isShopView);
   document.querySelectorAll('[data-view-tab]').forEach((tab) => {
@@ -1196,8 +1291,12 @@ function syncSiteView() {
     if (active) tab.setAttribute('aria-current', 'page');
     else tab.removeAttribute('aria-current');
   });
-  document.title = isShopView
-    ? '제품몰 · 손세차장 창업 로드맵'
+  renderShopRoute(productId);
+  const detailProduct = productId === null ? null : productById.get(productId);
+  document.title = detailProduct
+    ? `${detailProduct.name} · 손세차장 제품몰`
+    : isShopView
+      ? '제품몰 · 손세차장 창업 로드맵'
     : '손세차장 창업 로드맵';
   if (isShopView) requestAnimationFrame(() => globalThis.scrollTo({ top: 0, behavior: 'auto' }));
 }

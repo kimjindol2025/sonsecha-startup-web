@@ -406,6 +406,7 @@ function validateProduct(input, existingId = '') {
     name: cleanText(input.name, 160, true),
     category,
     summary: cleanText(input.summary, 600),
+    details: cleanText(input.details, 4000),
     price,
     image: cleanUrl(input.image),
     shopUrl: cleanUrl(input.shopUrl),

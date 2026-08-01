@@ -571,6 +571,7 @@ function fillForm(product) {
   elements.form.elements.category.value = product?.category || 'equipment';
   elements.form.elements.price.value = product?.price ?? '';
   elements.form.elements.summary.value = product?.summary || '';
+  elements.form.elements.details.value = product?.details || '';
   elements.form.elements.image.value = product?.image || '';
   elements.form.elements.shopUrl.value = product?.shopUrl || '';
   elements.form.elements.badge.value = product?.badge || '';
@@ -609,6 +610,7 @@ function formProduct() {
     category: fields.category.value,
     price: fields.price.value === '' ? null : Number(fields.price.value),
     summary: fields.summary.value,
+    details: fields.details.value,
     image: fields.image.value,
     shopUrl: fields.shopUrl.value,
     badge: fields.badge.value,

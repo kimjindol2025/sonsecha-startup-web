@@ -43,11 +43,11 @@ function sectionFor(element) {
   if (element.closest('header')) return '상단 메뉴';
   if (element.closest('footer')) return '하단 정보';
   if (element.closest('.roadmap-shop-banner')) return '창업절차 상품 배너';
-  return globalThis.location.hash === '#shop' ? '제품몰' : '창업가이드';
+  return globalThis.location.hash.startsWith('#shop') ? '제품몰' : '창업가이드';
 }
 
 function productName(element) {
-  return compact(element.closest('.product-card, [data-cart-product]')?.querySelector('h3, .cart-item-copy > strong')?.textContent, 80);
+  return compact(element.closest('.product-card, .product-detail-hero, [data-cart-product]')?.querySelector('h1, h3, .cart-item-copy > strong')?.textContent, 80);
 }
 
 function describe(element) {
@@ -93,9 +93,10 @@ function describe(element) {
   const productCard = element.closest('.product-card');
   const cardProductId = productCard?.querySelector('[data-add-product]')?.dataset.addProduct;
   if (element instanceof HTMLAnchorElement && cardProductId) {
+    const internalDetail = element.hasAttribute('data-product-detail');
     return {
       key: `product:detail:${slug(cardProductId)}`,
-      label: `공식몰 상세 · ${name || cardProductId}`,
+      label: `${internalDetail ? '상품 상세' : '공식몰 상세'} · ${name || cardProductId}`,
       kind: 'product',
       section: '제품몰',
       href: safeHref(element),

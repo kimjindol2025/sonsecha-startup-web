@@ -69,7 +69,8 @@
       </section>
 
       <section class="shop-section" id="shop">
-        <div class="shop-heading">
+        <div class="shop-catalog-view" id="shopCatalogView">
+          <div class="shop-heading">
           <div>
             <p class="eyebrow" data-content-key="shopEyebrow">OUR PRODUCT SHOP</p>
             <h2 data-content-key="shopTitle">세차장 운영에 필요한 제품</h2>
@@ -85,35 +86,38 @@
               <strong><span data-cart-count>0</span>개</strong>
             </button>
           </div>
-        </div>
-
-        <div class="shop-benefits" aria-label="쇼핑 안내">
-          <p><span>01</span><strong data-content-key="shopBenefit1Title">전문 제품</strong><small data-content-key="shopBenefit1Detail">손세차장 운영 품목 중심</small></p>
-          <p><span>02</span><strong data-content-key="shopBenefit2Title">간편 견적</strong><small data-content-key="shopBenefit2Detail">장바구니 목록으로 문의</small></p>
-          <p><span>03</span><strong data-content-key="shopBenefit3Title">전화 상담</strong><small data-content-key="phone">031-1688-7759</small></p>
-        </div>
-
-        <div class="shop-toolbar">
-          <div class="shop-categories" id="shopCategories" role="group" aria-label="상품 카테고리"></div>
-          <div class="shop-controls">
-            <label class="product-search">
-              <span class="sr-only">상품 검색</span>
-              <input id="productSearch" type="search" placeholder="상품명 검색">
-            </label>
-            <label>
-              <span class="sr-only">상품 정렬</span>
-              <select id="productSort" aria-label="상품 정렬">
-                <option value="featured">추천순</option>
-                <option value="name">상품명순</option>
-                <option value="price-low">낮은 가격순</option>
-                <option value="price-high">높은 가격순</option>
-              </select>
-            </label>
           </div>
+
+          <div class="shop-benefits" aria-label="쇼핑 안내">
+            <p><span>01</span><strong data-content-key="shopBenefit1Title">전문 제품</strong><small data-content-key="shopBenefit1Detail">손세차장 운영 품목 중심</small></p>
+            <p><span>02</span><strong data-content-key="shopBenefit2Title">간편 견적</strong><small data-content-key="shopBenefit2Detail">장바구니 목록으로 문의</small></p>
+            <p><span>03</span><strong data-content-key="shopBenefit3Title">전화 상담</strong><small data-content-key="phone">031-1688-7759</small></p>
+          </div>
+
+          <div class="shop-toolbar">
+            <div class="shop-categories" id="shopCategories" role="group" aria-label="상품 카테고리"></div>
+            <div class="shop-controls">
+              <label class="product-search">
+                <span class="sr-only">상품 검색</span>
+                <input id="productSearch" type="search" placeholder="상품명 검색">
+              </label>
+              <label>
+                <span class="sr-only">상품 정렬</span>
+                <select id="productSort" aria-label="상품 정렬">
+                  <option value="featured">추천순</option>
+                  <option value="name">상품명순</option>
+                  <option value="price-low">낮은 가격순</option>
+                  <option value="price-high">높은 가격순</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <p class="product-results" id="productResults" aria-live="polite"></p>
+          <div class="product-grid" id="productGrid"></div>
         </div>
 
-        <p class="product-results" id="productResults" aria-live="polite"></p>
-        <div class="product-grid" id="productGrid"></div>
+        <article class="product-detail-view" id="productDetailView" aria-live="polite" hidden></article>
       </section>
 
       <section class="roadmap-section" id="roadmap">
