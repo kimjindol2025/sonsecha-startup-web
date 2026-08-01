@@ -382,6 +382,7 @@ function cleanText(value, maximum, required = false) {
 function cleanUrl(value) {
   const cleaned = cleanText(value, 1000);
   if (!cleaned) return '';
+  if (/^\/(?!\/)[A-Za-z0-9/_\-.%]+$/.test(cleaned)) return cleaned;
   try {
     const parsed = new URL(cleaned);
     if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error();
