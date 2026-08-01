@@ -52,6 +52,7 @@
           <button class="active" type="button" data-admin-section="content" role="tab" aria-selected="true">메인페이지 글</button>
           <button type="button" data-admin-section="products" role="tab" aria-selected="false">상품 관리</button>
           <button type="button" data-admin-section="analytics" role="tab" aria-selected="false">클릭 분석</button>
+          <button type="button" data-admin-section="feedback" role="tab" aria-selected="false">사용자 피드백</button>
         </div>
 
         <section class="content-panel" id="contentPanel">
@@ -189,6 +190,37 @@
             </div>
             <p class="analytics-feedback" id="analyticsFeedback" aria-live="polite"></p>
           </article>
+        </section>
+
+        <section class="feedback-board" id="feedbackPanel" hidden>
+          <div class="feedback-board-heading">
+            <div>
+              <p>CUSTOMER FEEDBACK</p>
+              <h2>사용자 피드백 게시판</h2>
+              <span>방문자가 남긴 의견을 확인하고 처리 상태를 관리합니다.</span>
+            </div>
+            <button type="button" id="feedbackRefresh">새로고침</button>
+          </div>
+          <div class="feedback-board-summary">
+            <article><span>새 의견</span><strong id="feedbackNewCount">0</strong></article>
+            <article><span>검토 중</span><strong id="feedbackReviewingCount">0</strong></article>
+            <article><span>완료</span><strong id="feedbackDoneCount">0</strong></article>
+            <article><span>전체</span><strong id="feedbackTotalCount">0</strong></article>
+          </div>
+          <div class="feedback-board-tools">
+            <label><span class="sr-only">처리 상태</span>
+              <select id="feedbackStatusFilter">
+                <option value="all">모든 상태</option>
+                <option value="new">새 의견</option>
+                <option value="reviewing">검토 중</option>
+                <option value="done">완료</option>
+              </select>
+            </label>
+            <label><span class="sr-only">피드백 검색</span><input id="feedbackSearch" type="search" placeholder="내용·관련 화면 검색"></label>
+          </div>
+          <div class="feedback-board-list" id="feedbackList"></div>
+          <p class="feedback-board-empty" id="feedbackEmpty" hidden>조건에 맞는 피드백이 없습니다.</p>
+          <p class="feedback-board-status" id="feedbackBoardStatus" aria-live="polite"></p>
         </section>
 
         <form class="password-change" id="passwordForm">

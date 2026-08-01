@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { contentFields, defaultSiteContent } from './src/content.js';
 import { products as baselineProducts } from './src/products.js';
 
@@ -12,13 +13,17 @@ const productDataPath = resolve(dataRoot, 'products.json');
 const contentDataPath = resolve(dataRoot, 'content.json');
 const authDataPath = resolve(dataRoot, 'admin-auth.json');
 const analyticsDataPath = resolve(dataRoot, 'analytics.json');
+const feedbackDataPath = resolve(dataRoot, 'feedback.sqlite');
 const port = Number.parseInt(process.env.PORT || '40330', 10);
 const production = process.env.NODE_ENV === 'production';
 const sessionLifetime = 12 * 60 * 60 * 1000;
 const sessions = new Map();
 const loginAttempts = new Map();
 const analyticsAttempts = new Map();
+const feedbackAttempts = new Map();
 const allowedCategories = new Set(['chemical', 'tool', 'equipment', 'safety']);
+const allowedFeedbackKinds = new Set(['helpful', 'problem', 'idea', 'other']);
+const allowedFeedbackStatuses = new Set(['new', 'reviewing', 'done']);
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -79,6 +84,47 @@ async function writeJsonAtomic(pathname, value) {
   await rename(temporaryPath, pathname);
   await chmod(pathname, 0o600);
 }
+
+await mkdir(dataRoot, { recursive: true });
+const feedbackDatabase = new DatabaseSync(feedbackDataPath);
+feedbackDatabase.exec(`
+  PRAGMA journal_mode = DELETE;
+  PRAGMA busy_timeout = 3000;
+  CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    area TEXT NOT NULL,
+    message TEXT NOT NULL,
+    page TEXT NOT NULL,
+    device TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS feedback_status_created_idx ON feedback(status, created_at DESC);
+`);
+await chmod(feedbackDataPath, 0o600);
+
+const insertFeedback = feedbackDatabase.prepare(`
+  INSERT INTO feedback (kind, area, message, page, device, status, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, 'new', ?, ?)
+`);
+const listFeedback = feedbackDatabase.prepare(`
+  SELECT id, kind, area, message, page, device, status, created_at AS createdAt, updated_at AS updatedAt
+  FROM feedback
+  ORDER BY created_at DESC
+  LIMIT 500
+`);
+const feedbackCounts = feedbackDatabase.prepare(`
+  SELECT status, COUNT(*) AS count FROM feedback GROUP BY status
+`);
+const updateFeedbackStatus = feedbackDatabase.prepare(`
+  UPDATE feedback SET status = ?, updated_at = ? WHERE id = ?
+`);
+const getFeedback = feedbackDatabase.prepare(`
+  SELECT id, kind, area, message, page, device, status, created_at AS createdAt, updated_at AS updatedAt
+  FROM feedback WHERE id = ?
+`);
 
 function cloneBaselineProducts() {
   return baselineProducts.map((product) => ({ ...product }));
@@ -264,6 +310,43 @@ async function analyticsSummary(range) {
   };
 }
 
+function feedbackAllowed(address) {
+  const now = Date.now();
+  const current = feedbackAttempts.get(address);
+  if (!current || current.resetAt <= now) {
+    if (feedbackAttempts.size > 10_000) feedbackAttempts.clear();
+    feedbackAttempts.set(address, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    return true;
+  }
+  current.count += 1;
+  return current.count <= 5;
+}
+
+function validateFeedback(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_FEEDBACK');
+  const kind = cleanText(input.kind, 20, true);
+  if (!allowedFeedbackKinds.has(kind)) throw new Error('INVALID_FEEDBACK');
+  const message = cleanText(input.message, 1000, true);
+  if (message.length < 5) throw new Error('INVALID_FEEDBACK');
+  return {
+    kind,
+    area: cleanText(input.area, 80) || '기타',
+    message,
+    page: cleanText(input.page, 200) || '/',
+    device: ['mobile', 'tablet', 'desktop'].includes(input.device) ? input.device : 'unknown',
+    website: cleanText(input.website, 200),
+  };
+}
+
+function feedbackSummary() {
+  const counts = { new: 0, reviewing: 0, done: 0, total: 0 };
+  feedbackCounts.all().forEach((row) => {
+    if (row.status in counts) counts[row.status] = Number(row.count || 0);
+    counts.total += Number(row.count || 0);
+  });
+  return { feedback: listFeedback.all(), counts };
+}
+
 function cleanText(value, maximum, required = false) {
   const cleaned = typeof value === 'string' ? value.trim() : '';
   if (required && !cleaned) throw new Error('REQUIRED_FIELD');
@@ -422,6 +505,18 @@ async function handleApi(request, response, url) {
     return sendJson(response, 202, { accepted: true });
   }
 
+  if (request.method === 'POST' && url.pathname === '/api/feedback') {
+    const feedback = validateFeedback(await readJsonBody(request));
+    if (feedback.website) return sendJson(response, 201, { received: true });
+    const address = requestAddress(request);
+    if (!feedbackAllowed(address)) return sendError(response, 429, '의견은 한 시간에 5개까지 보낼 수 있습니다. 잠시 후 다시 시도해 주세요.');
+    const timestamp = new Date().toISOString();
+    const result = insertFeedback.run(
+      feedback.kind, feedback.area, feedback.message, feedback.page, feedback.device, timestamp, timestamp,
+    );
+    return sendJson(response, 201, { received: true, id: Number(result.lastInsertRowid) });
+  }
+
   if (request.method === 'POST' && url.pathname === '/api/admin/login') {
     const address = requestAddress(request);
     if (loginBlocked(address)) return sendError(response, 429, '10분 후에 다시 시도해 주세요.');
@@ -460,6 +555,21 @@ async function handleApi(request, response, url) {
     const requestedRange = Number.parseInt(url.searchParams.get('range') || '30', 10);
     const range = [7, 30, 90, 365].includes(requestedRange) ? requestedRange : 30;
     return sendJson(response, 200, { analytics: await analyticsSummary(range) });
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/admin/feedback') {
+    return sendJson(response, 200, feedbackSummary());
+  }
+
+  const feedbackMatch = url.pathname.match(/^\/api\/admin\/feedback\/(\d+)$/);
+  if (request.method === 'PATCH' && feedbackMatch) {
+    const feedbackId = Number.parseInt(feedbackMatch[1], 10);
+    const body = await readJsonBody(request);
+    const status = cleanText(body.status, 20, true);
+    if (!allowedFeedbackStatuses.has(status)) throw new Error('INVALID_FEEDBACK');
+    const result = updateFeedbackStatus.run(status, new Date().toISOString(), feedbackId);
+    if (!result.changes) return sendError(response, 404, '피드백을 찾을 수 없습니다.');
+    return sendJson(response, 200, { feedback: getFeedback.get(feedbackId) });
   }
 
   if (request.method === 'PUT' && url.pathname === '/api/admin/content') {
@@ -540,7 +650,7 @@ const server = createServer(async (request, response) => {
   } catch (error) {
     if (error.message === 'BODY_TOO_LARGE') return sendError(response, 413, '요청 크기가 너무 큽니다.');
     if (error.message === 'INVALID_JSON') return sendError(response, 400, 'JSON 형식을 확인해 주세요.');
-    if (['REQUIRED_FIELD', 'FIELD_TOO_LONG', 'INVALID_URL', 'INVALID_PRICE', 'INVALID_FEATURED', 'INVALID_CATEGORY', 'INVALID_CONTENT', 'INVALID_ANALYTICS'].includes(error.message)) {
+    if (['REQUIRED_FIELD', 'FIELD_TOO_LONG', 'INVALID_URL', 'INVALID_PRICE', 'INVALID_FEATURED', 'INVALID_CATEGORY', 'INVALID_CONTENT', 'INVALID_ANALYTICS', 'INVALID_FEEDBACK'].includes(error.message)) {
       return sendError(response, 400, '입력값을 확인해 주세요.');
     }
     console.error('[server]', error);
@@ -553,7 +663,10 @@ server.listen(port, '0.0.0.0', () => {
 });
 
 function shutdown() {
-  server.close(() => process.exit(0));
+  server.close(() => {
+    feedbackDatabase.close();
+    process.exit(0);
+  });
   setTimeout(() => process.exit(1), 5000).unref();
 }
 

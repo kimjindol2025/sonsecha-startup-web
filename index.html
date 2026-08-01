@@ -303,6 +303,52 @@
       </section>
     </main>
 
+    <button class="feedback-launcher" id="feedbackOpenButton" type="button" data-analytics-id="feedback:open" data-analytics-label="사용자 의견 보내기">
+      <span aria-hidden="true">✦</span>
+      <strong>의견 보내기</strong>
+    </button>
+    <button class="feedback-backdrop" type="button" data-feedback-close aria-label="의견창 닫기" hidden></button>
+    <section class="feedback-modal" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" aria-hidden="true">
+      <div class="feedback-modal-header">
+        <div>
+          <p>YOUR VOICE BUILDS THIS GUIDE</p>
+          <h2 id="feedbackTitle">어떤 점이 필요하셨나요?</h2>
+          <span>보내주신 의견은 우리 서버에 저장하고 실제 개선에 사용합니다.</span>
+        </div>
+        <button type="button" data-feedback-close aria-label="의견창 닫기">×</button>
+      </div>
+      <form id="feedbackForm">
+        <fieldset class="feedback-kind-options">
+          <legend>의견 종류</legend>
+          <label><input type="radio" name="kind" value="helpful" checked><span><b>도움됐어요</b><small>유용했던 점</small></span></label>
+          <label><input type="radio" name="kind" value="problem"><span><b>불편해요</b><small>막히거나 어려운 점</small></span></label>
+          <label><input type="radio" name="kind" value="idea"><span><b>기능 제안</b><small>추가로 필요한 것</small></span></label>
+          <label><input type="radio" name="kind" value="other"><span><b>기타 의견</b><small>자유로운 이야기</small></span></label>
+        </fieldset>
+        <label class="feedback-field">
+          <span>관련 화면</span>
+          <select name="area">
+            <option value="창업가이드">창업가이드 전체</option>
+            <option value="12단계 절차">12단계 절차</option>
+            <option value="후보지 체크">후보지·실무 체크</option>
+            <option value="제품몰">제품몰·상품</option>
+            <option value="장바구니·견적">장바구니·견적서</option>
+            <option value="기타">기타</option>
+          </select>
+        </label>
+        <label class="feedback-field">
+          <span>의견 <b>5자 이상</b></span>
+          <textarea name="message" rows="6" minlength="5" maxlength="1000" required placeholder="어떤 정보가 도움됐는지, 어디에서 막혔는지 편하게 적어주세요."></textarea>
+        </label>
+        <label class="feedback-honeypot" aria-hidden="true">웹사이트<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+        <p class="feedback-privacy">이름·연락처·IP 주소는 저장하지 않습니다. 답변이 필요한 문의는 하단 상담전화로 연락해 주세요.</p>
+        <div class="feedback-submit-row">
+          <p id="feedbackFormStatus" aria-live="polite"></p>
+          <button type="submit" id="feedbackSubmitButton">의견 보내기</button>
+        </div>
+      </form>
+    </section>
+
     <button class="cart-backdrop" type="button" data-cart-close aria-label="장바구니 닫기" hidden></button>
     <aside class="cart-drawer" id="cartDrawer" aria-label="장바구니" aria-hidden="true">
       <div class="cart-header">

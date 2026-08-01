@@ -15,6 +15,7 @@ const elements = {
   contentPanel: document.querySelector('#contentPanel'),
   productPanel: document.querySelector('#productPanel'),
   analyticsPanel: document.querySelector('#analyticsPanel'),
+  feedbackPanel: document.querySelector('#feedbackPanel'),
   contentForm: document.querySelector('#contentForm'),
   contentGroups: document.querySelector('#contentFieldGroups'),
   contentFeedback: document.querySelector('#contentFeedback'),
@@ -38,6 +39,16 @@ const elements = {
   analyticsEvents: document.querySelector('#analyticsEvents'),
   analyticsEmpty: document.querySelector('#analyticsEmpty'),
   analyticsFeedback: document.querySelector('#analyticsFeedback'),
+  feedbackRefresh: document.querySelector('#feedbackRefresh'),
+  feedbackStatusFilter: document.querySelector('#feedbackStatusFilter'),
+  feedbackSearch: document.querySelector('#feedbackSearch'),
+  feedbackList: document.querySelector('#feedbackList'),
+  feedbackEmpty: document.querySelector('#feedbackEmpty'),
+  feedbackBoardStatus: document.querySelector('#feedbackBoardStatus'),
+  feedbackNewCount: document.querySelector('#feedbackNewCount'),
+  feedbackReviewingCount: document.querySelector('#feedbackReviewingCount'),
+  feedbackDoneCount: document.querySelector('#feedbackDoneCount'),
+  feedbackTotalCount: document.querySelector('#feedbackTotalCount'),
   form: document.querySelector('#productForm'),
   formButton: document.querySelector('#saveProductButton'),
   mode: document.querySelector('#editorMode'),
@@ -52,6 +63,8 @@ let products = [];
 let selectedId = '';
 let contentFields = [];
 let analytics = null;
+let feedbackItems = [];
+let feedbackSummaryCounts = { new: 0, reviewing: 0, done: 0, total: 0 };
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -93,7 +106,7 @@ function showLogin(message = '') {
 async function showDashboard() {
   elements.loginView.hidden = true;
   elements.dashboard.hidden = false;
-  await Promise.all([loadContent(), loadProducts(), loadAnalytics()]);
+  await Promise.all([loadContent(), loadProducts(), loadAnalytics(), loadFeedback()]);
   switchAdminSection('content');
 }
 
@@ -101,6 +114,7 @@ function switchAdminSection(section) {
   elements.contentPanel.hidden = section !== 'content';
   elements.productPanel.hidden = section !== 'products';
   elements.analyticsPanel.hidden = section !== 'analytics';
+  elements.feedbackPanel.hidden = section !== 'feedback';
   elements.newProduct.hidden = section !== 'products';
   elements.sectionTabs.forEach((button) => {
     const active = button.dataset.adminSection === section;
@@ -211,6 +225,83 @@ async function loadAnalytics() {
     else elements.analyticsFeedback.textContent = error.message;
   } finally {
     elements.analyticsRefresh.disabled = false;
+  }
+}
+
+const feedbackKindLabels = {
+  helpful: '도움됐어요',
+  problem: '불편해요',
+  idea: '기능 제안',
+  other: '기타 의견',
+};
+
+const feedbackStatusLabels = {
+  new: '새 의견',
+  reviewing: '검토 중',
+  done: '완료',
+};
+
+const feedbackDeviceLabels = {
+  mobile: '모바일', tablet: '태블릿', desktop: 'PC', unknown: '기타',
+};
+
+function visibleFeedback() {
+  const status = elements.feedbackStatusFilter.value;
+  const query = elements.feedbackSearch.value.trim().toLocaleLowerCase('ko-KR');
+  return feedbackItems.filter((item) => {
+    const matchesStatus = status === 'all' || item.status === status;
+    const matchesQuery = !query || `${item.message} ${item.area} ${feedbackKindLabels[item.kind] || item.kind}`.toLocaleLowerCase('ko-KR').includes(query);
+    return matchesStatus && matchesQuery;
+  });
+}
+
+function renderFeedback() {
+  elements.feedbackNewCount.textContent = formatNumber(feedbackSummaryCounts.new);
+  elements.feedbackReviewingCount.textContent = formatNumber(feedbackSummaryCounts.reviewing);
+  elements.feedbackDoneCount.textContent = formatNumber(feedbackSummaryCounts.done);
+  elements.feedbackTotalCount.textContent = formatNumber(feedbackSummaryCounts.total);
+  const items = visibleFeedback();
+  elements.feedbackList.innerHTML = items.map((item) => `
+    <article class="feedback-board-item status-${escapeHtml(item.status)}" data-feedback-id="${Number(item.id)}">
+      <div class="feedback-item-heading">
+        <div>
+          <span class="feedback-kind kind-${escapeHtml(item.kind)}">${escapeHtml(feedbackKindLabels[item.kind] || item.kind)}</span>
+          <span class="feedback-state">${escapeHtml(feedbackStatusLabels[item.status] || item.status)}</span>
+        </div>
+        <time datetime="${escapeHtml(item.createdAt)}">${escapeHtml(formatDateTime(item.createdAt))}</time>
+      </div>
+      <p class="feedback-message">${escapeHtml(item.message)}</p>
+      <div class="feedback-meta">
+        <span>관련 화면 · <b>${escapeHtml(item.area)}</b></span>
+        <span>${escapeHtml(feedbackDeviceLabels[item.device] || '기타')}</span>
+        <span>${escapeHtml(item.page)}</span>
+      </div>
+      <div class="feedback-status-actions" aria-label="처리 상태 변경">
+        ${Object.entries(feedbackStatusLabels).map(([status, label]) => `
+          <button type="button" data-feedback-status="${status}"${item.status === status ? ' class="active" disabled' : ''}>${label}</button>
+        `).join('')}
+      </div>
+    </article>
+  `).join('');
+  elements.feedbackEmpty.hidden = items.length > 0;
+}
+
+async function loadFeedback() {
+  elements.feedbackRefresh.disabled = true;
+  elements.feedbackBoardStatus.textContent = '피드백을 불러오는 중…';
+  try {
+    const payload = await api('/api/admin/feedback');
+    feedbackItems = Array.isArray(payload.feedback) ? payload.feedback : [];
+    feedbackSummaryCounts = { ...feedbackSummaryCounts, ...(payload.counts || {}) };
+    renderFeedback();
+    elements.feedbackBoardStatus.textContent = feedbackItems.length
+      ? `최근 의견 ${formatDateTime(feedbackItems[0].createdAt)}`
+      : '아직 등록된 피드백이 없습니다.';
+  } catch (error) {
+    if (error.status === 401) showLogin('세션이 만료됐습니다. 다시 접속해 주세요.');
+    else elements.feedbackBoardStatus.textContent = error.message;
+  } finally {
+    elements.feedbackRefresh.disabled = false;
   }
 }
 
@@ -374,6 +465,28 @@ elements.sectionTabs.forEach((button) => {
 elements.analyticsRange.addEventListener('change', loadAnalytics);
 elements.analyticsRefresh.addEventListener('click', loadAnalytics);
 elements.analyticsSearch.addEventListener('input', renderAnalyticsEvents);
+elements.feedbackRefresh.addEventListener('click', loadFeedback);
+elements.feedbackStatusFilter.addEventListener('change', renderFeedback);
+elements.feedbackSearch.addEventListener('input', renderFeedback);
+elements.feedbackList.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-feedback-status]');
+  const item = button?.closest('[data-feedback-id]');
+  if (!button || !item) return;
+  button.disabled = true;
+  elements.feedbackBoardStatus.textContent = '처리 상태 저장 중…';
+  try {
+    await api(`/api/admin/feedback/${encodeURIComponent(item.dataset.feedbackId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: button.dataset.feedbackStatus }),
+    });
+    await loadFeedback();
+    elements.feedbackBoardStatus.textContent = '처리 상태를 변경했습니다.';
+  } catch (error) {
+    if (error.status === 401) showLogin('세션이 만료됐습니다. 다시 접속해 주세요.');
+    else elements.feedbackBoardStatus.textContent = error.message;
+    button.disabled = false;
+  }
+});
 
 elements.contentForm.addEventListener('submit', async (event) => {
   event.preventDefault();

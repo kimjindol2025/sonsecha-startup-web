@@ -930,6 +930,92 @@ function syncSiteView() {
   if (isShopView) requestAnimationFrame(() => globalThis.scrollTo({ top: 0, behavior: 'auto' }));
 }
 
+const feedbackElements = {
+  open: document.querySelector('#feedbackOpenButton'),
+  modal: document.querySelector('#feedbackModal'),
+  backdrop: document.querySelector('.feedback-backdrop'),
+  form: document.querySelector('#feedbackForm'),
+  submit: document.querySelector('#feedbackSubmitButton'),
+  status: document.querySelector('#feedbackFormStatus'),
+};
+
+function feedbackDeviceType() {
+  if (globalThis.matchMedia('(max-width: 600px)').matches) return 'mobile';
+  if (globalThis.matchMedia('(max-width: 1024px)').matches) return 'tablet';
+  return 'desktop';
+}
+
+function suggestedFeedbackArea() {
+  if (document.body.classList.contains('quote-open') || document.body.classList.contains('cart-open')) return '장바구니·견적';
+  if (globalThis.location.hash === '#shop') return '제품몰';
+  const center = document.elementFromPoint(globalThis.innerWidth / 2, globalThis.innerHeight / 2);
+  if (center?.closest('#roadmap')) return '12단계 절차';
+  if (center?.closest('#field-guide')) return '후보지 체크';
+  return '창업가이드';
+}
+
+function openFeedback() {
+  feedbackElements.form.elements.area.value = suggestedFeedbackArea();
+  feedbackElements.status.textContent = '';
+  feedbackElements.backdrop.hidden = false;
+  feedbackElements.modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('feedback-open');
+  requestAnimationFrame(() => {
+    feedbackElements.backdrop.classList.add('visible');
+    feedbackElements.modal.classList.add('open');
+    feedbackElements.form.elements.message.focus();
+  });
+}
+
+function closeFeedback() {
+  feedbackElements.modal.classList.remove('open');
+  feedbackElements.backdrop.classList.remove('visible');
+  feedbackElements.modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('feedback-open');
+  setTimeout(() => { feedbackElements.backdrop.hidden = true; }, 220);
+  feedbackElements.open.focus();
+}
+
+async function submitFeedback(event) {
+  event.preventDefault();
+  if (!feedbackElements.form.reportValidity()) return;
+  const fields = feedbackElements.form.elements;
+  feedbackElements.submit.disabled = true;
+  feedbackElements.status.textContent = '우리 서버에 저장하는 중…';
+  try {
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        kind: fields.kind.value,
+        area: fields.area.value,
+        message: fields.message.value,
+        website: fields.website.value,
+        page: `${globalThis.location.pathname}${globalThis.location.hash}`,
+        device: feedbackDeviceType(),
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || '의견을 저장하지 못했습니다.');
+    feedbackElements.form.reset();
+    feedbackElements.status.textContent = '고맙습니다. 의견을 안전하게 저장했습니다.';
+    feedbackElements.submit.textContent = '저장 완료';
+    setTimeout(closeFeedback, 1200);
+  } catch (error) {
+    feedbackElements.status.textContent = error.message;
+  } finally {
+    feedbackElements.submit.disabled = false;
+    setTimeout(() => { feedbackElements.submit.textContent = '의견 보내기'; }, 1400);
+  }
+}
+
+feedbackElements.open.addEventListener('click', openFeedback);
+document.querySelectorAll('[data-feedback-close]').forEach((button) => button.addEventListener('click', closeFeedback));
+feedbackElements.form.addEventListener('submit', submitFeedback);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && feedbackElements.modal.classList.contains('open')) closeFeedback();
+});
+
 checkboxes.forEach((box) => {
   box.addEventListener('change', () => {
     box.closest('.step-card').classList.toggle('completed', box.checked);

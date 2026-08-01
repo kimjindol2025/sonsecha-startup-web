@@ -343,6 +343,53 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .footer-business a { margin-left: 4px; color: var(--blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .footer-notice { max-width: 420px; justify-self: end; }
 
+.feedback-launcher {
+  position: fixed; right: 22px; bottom: 22px; z-index: 35; min-height: 52px; display: flex; align-items: center; gap: 9px;
+  padding: 0 18px; color: white; background: var(--blue); border: 2px solid white; border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(11,43,101,.28); cursor: pointer;
+}
+.feedback-launcher > span { font-size: 18px; }
+.feedback-launcher > strong { font-size: 13px; }
+body.feedback-open { overflow: hidden; }
+.feedback-backdrop { position: fixed; inset: 0; z-index: 60; padding: 0; background: rgba(8,23,42,.68); border: 0; opacity: 0; transition: opacity .2s; }
+.feedback-backdrop.visible { opacity: 1; }
+.feedback-modal {
+  position: fixed; top: 50%; left: 50%; z-index: 61; width: min(620px, calc(100% - 32px)); max-height: calc(100dvh - 32px);
+  overflow-y: auto; visibility: hidden; color: var(--ink); background: white; border: 1px solid var(--ink);
+  box-shadow: 16px 16px 0 var(--blue); opacity: 0; transform: translate(-50%, calc(-50% + 18px));
+  transition: opacity .2s, transform .2s, visibility .2s;
+}
+.feedback-modal.open { visibility: visible; opacity: 1; transform: translate(-50%, -50%); }
+.feedback-modal-header { display: flex; justify-content: space-between; gap: 20px; padding: 27px 28px 24px; color: white; background: var(--ink); }
+.feedback-modal-header p { margin: 0 0 7px; color: #8db1ff; font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.feedback-modal-header h2 { margin: 0 0 7px; font-size: 27px; }
+.feedback-modal-header span { color: #b9c7da; font-size: 11px; line-height: 1.5; }
+.feedback-modal-header > button { flex: 0 0 42px; width: 42px; height: 42px; padding: 0; color: white; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.25); border-radius: 50%; font-size: 26px; cursor: pointer; }
+#feedbackForm { display: grid; gap: 18px; padding: 26px 28px 28px; }
+.feedback-kind-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0; padding: 0; border: 0; }
+.feedback-kind-options legend, .feedback-field > span { display: block; width: 100%; margin-bottom: 8px; font-size: 11px; font-weight: 800; }
+.feedback-kind-options label { min-width: 0; cursor: pointer; }
+.feedback-kind-options input { position: absolute; opacity: 0; pointer-events: none; }
+.feedback-kind-options label > span { min-height: 70px; display: grid; align-content: center; gap: 4px; padding: 10px; background: #f1f5fa; border: 1px solid #cbd6e4; text-align: center; }
+.feedback-kind-options label b, .feedback-kind-options label small { display: block; }
+.feedback-kind-options label b { font-size: 11px; }
+.feedback-kind-options label small { color: var(--muted); font-size: 8px; }
+.feedback-kind-options input:checked + span { color: white; background: var(--blue); border-color: var(--blue); }
+.feedback-kind-options input:checked + span small { color: #dce7ff; }
+.feedback-kind-options input:focus-visible + span { outline: 3px solid rgba(20,87,255,.22); outline-offset: 2px; }
+.feedback-field { display: grid; }
+.feedback-field > span b { color: var(--muted); font-size: 9px; font-weight: 500; }
+.feedback-field select, .feedback-field textarea { width: 100%; color: var(--ink); background: white; border: 1px solid #aab8cb; border-radius: 0; }
+.feedback-field select { height: 46px; padding: 0 12px; }
+.feedback-field textarea { min-height: 130px; padding: 12px; resize: vertical; line-height: 1.6; }
+.feedback-field select:focus, .feedback-field textarea:focus { outline: 3px solid rgba(20,87,255,.13); border-color: var(--blue); }
+.feedback-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.feedback-privacy { margin: -4px 0 0; padding: 12px 14px; color: #53647b; background: #eef4ff; font-size: 9px; line-height: 1.6; }
+.feedback-submit-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.feedback-submit-row p { min-height: 18px; margin: 0; color: var(--blue); font-size: 11px; }
+.feedback-submit-row button { flex: 0 0 auto; min-height: 48px; padding: 0 24px; color: white; background: var(--blue); border: 0; font-weight: 800; cursor: pointer; }
+.feedback-submit-row button:disabled { background: #9cabc0; cursor: wait; }
+
 body.cart-open { overflow: hidden; }
 .cart-backdrop { position: fixed; inset: 0; z-index: 40; padding: 0; background: rgba(8,23,42,.56); border: 0; opacity: 0; cursor: default; transition: opacity .24s; }
 .cart-backdrop.visible { opacity: 1; }
@@ -636,10 +683,22 @@ body.quote-open { overflow: hidden; }
   .final-cta h2 { font-size: 32px; word-break: keep-all; }
   .site-footer { grid-template-columns: 1fr; gap: 22px; padding: 30px 20px; font-size: 13px; }
   .footer-notice { grid-column: auto; }
+  .feedback-launcher { right: 14px; bottom: 14px; min-height: 48px; padding: 0 15px; }
+  .feedback-modal { width: calc(100% - 20px); max-height: calc(100dvh - 20px); box-shadow: 7px 7px 0 var(--blue); }
+  .feedback-modal-header { padding: 22px 18px 19px; }
+  .feedback-modal-header h2 { font-size: 23px; word-break: keep-all; }
+  .feedback-modal-header span { display: block; max-width: 260px; }
+  #feedbackForm { gap: 16px; padding: 20px 16px 22px; }
+  .feedback-kind-options { grid-template-columns: 1fr 1fr; }
+  .feedback-kind-options label > span { min-height: 64px; }
+  .feedback-field select, .feedback-field textarea { font-size: 16px; }
+  .feedback-field select { height: 50px; }
+  .feedback-submit-row { align-items: stretch; flex-direction: column; }
+  .feedback-submit-row button { width: 100%; min-height: 52px; }
 }
 
 @media print {
-  .site-header, .hero-visual, .hero-actions, .shop-section, .phase-tabs, .detail-toggle, .final-cta, .cart-backdrop, .cart-drawer { display: none !important; }
+  .site-header, .hero-visual, .hero-actions, .shop-section, .phase-tabs, .detail-toggle, .final-cta, .feedback-launcher, .feedback-backdrop, .feedback-modal, .cart-backdrop, .cart-drawer { display: none !important; }
   .hero { min-height: auto; display: block; }
   .hero-copy, .roadmap-section, .documents-section, .risk-section { padding: 30px; }
   .step-card { break-inside: avoid; min-height: 100px; }
