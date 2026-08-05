@@ -8,9 +8,9 @@
     "nextRule": "completed 항목 다음의 첫 pending 항목을 다음 작업으로 사용"
   },
   "current": {
-    "lastCompletedId": "stage-ui-1-5",
-    "nextId": "dashboard",
-    "nextTitle": "후보지 대시보드에 20단계 진행률과 다음 일정 반영"
+    "lastCompletedId": "stage-ui-6-12",
+    "nextId": "stage-ui-13-20",
+    "nextTitle": "13~20단계 운영형 UI 확장"
   },
   "items": [
     {
@@ -65,13 +65,14 @@
       "id": "stage-ui-6-12",
       "order": 5,
       "title": "6~12단계 입력형 UI 확장",
-      "status": "pending",
+      "status": "completed",
       "output": [
         "index.html",
         "src/main.js",
         "src/style.css"
       ],
-      "notes": "건축, 배수, 공사, 시운전, 사업자등록, 보험 단계 확장"
+      "notes": "1~5단계와 같은 stageRecords 입력 패널을 6~12단계까지 확장하고 기존 저장/로드 흐름과 함께 빌드 검증 완료",
+      "doneAt": "2026-08-05"
     },
     {
       "id": "stage-ui-13-20",
