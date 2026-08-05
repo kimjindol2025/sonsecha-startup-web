@@ -21,6 +21,39 @@ const candidateStatusLabels = {
 };
 let businessPlanApp = null;
 const stageAppPrototypeSteps = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
+const roadmapStageAppLinks = {
+  '5': [
+    { href: '/wastewater-app.html', title: '폐수관리 앱', description: '유입량, 처리량, 슬러지와 점검 기록을 남깁니다.' },
+  ],
+  '6': [
+    { href: '/wastewater-app.html', title: '폐수관리 앱', description: '허가·신고 준비용 폐수 운영 기록을 분리 관리합니다.' },
+  ],
+  '7': [
+    { href: '/wastewater-app.html', title: '폐수관리 앱', description: '배수라인과 처리 상태를 날짜별로 정리합니다.' },
+  ],
+  '9': [
+    { href: '/equipment-app.html', title: '장비관리 앱', description: '설치 장비별 점검과 초기 이상 여부를 기록합니다.' },
+  ],
+  '12': [
+    { href: '/operations-apps.html', title: '운영 앱 허브', description: '오픈 후 필요한 재고·매출·장비·일지 앱을 한곳에서 엽니다.' },
+    { href: '/startup-diary-app.html', title: '창업 일지 앱', description: '오픈 1일차부터 운영 일지를 바로 기록합니다.' },
+  ],
+  '13': [
+    { href: '/startup-diary-app.html', title: '창업 일지 앱', description: '첫 30일 차량수, 오류, 민원, 반응을 일자별로 남깁니다.' },
+  ],
+  '17': [
+    { href: '/inventory-app.html', title: '재고관리 앱', description: '약품, 소모품, 최소 재고와 발주 메모를 관리합니다.' },
+  ],
+  '18': [
+    { href: '/equipment-app.html', title: '장비관리 앱', description: '정기점검, 동절기 점검, AS 이력을 분리 기록합니다.' },
+  ],
+  '19': [
+    { href: '/sales-app.html', title: '매출관리 앱', description: '일매출, 차량수, 환불, 객단가를 누적 분석합니다.' },
+  ],
+  '20': [
+    { href: '/operations-apps.html', title: '운영 앱 허브', description: '확장 판단 전에 누적 운영 앱 기록을 한곳에서 검토합니다.' },
+  ],
+};
 const stepOneCheckGroups = [
   {
     id: 'online',
@@ -1737,6 +1770,22 @@ document.querySelectorAll('.detail-toggle').forEach((button) => {
   });
 });
 
+function injectRoadmapStageAppLinks() {
+  Object.entries(roadmapStageAppLinks).forEach(([step, links]) => {
+    const card = document.querySelector(`input[data-step="${step}"]`)?.closest('.step-card');
+    const detail = card?.querySelector('.step-detail');
+    if (!detail) return;
+    detail.querySelector('.step-app-links')?.remove();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'step-app-links';
+    wrapper.innerHTML = [
+      '<p class="step-app-note">이 단계의 기록은 별도 운영 앱에서 관리합니다.</p>',
+      ...links.map((link) => `\n        <a href="${link.href}">\n          <span>\n            <strong>${link.title}</strong>\n            <small>${link.description}</small>\n          </span>\n          <em>앱 열기 →</em>\n        </a>\n      `),
+    ].join('');
+    detail.append(wrapper);
+  });
+}
+
 document.querySelectorAll('.phase-tabs button').forEach((button) => {
   button.addEventListener('click', () => {
     document.querySelector('.phase-tabs .active').classList.remove('active');
@@ -1789,6 +1838,7 @@ syncSiteView();
 installClickAnalytics();
 initializeSiteContent();
 hydrateGuide();
+injectRoadmapStageAppLinks();
 candidateState = loadCandidateState();
 saveCandidateState();
 hydrateDetailChecks();

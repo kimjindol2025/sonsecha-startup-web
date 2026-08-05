@@ -459,6 +459,60 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .guide-content blockquote { margin: 16px 0; padding: 18px 22px; color: var(--ink); background: #fff8f2; border-left: 4px solid var(--orange); }
 .guide-content hr { margin: 24px 0; border: 0; border-top: 1px solid var(--line); }
 
+.step-app-links {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.step-app-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.step-app-links a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  background: #edf4ff;
+  border: 1px solid #bed2ff;
+  border-radius: 7px;
+  transition: background .18s, border-color .18s, transform .18s;
+}
+.step-app-links a:hover {
+  background: #dfeaff;
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+.step-app-links a:focus-visible {
+  outline: 3px solid rgba(20,87,255,.22);
+  outline-offset: 2px;
+}
+.step-app-links strong {
+  display: block;
+  color: var(--blue);
+  font-size: 13px;
+}
+.step-app-links small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.step-app-links em {
+  flex: 0 0 auto;
+  color: var(--blue);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .documents-section { background: var(--sky); }
 .document-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
 .document-grid article { padding: 34px; background: white; border-top: 6px solid var(--blue); box-shadow: 0 12px 40px rgba(17,37,63,.08); }
