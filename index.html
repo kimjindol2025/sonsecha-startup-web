@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="용도변경부터 폐수시설 신고와 개업까지, 손세차장 창업 절차를 순서대로 확인하세요." />
+    <meta name="description" content="부지 검토부터 장비 견적, 폐수·재이용수 설계, 결제 시스템 오픈까지 노터치 자동세차 창업 절차를 순서대로 확인하세요." />
     <meta name="theme-color" content="#eef4ff" />
-    <title>손세차장 창업 로드맵</title>
+    <title>노터치 자동세차 창업 프로그램</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -15,13 +15,14 @@
     <header class="site-header">
       <a class="brand" href="#top" aria-label="처음으로">
         <span class="brand-mark" aria-hidden="true">水</span>
-        <span data-content-key="brandTitle">손세차장 창업 로드맵</span>
+        <span data-content-key="brandTitle">노터치 자동세차 창업 프로그램</span>
       </a>
       <nav aria-label="주요 메뉴">
         <a class="nav-view-tab active" href="#top" data-view-tab="guide" data-content-key="navGuideLabel" aria-current="page">창업가이드</a>
         <a class="nav-view-tab" href="#plan" data-view-tab="plan">사업계획서</a>
         <a class="nav-view-tab" href="#shop" data-view-tab="shop" data-content-key="navShopLabel">제품몰</a>
         <a class="nav-admin-link" href="/admin.html">관리자</a>
+        <a class="nav-admin-link" href="/korea-touchless-report.html">리서치 보고서</a>
         <span class="nav-divider" aria-hidden="true"></span>
         <a class="guide-subnav" href="#roadmap">절차</a>
         <a class="guide-subnav" href="#documents">서류</a>
@@ -39,16 +40,16 @@
         <div class="hero-copy">
           <p class="eyebrow" data-content-key="heroEyebrow">KOREA · CAR WASH STARTUP GUIDE</p>
           <h1><span data-content-key="heroTitleLine1">계약보다 먼저,</span><br /><em data-content-key="heroTitleHighlight">가능한 자리</em><span data-content-key="heroTitleSuffix">인지 확인하세요.</span></h1>
-          <p class="hero-description" data-content-key="heroDescription">손세차장 창업은 좋은 장비보다 올바른 순서가 먼저입니다. 입지 검토부터 용도변경, 폐수시설 신고, 개업까지 한 장에 정리했습니다.</p>
+          <p class="hero-description" data-content-key="heroDescription">노터치 자동세차 창업은 단독 기계 사업보다 노터치와 손세차·셀프 보완 동선을 함께 설계하는 경우가 많습니다. 후보지 확인부터 장비 견적, 건축·배수·운영 설계, 오픈 준비까지 한 흐름으로 정리했습니다.</p>
           <div class="hero-actions">
-            <a class="primary-button" href="#roadmap"><span data-content-key="heroPrimaryButton">12단계 확인하기</span> <span>↓</span></a>
+            <a class="primary-button" href="#roadmap"><span data-content-key="heroPrimaryButton">20단계 확인하기</span> <span>↓</span></a>
             <button class="text-button" type="button" id="resetButton">체크리스트 초기화</button>
           </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
           <div class="sun"></div>
           <div class="building">
-            <div class="sign">HAND<br />WASH</div>
+            <div class="sign">TOUCHLESS<br />WASH</div>
             <div class="awning"></div>
             <div class="bay">
               <div class="car">
@@ -90,7 +91,7 @@
           </div>
 
           <div class="shop-benefits" aria-label="쇼핑 안내">
-            <p><span>01</span><strong data-content-key="shopBenefit1Title">전문 제품</strong><small data-content-key="shopBenefit1Detail">손세차장 운영 품목 중심</small></p>
+            <p><span>01</span><strong data-content-key="shopBenefit1Title">설비 중심</strong><small data-content-key="shopBenefit1Detail">노터치 자동세차 운영 품목 중심</small></p>
             <p><span>02</span><strong data-content-key="shopBenefit2Title">간편 견적</strong><small data-content-key="shopBenefit2Detail">장바구니 목록으로 문의</small></p>
             <p><span>03</span><strong data-content-key="shopBenefit3Title">전화 상담</strong><small data-content-key="phone">031-1688-7759</small></p>
           </div>
@@ -125,11 +126,11 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow" data-content-key="roadmapEyebrow">STEP BY STEP</p>
-            <h2 data-content-key="roadmapTitle">창업 절차 12단계</h2>
+            <h2 data-content-key="roadmapTitle">창업 절차 20단계</h2>
           </div>
           <div class="progress-card" aria-live="polite">
             <span>진행률</span>
-            <strong id="progressText">0 / 12</strong>
+            <strong id="progressText">0 / 20</strong>
             <div class="progress-track"><span id="progressBar"></span></div>
           </div>
         </div>
@@ -146,21 +147,21 @@
           <article class="step-card" data-phase="check">
             <label><input type="checkbox" data-step="1" /><span class="checkmark"></span></label>
             <div class="step-number">01</div>
-            <div><span class="phase-tag">입지 검토</span><h3 data-content-key="step1Title">후보지 사전 확인</h3><p data-content-key="step1Description">건축물대장, 토지이용계획, 위반건축물 여부와 공공하수도 연결 가능성을 확인합니다.</p></div>
+            <div><span class="phase-tag">입지 검토</span><h3 data-content-key="step1Title">후보지·상권 사전 확인</h3><p data-content-key="step1Description">건축물대장, 토지이용계획, 대기차량 동선, 공공하수도 연결과 노터치·손세차 복합 운영 동선 가능성을 확인합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
-            <div class="step-detail"><ul><li>관할 구청 건축·도시계획·환경·하수 부서 사전협의</li><li>차량 진입로와 도로점용 필요 여부 확인</li><li>상수도 공급량과 전기 용량 확인</li></ul></div>
+            <div class="step-detail"><ul><li>관할 구청 건축·도시계획·환경·하수 부서 사전협의</li><li>차량 진입로와 도로점용 필요 여부 확인</li><li>손세차·셀프 베이와 드라잉존을 함께 둘 수 있는지 확인</li><li>상수도 공급량과 전기 용량 확인</li></ul></div>
           </article>
           <article class="step-card" data-phase="check">
             <label><input type="checkbox" data-step="2" /><span class="checkmark"></span></label>
             <div class="step-number">02</div>
-            <div><span class="phase-tag">전문 검토</span><h3 data-content-key="step2Title">건축사 용도변경 검토</h3><p data-content-key="step2Description">자동차 관련 시설 중 세차장으로 변경 가능한지, 허가·신고 구분과 건축 기준을 검토합니다.</p></div>
+            <div><span class="phase-tag">전문 검토</span><h3 data-content-key="step2Title">건축·용도 변경 검토</h3><p data-content-key="step2Description">자동차 관련 시설 중 세차장으로 가능한지, 베이 높이·기계실·캐노피·경량철골 구조물, 주차·소방 기준과 허가 구분을 검토합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
-            <div class="step-detail"><ul><li>주차대수·소방·피난·구조 기준</li><li>캐노피·컨테이너·간판 설치 가능 여부</li><li>100㎡·500㎡ 기준에 따른 추가 절차 검토</li></ul></div>
+            <div class="step-detail"><ul><li>주차대수·소방·피난·구조 기준</li><li>캐노피·경량철골·기계실 박스가 별도 구조물로 판단되는지 확인</li><li>기존 건축물대장 용도와 세차장 용도변경 가능 여부 검토</li><li>100㎡·500㎡ 기준에 따른 추가 절차 검토</li></ul></div>
           </article>
           <article class="step-card critical" data-phase="check">
             <label><input type="checkbox" data-step="3" /><span class="checkmark"></span></label>
             <div class="step-number">03</div>
-            <div><span class="phase-tag">계약</span><h3 data-content-key="step3Title">조건부 임대차계약</h3><p data-content-key="step3Description">용도변경이나 환경 신고가 불가능할 경우 계약금 반환이 가능한 특약을 넣습니다.</p></div>
+            <div><span class="phase-tag">계약</span><h3 data-content-key="step3Title">조건부 부지 계약</h3><p data-content-key="step3Description">전기 증설, 폐수·재이용수, 장비 설치가 불가능하면 계약을 해제할 수 있는 특약을 넣습니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><blockquote>“세차장 영업에 필요한 행정절차가 불허될 경우 임차인은 계약을 해제하고 계약금을 반환받는다.”</blockquote></div>
           </article>
@@ -170,7 +171,7 @@
               <div class="roadmap-banner-copy">
                 <span>WASTEWATER TREATMENT</span>
                 <strong data-content-key="banner1Title">세차장 폐수처리기</strong>
-                <p data-content-key="banner1Description">자동형·수동형 폐수처리 설비의 예산과 설치 조건을 제품몰에서 확인하세요.</p>
+                <p data-content-key="banner1Description">노터치 자동세차 부지에서 필요한 폐수·재이용수 설비 예산과 설치 조건을 제품몰에서 확인하세요.</p>
               </div>
               <em data-content-key="banner1Cta">폐수 설비 보기 →</em>
             </a>
@@ -178,28 +179,28 @@
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="4" /><span class="checkmark"></span></label>
             <div class="step-number">04</div>
-            <div><span class="phase-tag">환경 설계</span><h3 data-content-key="step4Title">폐수처리계획 설계</h3><p data-content-key="step4Description">세차폐수의 발생량과 처리 경로를 정하고, 바닥·트렌치·집수조·유수분리시설을 설계합니다.</p></div>
+            <div><span class="phase-tag">환경 설계</span><h3 data-content-key="step4Title">장비사·시공사 견적 비교</h3><p data-content-key="step4Description">노터치 본체, 건조기, 결제기, 기계실뿐 아니라 건축·토목·배수·전기 공사 포함 범위를 비교해 처리량과 총 설치비를 확인합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
-            <div class="step-detail"><ul><li>빗물과 세차폐수 배관 분리</li><li>슬러지 보관 및 위탁처리 계획</li><li>폐수를 우수관·도로 측구로 방류 금지</li></ul></div>
+            <div class="step-detail"><ul><li>장비가에 건축·토목·전기·배수 공사가 포함인지 별도인지 구분</li><li>빗물과 세차폐수 배관 분리</li><li>슬러지 보관 및 위탁처리 계획</li><li>폐수를 우수관·도로 측구로 방류 금지</li></ul></div>
           </article>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="5" /><span class="checkmark"></span></label>
             <div class="step-number">05</div>
-            <div><span class="phase-tag">환경 인허가</span><h3 data-content-key="step5Title">폐수배출시설 허가·신고</h3><p data-content-key="step5Description">공사 전에 관할 환경부서에 위치도, 공정 흐름도, 폐수량과 방지시설 도면을 제출합니다.</p></div>
+            <div><span class="phase-tag">환경 인허가</span><h3 data-content-key="step5Title">폐수·재이용수 계획 설계</h3><p data-content-key="step5Description">차량당 물 사용량, 회수수 적용 범위, 배수 경로와 집수·처리 설비를 설계합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><a class="source-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14800000112&HighCtgCD=A09006" target="_blank" rel="noreferrer">정부24 폐수배출시설 안내 ↗</a></div>
           </article>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="6" /><span class="checkmark"></span></label>
             <div class="step-number">06</div>
-            <div><span class="phase-tag">건축 인허가</span><h3 data-content-key="step6Title">건축물 용도변경</h3><p data-content-key="step6Description">건축사 도면을 갖춰 자동차 관련 시설(세차장)로 용도변경 허가 또는 신고를 진행합니다.</p></div>
+            <div><span class="phase-tag">건축 인허가</span><h3 data-content-key="step6Title">폐수배출시설 허가·신고</h3><p data-content-key="step6Description">공사 전에 관할 환경부서에 위치도, 폐수량, 재이용수 설비와 방지시설 도면을 제출합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><a class="source-link" href="https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1028542757" target="_blank" rel="noreferrer">건축법 제19조 확인 ↗</a></div>
           </article>
           <article class="step-card" data-phase="permit">
             <label><input type="checkbox" data-step="7" /><span class="checkmark"></span></label>
             <div class="step-number">07</div>
-            <div><span class="phase-tag">하수도</span><h3 data-content-key="step7Title">배수설비·도로 관련 신고</h3><p data-content-key="step7Description">공공하수도 연결 설계와 배수설비 신고를 하고, 필요하면 도로점용·차량출입시설 허가를 받습니다.</p></div>
+            <div><span class="phase-tag">하수도</span><h3 data-content-key="step7Title">건축·배수·도로 인허가</h3><p data-content-key="step7Description">용도변경, 공공하수도 연결 설계, 배수설비 신고와 필요 시 도로점용·차량출입시설 허가를 받습니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><a class="source-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14800000189&HighCtgCD=A03001&tp_seq=" target="_blank" rel="noreferrer">정부24 배수설비 안내 ↗</a></div>
           </article>
@@ -209,7 +210,7 @@
               <div class="roadmap-banner-copy">
                 <span>BIGWASH SITE REVIEW</span>
                 <strong data-content-key="reviewBannerTitle">후보지 검토 요청</strong>
-                <p data-content-key="reviewBannerDescription">1~12단계 체크·판정·메모를 선택해 빅워시에 검토를 요청하세요.</p>
+                <p data-content-key="reviewBannerDescription">1~20단계 체크·판정·메모를 선택해 노터치 자동세차 후보지 검토를 요청하세요.</p>
               </div>
               <em data-content-key="reviewBannerCta">빅워시 문의 →</em>
             </button>
@@ -217,21 +218,21 @@
           <article class="step-card" data-phase="build">
             <label><input type="checkbox" data-step="8" /><span class="checkmark"></span></label>
             <div class="step-number">08</div>
-            <div><span class="phase-tag">시공</span><h3 data-content-key="step8Title">시설공사</h3><p data-content-key="step8Description">허가·신고 수리 후 승인된 도면대로 방수 바닥, 트렌치, 폐수처리·급수·전기·소방시설을 시공합니다.</p></div>
+            <div><span class="phase-tag">시공</span><h3 data-content-key="step8Title">전기·수도·가스 증설 확정</h3><p data-content-key="step8Description">본체와 건조기 요구 전력, 온수 설비, 통신과 급배수 조건을 최종 확정하고 공사 일정을 묶습니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"><ul><li>고압세척기 누전차단·접지</li><li>콤프레서 소음·진동 저감</li><li>임의 캐노피·컨테이너 설치 금지</li></ul></div>
           </article>
           <article class="step-card" data-phase="build">
             <label><input type="checkbox" data-step="9" /><span class="checkmark"></span></label>
             <div class="step-number">09</div>
-            <div><span class="phase-tag">준공</span><h3 data-content-key="step9Title">사용승인·대장 확인</h3><p data-content-key="step9Description">필요한 검사와 사용승인을 받은 뒤 건축물대장 용도가 ‘자동차 관련 시설(세차장)’인지 확인합니다.</p></div>
+            <div><span class="phase-tag">준공</span><h3 data-content-key="step9Title">노터치 장비·건조기 설치</h3><p data-content-key="step9Description">승인된 도면과 견적 기준으로 본체, 건조기, 기계실, 레일과 안전장치를 설치합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
           <article class="step-card" data-phase="open">
             <label><input type="checkbox" data-step="10" /><span class="checkmark"></span></label>
             <div class="step-number">10</div>
-            <div><span class="phase-tag">가동 준비</span><h3 data-content-key="step10Title">폐수시설 가동 절차</h3><p data-content-key="step10Description">허가·신고 대상 시설은 가동 전에 가동시작 신고를 하고 처리시설 시운전과 운영일지를 준비합니다.</p></div>
+            <div><span class="phase-tag">가동 준비</span><h3 data-content-key="step10Title">결제·POS·원격관제 세팅</h3><p data-content-key="step10Description">무인결제, 프로그램 가격표, 원격 모니터링과 오픈·장애 대응 체계를 세팅합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
@@ -241,7 +242,7 @@
               <div class="roadmap-banner-copy">
                 <span>AIR COMPRESSOR</span>
                 <strong data-content-key="banner3Title">세차장 콤프레셔</strong>
-                <p data-content-key="banner3Description">에어건과 공압 장비 사용량에 맞는 탱크 용량과 설치 위치를 확인하세요.</p>
+                <p data-content-key="banner3Description">에어건과 부가 장비, 보조 세척 구역까지 고려해 탱크 용량과 설치 위치를 확인하세요.</p>
               </div>
               <em data-content-key="banner3Cta">콤프레셔 보기 →</em>
             </a>
@@ -249,16 +250,72 @@
           <article class="step-card" data-phase="open">
             <label><input type="checkbox" data-step="11" /><span class="checkmark"></span></label>
             <div class="step-number">11</div>
-            <div><span class="phase-tag">세무</span><h3 data-content-key="step11Title">사업자등록</h3><p data-content-key="step11Description">개업 전 또는 사업 개시일부터 20일 이내에 홈택스·관할 세무서에서 실제 서비스에 맞는 업종으로 등록합니다.</p></div>
+            <div><span class="phase-tag">세무</span><h3 data-content-key="step11Title">시운전·보험·안전 점검</h3><p data-content-key="step11Description">세차 프로그램, 결제 흐름, 차량 유도, 파손 대응 기준과 영업배상책임보험을 최종 점검합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
             <div class="step-detail"></div>
           </article>
           <article class="step-card" data-phase="open">
             <label><input type="checkbox" data-step="12" /><span class="checkmark"></span></label>
             <div class="step-number">12</div>
-            <div><span class="phase-tag">OPEN</span><h3 data-content-key="step12Title">보험·안전 확인 후 개업</h3><p data-content-key="step12Description">영업배상책임보험, 차량 파손 보상기준, MSDS, 폐기물 처리와 직원 근로계약을 점검합니다.</p></div>
+            <div><span class="phase-tag">OPEN</span><h3 data-content-key="step12Title">사업자등록 후 오픈</h3><p data-content-key="step12Description">사업자등록 이후에는 현장 운영 매뉴얼, 일일 점검표, 장애 대응 연락망, 세차권·멤버십 정책과 KPI 확인 체계를 정리한 뒤 오픈합니다.</p></div>
             <button class="detail-toggle" type="button" aria-expanded="false">+</button>
-            <div class="step-detail"></div>
+            <div class="step-detail"><ul><li>오픈·마감 점검표와 약품·노즐·건조 상태 기록</li><li>일매출·차량수·객단가·민원 건수 확인 체계</li><li>정전·동파·결제오류·장비고장 대응 연락망 정리</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="13" /><span class="checkmark"></span></label>
+            <div class="step-number">13</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step13Title">오픈 첫 30일 운영 안정화</h3><p data-content-key="step13Description">초기 30일 동안 시간대별 차량 수, 장비 오류, 손세차 보완 요청과 고객 반응을 매일 기록해 운영 기준을 고정합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>첫 4주 일매출·차량수·오류 건수 일지 작성</li><li>노터치 후 손세차 보완 요청 빈도 기록</li><li>오픈 이벤트 종료 후 정상 수요 확인</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="14" /><span class="checkmark"></span></label>
+            <div class="step-number">14</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step14Title">손세차·셀프 보완 동선 정리</h3><p data-content-key="step14Description">노터치 후 손세차 마감, 실내 청소, 에어건, 드라잉존 동선을 분리해 병목과 대기를 줄입니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>노터치 대기줄과 손세차 마감구역 분리</li><li>드라잉존 체류시간 기준 설정</li><li>셀프 구역 혼잡 시간대 직원 유도</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="15" /><span class="checkmark"></span></label>
+            <div class="step-number">15</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step15Title">가격·회원권·구독 정책 조정</h3><p data-content-key="step15Description">1회권, 정액권, 멤버십, 손세차 추가 옵션의 가격과 할인 구조를 실제 재방문 데이터에 맞춰 조정합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>기본 세차와 손세차 보완 옵션 분리 가격표 작성</li><li>구독 고객 월 사용횟수 추적</li><li>평일·주말 가격차 적용 여부 검토</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="16" /><span class="checkmark"></span></label>
+            <div class="step-number">16</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step16Title">민원·재세차·환불 기준 운영</h3><p data-content-key="step16Description">세정력 불만, 건조 불만, 파손 주장, 재세차 요청과 환불 기준을 문서화해 직원과 동일하게 대응합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>재세차 허용 기준과 환불 승인 기준 표준화</li><li>CCTV 보관기간과 사고 접수 절차 정리</li><li>민원 다발 코스와 시간대 분석</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="17" /><span class="checkmark"></span></label>
+            <div class="step-number">17</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step17Title">약품·소모품·재고 관리</h3><p data-content-key="step17Description">세제, 왁스, 필터, 와이퍼, 타월, 결제 용지 등 운영 소모품의 사용량과 발주 주기를 관리합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>약품 희석비와 소모량 주간 점검</li><li>소모품 최소 재고 기준 설정</li><li>손세차 마감용 타월·케미컬 분리 관리</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="18" /><span class="checkmark"></span></label>
+            <div class="step-number">18</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step18Title">정기점검·동절기 대비</h3><p data-content-key="step18Description">노즐, 펌프, 건조기, 열선, 배수, 동파 방지 장치를 정기 점검하고 계절별 고장 포인트를 선제 대응합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>월간 예방정비 일정표 운영</li><li>겨울철 동파·결빙 대응 체크리스트 확보</li><li>장비사 A/S와 자체 대응 범위 구분</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="19" /><span class="checkmark"></span></label>
+            <div class="step-number">19</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step19Title">일매출·원가·피크타임 분석</h3><p data-content-key="step19Description">시간대별 매출, 객단가, 약품 사용량, 전기·수도 비용, 대기 시간을 묶어 손익과 병목을 분석합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>시간대별 회전율과 대기시간 보고</li><li>노터치·손세차 보완 매출 비중 분리 분석</li><li>비수기 손익분기 차량 수 재산정</li></ul></div>
+          </article>
+          <article class="step-card" data-phase="open">
+            <label><input type="checkbox" data-step="20" /><span class="checkmark"></span></label>
+            <div class="step-number">20</div>
+            <div><span class="phase-tag">운영</span><h3 data-content-key="step20Title">추가 베이·확장 여부 판단</h3><p data-content-key="step20Description">운영 3~6개월 데이터로 추가 베이, 손세차 인력 확충, 부가서비스 확대 여부를 판단합니다.</p></div>
+            <button class="detail-toggle" type="button" aria-expanded="false">+</button>
+            <div class="step-detail"><ul><li>피크타임 과부하가 구조적 문제인지 확인</li><li>손세차 인력 증원과 베이 확장 수익성 비교</li><li>추가 투자 전 재방문율과 민원 추세 확인</li></ul></div>
           </article>
         </div>
       </section>
@@ -370,7 +427,7 @@
           <span>관련 화면</span>
           <select name="area">
             <option value="창업가이드">창업가이드 전체</option>
-            <option value="12단계 절차">12단계 절차</option>
+            <option value="20단계 절차">20단계 절차</option>
             <option value="후보지 체크">후보지·실무 체크</option>
             <option value="제품몰">제품몰·상품</option>
             <option value="장바구니·견적">장바구니·견적서</option>
@@ -493,7 +550,7 @@
 
     <footer class="site-footer">
       <div class="footer-brand">
-        <strong data-content-key="brandTitle">손세차장 창업 로드맵</strong>
+        <strong data-content-key="brandTitle">노터치 자동세차 창업 프로그램</strong>
         <p>상담 및 문의전화 <a href="tel:03116887759" data-phone-link data-content-key="phone">031-1688-7759</a></p>
       </div>
       <div class="footer-business" aria-label="사업자 정보">

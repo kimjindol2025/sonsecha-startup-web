@@ -1,31 +1,31 @@
 const planStorageKey = 'sonsecha-business-plans-v1';
 
 const budgetItems = [
-  { key: 'deposit', label: '임대 보증금', group: '임대', example: 30000000, help: '월세와 별도로 묶이는 보증금' },
+  { key: 'deposit', label: '임대 보증금', group: '임대', example: 50000000, help: '월세와 별도로 묶이는 보증금' },
   { key: 'premium', label: '권리금', group: '임대', example: 0, help: '시설·영업권 인수 시에만 입력' },
-  { key: 'contract', label: '중개·계약 부대비', group: '임대', example: 1500000, help: '중개보수·계약 관련 비용' },
-  { key: 'permit', label: '건축·인허가·설계', group: '준비', example: 5000000, help: '건축사·도면·신고 준비 비용' },
-  { key: 'floorDrain', label: '바닥·방수·배수 공사', group: '공사', example: 35000000, help: '철거·굴착·트렌치·방수 범위' },
-  { key: 'wastewater', label: '폐수처리·배관', group: '공사', example: 25000000, help: '처리시설·집수·배관 공사' },
-  { key: 'utilities', label: '전기·수도·소방', group: '공사', example: 10000000, help: '증설과 인입 조건에 따라 변동' },
-  { key: 'equipment', label: '세차 장비', group: '장비', example: 30000000, help: '고압세척기·콤프레셔·청소기 등' },
-  { key: 'interior', label: '인테리어·간판', group: '공사', example: 12000000, help: '고객 공간·직원 공간·외부 사인' },
-  { key: 'supplies', label: '초도 약품·용품', group: '운영', example: 3000000, help: '세제·타월·소모품 최초 구비' },
-  { key: 'insurance', label: '보험·사업자 준비', group: '준비', example: 2000000, help: '보험·등록·안전 준비 항목' },
-  { key: 'marketing', label: '오픈 홍보비', group: '운영', example: 3000000, help: '간판 외 온라인·지역 홍보' },
-  { key: 'workingCapital', label: '초기 운전자금', group: '운영', example: 20000000, help: '매출 안정 전 임대료·인건비 확보' },
-  { key: 'contingency', label: '예비비', group: '예비', example: 10000000, help: '누락·변경 공사에 대비한 별도 금액' },
+  { key: 'contract', label: '중개·계약 부대비', group: '임대', example: 2000000, help: '중개보수·계약 관련 비용' },
+  { key: 'permit', label: '건축·인허가·설계', group: '준비', example: 8000000, help: '건축사, 도면, 환경·배수 신고 준비 비용' },
+  { key: 'floorDrain', label: '토목·바닥·배수 공사', group: '공사', example: 60000000, help: '철거·굴착·트렌치·방수·배수 범위' },
+  { key: 'wastewater', label: '폐수처리·재이용수', group: '공사', example: 35000000, help: '처리시설, 집수, 회수수와 관련 배관 공사' },
+  { key: 'utilities', label: '전기·수도·가스·통신', group: '공사', example: 25000000, help: '증설과 인입 조건에 따라 크게 변동' },
+  { key: 'equipment', label: '노터치 자동세차기 본체', group: '장비', example: 180000000, help: '본체, 세척암, 제어부, 기본 장비 패키지' },
+  { key: 'interior', label: '건조기·결제기·간판', group: '장비', example: 40000000, help: '건조기, POS·무인결제, 외부 사인과 고객 안내' },
+  { key: 'supplies', label: '초도 케미컬·소모품', group: '운영', example: 5000000, help: '세제, 왁스, 소모품 최초 구비' },
+  { key: 'insurance', label: '보험·사업자 준비', group: '준비', example: 3000000, help: '보험, 등록, 안전 준비 항목' },
+  { key: 'marketing', label: '오픈 홍보비', group: '운영', example: 5000000, help: '현수막, 지도 등록, 지역 홍보, 오픈 프로모션' },
+  { key: 'workingCapital', label: '초기 운전자금', group: '운영', example: 30000000, help: '매출 안정 전 임대료·유틸리티·관리비 확보' },
+  { key: 'contingency', label: '예비비', group: '예비', example: 20000000, help: '누락·변경 공사와 추가 장비 대응 자금' },
 ];
 
 const monthlyCostItems = [
   { key: 'rent', label: '월 임대료', example: 2000000 },
-  { key: 'labor', label: '인건비', example: 3000000 },
-  { key: 'utilities', label: '수도·전기·연료', example: 1000000 },
-  { key: 'supplies', label: '약품·소모품', example: 700000 },
-  { key: 'cardFees', label: '카드·플랫폼 수수료', example: 300000 },
-  { key: 'maintenance', label: '장비 유지보수', example: 300000 },
+  { key: 'labor', label: '순회인력·관리 인건비', example: 1000000 },
+  { key: 'utilities', label: '수도·전기·가스', example: 1800000 },
+  { key: 'supplies', label: '케미컬·소모품', example: 1200000 },
+  { key: 'cardFees', label: '카드·플랫폼 수수료', example: 500000 },
+  { key: 'maintenance', label: '장비 유지보수', example: 1500000 },
   { key: 'loanPayment', label: '대출 상환액', example: 0 },
-  { key: 'other', label: '기타 고정비', example: 300000 },
+  { key: 'other', label: '기타 고정비', example: 500000 },
 ];
 
 const officialSources = [
@@ -64,18 +64,26 @@ const statusLabels = {
 };
 
 const roadmapSteps = [
-  '후보지 사전 확인',
-  '건축사 용도변경 검토',
-  '조건부 임대차계약',
-  '폐수처리계획 설계',
+  '후보지·상권 사전 확인',
+  '건축·용도 변경 검토',
+  '조건부 부지 계약',
+  '장비사·시공사 견적 비교',
+  '폐수·재이용수 계획 설계',
   '폐수배출시설 허가·신고',
-  '건축물 용도변경',
-  '배수설비·도로 관련 신고',
-  '시설공사',
-  '사용승인·대장 확인',
-  '폐수시설 가동 절차',
-  '사업자등록',
-  '보험·안전 확인 후 개업',
+  '건축·배수·도로 인허가',
+  '전기·수도·가스 증설 확정',
+  '노터치 장비·건조기 설치',
+  '결제·POS·원격관제 세팅',
+  '시운전·보험·안전 점검',
+  '사업자등록 후 오픈',
+  '오픈 첫 30일 운영 안정화',
+  '손세차·셀프 보완 동선 정리',
+  '가격·회원권·구독 정책 조정',
+  '민원·재세차·환불 기준 운영',
+  '약품·소모품·재고 관리',
+  '정기점검·동절기 대비',
+  '일매출·원가·피크타임 분석',
+  '추가 베이·확장 여부 판단',
 ];
 
 const requiredPlanFields = [
@@ -117,7 +125,7 @@ function makePlan(seed = {}) {
   const now = new Date().toISOString();
   return {
     id: typeof seed.id === 'string' && seed.id ? seed.id : makeId(),
-    title: asText(seed.title) || '나의 손세차장 사업계획',
+    title: asText(seed.title) || '나의 노터치 자동세차 사업계획',
     linkedCandidateId: asText(seed.linkedCandidateId),
     basic: {
       ownerName: asText(seed.basic?.ownerName),
@@ -294,7 +302,7 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
   const executiveSummary = `${plan.basic.ownerName || '예비 창업자'}는 ${plan.basic.targetRegion || '희망 지역 확인 필요'}에서 ${plan.basic.floorArea || '규모 확인 필요'}평, ${plan.basic.bayCount || '수량 확인 필요'}베이 규모의 ${plan.basic.washType || '형태 확인 필요'} 창업을 검토한다. 목표 개업일은 ${plan.basic.openingDate || '확인 필요'}이며, 준비기간 ${plan.basic.preparationMonths || '확인 필요'}개월과 공사기간 ${plan.basic.constructionWeeks || '확인 필요'}주를 가정했다. 현재 입력 기준 예상 창업비는 ${formatMoney(calc.budgetTotal)}, 자금 확보계획은 ${formatMoney(calc.fundingTotal)}으로 ${calc.gap >= 0 ? `예상 여유자금은 ${formatMoney(calc.gap)}` : `추가 확보가 필요한 금액은 ${formatMoney(Math.abs(calc.gap))}`}이다.`;
 
   return `<article class="plan-document" data-plan-document>
-    <header><div><p>HAND CAR WASH BUSINESS PLAN</p><h2>${escapeHtml(plan.title)}</h2><span>${escapeHtml(plan.basic.targetRegion || '희망 지역 미입력')} · 작성일 ${new Intl.DateTimeFormat('ko-KR').format(new Date())}</span></div><b>${calc.completed}/${calc.total} 핵심항목</b></header>
+    <header><div><p>TOUCHLESS CAR WASH BUSINESS PLAN</p><h2>${escapeHtml(plan.title)}</h2><span>${escapeHtml(plan.basic.targetRegion || '희망 지역 미입력')} · 작성일 ${new Intl.DateTimeFormat('ko-KR').format(new Date())}</span></div><b>${calc.completed}/${calc.total} 핵심항목</b></header>
     <section class="plan-document-overview"><div><span>사업 형태</span><strong>${escapeHtml(plan.basic.washType || '확인 필요')} · ${escapeHtml(plan.basic.bayCount || '-')}베이</strong></div><div><span>사업장 규모</span><strong>${escapeHtml(plan.basic.floorArea || '-')}평</strong></div><div><span>개업 목표</span><strong>${escapeHtml(plan.basic.openingDate || '확인 필요')}</strong></div><div><span>연결 후보지</span><strong>${candidate ? escapeHtml(candidateLabel) : '독립 계획서'}</strong></div></section>
 
     <section data-document-section="executive"><h3>01. 사업계획 요약</h3><p>${escapeHtml(executiveSummary)}</p><div class="plan-document-numbers"><p><span>예상 창업비</span><strong>${formatMoney(calc.budgetTotal)}</strong></p><p><span>자금 확보계획</span><strong>${formatMoney(calc.fundingTotal)}</strong></p><p><span>월 매출 가정</span><strong>${formatMoney(calc.monthlySales)}</strong></p><p><span>단순 월 잔액</span><strong>${formatMoney(calc.monthlyProfit)}</strong></p></div></section>
@@ -311,15 +319,15 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
 
     <section data-document-section="market"><h3>07. 시장·상권 조사 정리</h3><div class="plan-document-research"><article><span>예상 고객과 수요</span><p>${escapeHtml(plan.research.targetCustomers || '확인 필요')}</p></article><article><span>주변 경쟁업체</span><p>${escapeHtml(plan.research.competitorMemo || '확인 필요')}</p></article><article><span>차량 유입·동선</span><p>${escapeHtml(plan.research.trafficMemo || '확인 필요')}</p></article><article><span>지원사업·정책자금</span><p>${escapeHtml(plan.research.supportMemo || '확인 필요')}</p></article></div></section>
 
-    ${candidate ? `<section data-document-section="candidate"><h3>08. 후보지 12단계 검토 기록</h3><p>${escapeHtml(candidateLabel)} · ${escapeHtml(candidate.address || '주소 미입력')} · 진행 ${linkedMetrics.completed}/12 · 종합 판정 ${escapeHtml(linkedMetrics.status)}</p><ol class="plan-document-stages">${stageRows}</ol>${candidateNotes.length ? `<h4>후보지에 작성된 메모</h4><ul class="plan-document-notes">${candidateNotes.map((note) => `<li>${escapeHtml(note)}</li>`).join('')}</ul>` : '<p class="plan-document-empty">작성된 후보지 세부 메모가 없습니다.</p>'}<small>체크와 판정은 사용자의 기존 후보지 기록을 옮긴 것이며 허가 가능성을 자동 확정하지 않습니다.</small></section>` : `<section data-document-section="candidate"><h3>08. 후보지 검토 기록</h3><p>연결된 후보지가 없습니다. 후보지가 정해지면 1~12단계 기록을 연결해 검토 근거를 보완할 수 있습니다.</p></section>`}
+    ${candidate ? `<section data-document-section="candidate"><h3>08. 후보지 20단계 검토 기록</h3><p>${escapeHtml(candidateLabel)} · ${escapeHtml(candidate.address || '주소 미입력')} · 진행 ${linkedMetrics.completed}/${roadmapSteps.length} · 종합 판정 ${escapeHtml(linkedMetrics.status)}</p><ol class="plan-document-stages">${stageRows}</ol>${candidateNotes.length ? `<h4>후보지에 작성된 메모</h4><ul class="plan-document-notes">${candidateNotes.map((note) => `<li>${escapeHtml(note)}</li>`).join('')}</ul>` : '<p class="plan-document-empty">작성된 후보지 세부 메모가 없습니다.</p>'}<small>체크와 판정은 사용자의 기존 후보지 기록을 옮긴 것이며 허가 가능성을 자동 확정하지 않습니다.</small></section>` : `<section data-document-section="candidate"><h3>08. 후보지 검토 기록</h3><p>연결된 후보지가 없습니다. 후보지가 정해지면 1~20단계 기록을 연결해 검토 근거를 보완할 수 있습니다.</p></section>`}
 
     <section data-document-section="sources"><h3>09. 확인할 공식 자료</h3><div class="plan-document-source-list">${officialSources.map((source) => `<div><span>${escapeHtml(source.kind)}</span><strong>${escapeHtml(source.title)}</strong><p>${escapeHtml(source.description)}</p><a href="${escapeHtml(source.href)}" target="_blank" rel="noopener noreferrer">공식 자료 열기 ↗</a></div>`).join('')}</div></section>
 
-    <section data-document-section="action"><h3>10. 위험요인과 실행계획</h3><div class="plan-document-columns"><div><h4>아직 확정하지 못한 위험</h4><p>${escapeHtml(plan.research.risks || '아직 작성하지 않았습니다. 인허가, 임대차, 공사비, 폐수처리, 전력과 인력 조건을 확인해야 합니다.')}</p></div><div><h4>다음 행동과 일정</h4><p>${escapeHtml(plan.actionPlan || '아직 작성하지 않았습니다. 담당자, 확인일, 문의처와 다음 마감일을 정해야 합니다.')}</p></div></div></section>
+    <section data-document-section="action"><h3>10. 위험요인과 실행계획</h3><div class="plan-document-columns"><div><h4>아직 확정하지 못한 위험</h4><p>${escapeHtml(plan.research.risks || '아직 작성하지 않았습니다. 인허가, 임대차, 총 설치비, 폐수·재이용수, 전력과 장비 유지보수 조건을 확인해야 합니다.')}</p></div><div><h4>다음 행동과 일정</h4><p>${escapeHtml(plan.actionPlan || '아직 작성하지 않았습니다. 담당자, 확인일, 문의처와 다음 마감일을 정해야 합니다.')}</p></div></div></section>
 
     <section data-document-section="missing"><h3>11. 작성 전 보완할 항목</h3>${missing.length ? `<p>현재 ${missing.length}개 항목을 더 확인하면 계획서의 근거가 구체화됩니다.</p><ul class="plan-document-missing">${missing.map((item) => `<li>${escapeHtml(item.label)} <b>확인 필요</b></li>`).join('')}</ul>` : '<p class="plan-document-complete">핵심 작성 항목이 모두 입력되었습니다. 이제 입력값을 현장 견적과 공식 답변으로 검증하세요.</p>'}</section>
 
-    <footer><p>본 문서는 사용자가 입력한 가정과 확인 기록을 자동 정리한 초안입니다. 실제 인허가·공사비·대출·지원사업·매출·수익은 관할 기관, 전문가와 현장 견적으로 다시 확인해야 합니다.</p><strong>대한이엔지 손세차장 창업 로드맵</strong></footer>
+    <footer><p>본 문서는 사용자가 입력한 가정과 확인 기록을 자동 정리한 초안입니다. 실제 인허가·공사비·대출·지원사업·매출·수익은 관할 기관, 전문가와 현장 견적으로 다시 확인해야 합니다.</p><strong>대한이엔지 노터치 자동세차 창업 프로그램</strong></footer>
   </article>`;
 }
 
@@ -410,7 +418,7 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
     const calc = calculations(plan);
     root.innerHTML = `
       <header class="plan-hero">
-        <div><p>MY BUSINESS PLAN</p><h1 id="businessPlanHeading">나의 손세차장 사업계획서</h1><span>몇 가지 질문에 답하고 공식 자료를 확인하면 예산·일정·실행계획이 한 문서로 정리됩니다.</span></div>
+        <div><p>MY BUSINESS PLAN</p><h1 id="businessPlanHeading">나의 노터치 자동세차 사업계획서</h1><span>몇 가지 질문에 답하고 공식 자료를 확인하면 예산·일정·실행계획이 한 문서로 정리됩니다.</span></div>
         <div class="plan-privacy"><strong>내 정보는 이 기기에 저장</strong><small>자동 서버 전송 없음 · 사용자가 직접 인쇄·공유</small></div>
       </header>
 
@@ -427,29 +435,29 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
       <div class="plan-progress" aria-label="핵심 질문 작성 진행률"><span style="width:${Math.round(calc.completed / calc.total * 100)}%"></span><b>${calc.completed} / ${calc.total} 핵심 질문 작성</b></div>
 
       <section class="plan-card plan-candidate-card">
-        <div class="plan-card-head"><div><span>01 · 기록 연결</span><h2>검토 중인 후보지가 있나요?</h2><p>후보지를 연결하면 주소·형태·베이 수와 12단계 진행상태를 사업계획서에 참고자료로 불러옵니다.</p></div><a href="#roadmap">후보지 기록 확인 →</a></div>
+        <div class="plan-card-head"><div><span>01 · 기록 연결</span><h2>검토 중인 후보지가 있나요?</h2><p>후보지를 연결하면 주소·형태·베이 수와 20단계 진행상태를 사업계획서에 참고자료로 불러옵니다.</p></div><a href="#roadmap">후보지 기록 확인 →</a></div>
         <div class="plan-candidate-row">
           <label class="plan-field"><span>후보지 선택 · 선택사항</span><select data-plan-path="linkedCandidateId"><option value="">연결하지 않고 작성</option>${list.map((candidate) => `<option value="${escapeHtml(candidate.id)}" ${candidate.id === plan.linkedCandidateId ? 'selected' : ''}>${escapeHtml(candidateName(candidate))}</option>`).join('')}</select></label>
           <button type="button" data-plan-action="import-candidate" ${linked ? '' : 'disabled'}>후보지 기본정보 불러오기</button>
         </div>
-        ${linked ? `<div class="plan-candidate-summary"><strong>${escapeHtml(candidateName(linked))}</strong><span>${escapeHtml(linked.address || '주소 미입력')}</span><dl><div><dt>12단계</dt><dd>${linkedMetrics.completed}/12</dd></div><div><dt>종합 판정</dt><dd>${escapeHtml(linkedMetrics.status)}</dd></div><div><dt>작성 메모</dt><dd>${linkedMetrics.notes}개</dd></div></dl></div>` : '<p class="plan-empty-note">후보지가 없어도 독립된 사업계획서를 작성할 수 있습니다.</p>'}
+        ${linked ? `<div class="plan-candidate-summary"><strong>${escapeHtml(candidateName(linked))}</strong><span>${escapeHtml(linked.address || '주소 미입력')}</span><dl><div><dt>20단계</dt><dd>${linkedMetrics.completed}/${roadmapSteps.length}</dd></div><div><dt>종합 판정</dt><dd>${escapeHtml(linkedMetrics.status)}</dd></div><div><dt>작성 메모</dt><dd>${linkedMetrics.notes}개</dd></div></dl></div>` : '<p class="plan-empty-note">후보지가 없어도 독립된 사업계획서를 작성할 수 있습니다.</p>'}
       </section>
 
       <section class="plan-card">
         <div class="plan-card-head"><div><span>02 · 기초 질문</span><h2>먼저, 어떤 창업을 준비하나요?</h2><p>모르는 항목은 비워 두고 조사 후 채워도 됩니다.</p></div></div>
         <div class="plan-form-grid">
-          ${input('title', '사업계획서 이름', plan.title, { placeholder: '예: 양주 2베이 손세차장 계획' })}
+          ${input('title', '사업계획서 이름', plan.title, { placeholder: '예: 양주 노터치 자동세차 2베이 계획' })}
           ${input('basic.ownerName', '작성자·예비 대표', plan.basic.ownerName, { placeholder: '이름 또는 팀명' })}
           ${moneyInput('funding.own', '현재 준비 가능한 자기자금', plan.funding.own, '실제로 투입 가능한 금액만 입력')}
           ${input('basic.targetRegion', '희망 지역', plan.basic.targetRegion, { placeholder: '예: 경기도 양주시 옥정동' })}
           ${input('basic.siteAddress', '후보지 주소 · 있으면', plan.basic.siteAddress, { placeholder: '도로명 또는 지번' })}
           ${input('basic.floorArea', '예상 사업장 평수', plan.basic.floorArea, { type: 'number', min: 0, step: 1, inputmode: 'decimal', placeholder: '예: 80' })}
-          <label class="plan-field"><span>하고 싶은 세차장 형태</span><select data-plan-path="basic.washType"><option value="">선택 또는 조사 중</option>${['손세차 전문','디테일링·광택','손세차+디테일링','출장·예약형','기타'].map((value) => `<option ${plan.basic.washType === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label>
+          <label class="plan-field"><span>하고 싶은 세차장 형태</span><select data-plan-path="basic.washType"><option value="">선택 또는 조사 중</option>${['노터치 인베이 1베이','노터치 인베이 2베이','노터치+셀프 복합형','주유소 결합형 노터치','기타'].map((value) => `<option ${plan.basic.washType === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label>
           ${input('basic.bayCount', '예상 세차 베이 수', plan.basic.bayCount, { type: 'number', min: 1, step: 1, inputmode: 'numeric', placeholder: '예: 2' })}
           ${input('basic.preparationMonths', '전체 준비기간 · 개월', plan.basic.preparationMonths, { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: '예: 6' })}
           ${input('basic.constructionWeeks', '예상 공사기간 · 주', plan.basic.constructionWeeks, { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: '예: 8' })}
           ${input('basic.openingDate', '창업 예상일', plan.basic.openingDate, { type: 'date' })}
-          ${textarea('basic.businessDescription', '무엇을 하고 싶은가요?', plan.basic.businessDescription, '제공할 서비스, 가격대, 예약 방식, 다른 세차장과 다르게 하고 싶은 점을 자유롭게 적으세요.', 5)}
+          ${textarea('basic.businessDescription', '무엇을 하고 싶은가요?', plan.basic.businessDescription, '세차 프로그램, 가격대, 무인 운영 방식, 멤버십, 다른 자동세차장과 다르게 하고 싶은 점을 자유롭게 적으세요.', 5)}
         </div>
       </section>
 
@@ -479,12 +487,12 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
         <div class="plan-card-head"><div><span>05 · 기본 리서치</span><h2>우리가 확인 순서와 공식 자료를 제공합니다.</h2><p>지역명만으로 자동 결론을 내리지 않습니다. 공식 자료를 열어 확인한 숫자와 현장 판단을 아래 메모에 남기세요.</p></div></div>
         <div class="plan-source-grid">${renderSources()}</div>
         <div class="plan-form-grid plan-research-notes">
-          ${textarea('research.targetCustomers', '예상 고객과 수요', plan.research.targetCustomers, '예: 인근 산업단지 출퇴근 차량, 아파트 거주자, 법인 차량 등')}
-          ${textarea('research.competitorMemo', '주변 경쟁업체 조사', plan.research.competitorMemo, '업체명, 거리, 가격, 강점, 예약 여부를 확인하세요.')}
-          ${textarea('research.trafficMemo', '차량 유입·동선 조사', plan.research.trafficMemo, '도로 방향, 진입·회차, 대기 차량, 보행자와 민원 가능성을 적으세요.')}
+          ${textarea('research.targetCustomers', '예상 고객과 수요', plan.research.targetCustomers, '예: 출퇴근 차량, 주유소 방문 고객, 아파트 거주자, 법인 차량 등')}
+          ${textarea('research.competitorMemo', '주변 경쟁업체 조사', plan.research.competitorMemo, '노터치, 브러시형, 셀프, 손세차 경쟁업체의 거리, 가격, 강점, 멤버십 여부를 확인하세요.')}
+          ${textarea('research.trafficMemo', '차량 유입·동선 조사', plan.research.trafficMemo, '도로 방향, 진입·회차, 대기 차량 적치, 야간 접근성, 보행자와 민원 가능성을 적으세요.')}
           ${textarea('research.supportMemo', '지원사업·정책자금 확인', plan.research.supportMemo, '공고명, 대상, 신청기한, 자부담, 문의처를 원문 기준으로 적으세요.')}
-          ${textarea('research.risks', '아직 확정하지 못한 위험', plan.research.risks, '인허가, 임대차, 공사비, 폐수처리, 전력, 인력 등 미확인 항목을 적으세요.')}
-          ${textarea('actionPlan', '다음 행동과 일정', plan.actionPlan, '예: 8월 5일 건축과 문의 → 8월 8일 건축사 현장 확인 → 견적 3곳 비교')}
+          ${textarea('research.risks', '아직 확정하지 못한 위험', plan.research.risks, '인허가, 임대차, 총 설치비, 폐수·재이용수, 전력, 장비 A/S 등 미확인 항목을 적으세요.')}
+          ${textarea('actionPlan', '다음 행동과 일정', plan.actionPlan, '예: 8월 5일 환경과 문의 → 8월 8일 장비사 3곳 견적 비교 → 8월 12일 전기 증설 가능 여부 확인')}
         </div>
       </section>
 
@@ -551,7 +559,7 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
     const action = button.dataset.planAction;
     const plan = activePlan();
     if (action === 'new') {
-      const next = makePlan({ title: `나의 손세차장 사업계획 ${state.plans.length + 1}` });
+      const next = makePlan({ title: `나의 노터치 자동세차 사업계획 ${state.plans.length + 1}` });
       state.plans.push(next); state.activeId = next.id; save('새 계획서를 만들었습니다'); render();
     }
     if (action === 'delete' && state.plans.length > 1 && globalThis.confirm('현재 사업계획서를 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) {
@@ -564,7 +572,7 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
       plan.basic.targetRegion = candidate.address?.split(/\s+/).slice(0, 2).join(' ') || plan.basic.targetRegion;
       plan.basic.washType = candidate.washType || plan.basic.washType;
       plan.basic.bayCount = candidate.bayCount || plan.basic.bayCount;
-      if (plan.title === '나의 손세차장 사업계획') plan.title = `${candidateName(candidate)} 사업계획`;
+      if (plan.title === '나의 노터치 자동세차 사업계획') plan.title = `${candidateName(candidate)} 사업계획`;
       save('후보지 기본정보를 불러왔습니다'); render();
     }
     if (action === 'fill-budget-example') {

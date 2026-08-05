@@ -308,16 +308,16 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         <nav class="consultation-steps" aria-label="상담자료 만들기 순서"><strong>1. 공유 선택</strong><span>2. 미리보기</span><span>3. 동의·전송</span></nav>
         <fieldset class="consultation-candidate-picker"><legend>검토받을 후보지 선택 <b data-selected-count>${selectedCandidates.length}곳</b></legend>
           <label class="candidate-select-all"><input type="checkbox" data-candidate-all ${selectedCandidates.length === candidates.length ? 'checked' : ''}><span><strong>전체 후보지 선택</strong><small>선택한 후보지를 한 접수번호로 함께 비교·검토합니다.</small></span></label>
-          <div data-candidate-list>${candidates.map((candidate) => `<label class="consultation-candidate-choice${selectedCandidateIds.has(candidate.id) ? ' selected' : ''}"><input type="checkbox" value="${escapeHtml(candidate.id)}" data-candidate-select ${selectedCandidateIds.has(candidate.id) ? 'checked' : ''}><span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>${escapeHtml(candidate.address || '주소 미입력')} · 12단계 ${(candidate.stepChecks || []).length}/12</small></span></label>`).join('')}</div>
+          <div data-candidate-list>${candidates.map((candidate) => `<label class="consultation-candidate-choice${selectedCandidateIds.has(candidate.id) ? ' selected' : ''}"><input type="checkbox" value="${escapeHtml(candidate.id)}" data-candidate-select ${selectedCandidateIds.has(candidate.id) ? 'checked' : ''}><span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>${escapeHtml(candidate.address || '주소 미입력')} · 20단계 ${(candidate.stepChecks || []).length}/20</small></span></label>`).join('')}</div>
         </fieldset>
         <fieldset class="consultation-options"><legend>공유할 정보</legend>
           <label><input type="checkbox" name="shareAddress"><span><strong>주소</strong><small>선택해야만 서버로 전송됩니다.</small></span></label>
           <label><input type="checkbox" name="sharePlan"><span><strong>세차장 형태·베이 수</strong><small>선택 후보지별 입력 내용을 공유합니다.</small></span></label>
-          <label class="consultation-notes-option"><input type="checkbox" name="shareNotes"><span><strong>1~12단계 메모·담당기관 문의 기록</strong><small data-share-notes-count>작성된 단계별 메모 ${notesCount}개 · 선택하면 단계별로 묶어 요청서에 전달됩니다.</small></span></label>
+          <label class="consultation-notes-option"><input type="checkbox" name="shareNotes"><span><strong>1~20단계 메모·담당기관 문의 기록</strong><small data-share-notes-count>작성된 단계별 메모 ${notesCount}개 · 선택하면 단계별로 묶어 요청서에 전달됩니다.</small></span></label>
           <label><input type="checkbox" name="sharePhotos"><span><strong>선택 사진</strong><small>아래에서 사진별로 다시 선택합니다.</small></span></label>
         </fieldset>
         <section class="consultation-stage-review">
-          <header><div><strong>1~12단계 기록 확인</strong><span>관리자가 다시 묻지 않도록 단계별 판정과 작성 메모를 전송 전에 확인하세요.</span></div><b data-stage-share-state>메모 공유 선택 필요</b></header>
+          <header><div><strong>1~20단계 기록 확인</strong><span>관리자가 다시 묻지 않도록 단계별 판정과 작성 메모를 전송 전에 확인하세요.</span></div><b data-stage-share-state>메모 공유 선택 필요</b></header>
           <div data-stage-review></div>
         </section>
         <section class="consultation-photo-picker">
@@ -354,7 +354,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         const notes = Object.entries(candidate.detailNotes || {}).filter(([, text]) => String(text).trim()).map(([id, text]) => ({
           id, step: id.split('-')[0], label: checkLabels.get(id) || id, text,
         }));
-        return `<details class="consultation-stage-candidate"${candidateIndex === 0 ? ' open' : ''}><summary><span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>12단계 ${(candidate.stepChecks || []).length}/12 · 메모 ${notes.length}개</small></span><b>${noteSharing ? '전송 포함' : '메모 제외'}</b></summary><div>${stepDefinitions.map((step) => {
+        return `<details class="consultation-stage-candidate"${candidateIndex === 0 ? ' open' : ''}><summary><span><strong>${escapeHtml(candidateDisplayName(candidate))}</strong><small>20단계 ${(candidate.stepChecks || []).length}/20 · 메모 ${notes.length}개</small></span><b>${noteSharing ? '전송 포함' : '메모 제외'}</b></summary><div>${stepDefinitions.map((step) => {
           const stepNotes = notes.filter((note) => note.step === step.id);
           const completed = (candidate.stepChecks || []).includes(step.id);
           const status = stepStatusText(completed, candidate.stepStatuses?.[step.id] || 'unreviewed');
@@ -454,7 +454,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
     body.innerHTML = `
       <div class="consultation-preview">
         <nav class="consultation-steps" aria-label="상담자료 만들기 순서"><span>1. 공유 선택</span><strong>2. 미리보기</strong><span>3. 동의·전송</span></nav>
-        <section class="consultation-bundle-summary"><span>한 건으로 접수할 후보지</span><strong>${candidates.length}곳</strong><small>각 후보지의 12단계 자료는 서로 분리되어 전달됩니다.</small></section>
+        <section class="consultation-bundle-summary"><span>한 건으로 접수할 후보지</span><strong>${candidates.length}곳</strong><small>각 후보지의 20단계 자료는 서로 분리되어 전달됩니다.</small></section>
         ${candidates.map((candidate, index) => {
           const unconfirmed = candidate.checks.filter((item) => !item.completed);
           return `<section class="consultation-candidate-preview">
@@ -468,7 +468,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
               ${candidate.sharing.notes ? `<button type="button" data-preview-exclude="notes" data-candidate-ref="${escapeHtml(candidate.candidateRef)}">단계별 메모 제외</button>` : ''}
             </div>
             ${candidate.plan ? `<div class="preview-block"><h3>예상 형태</h3><p>${escapeHtml(candidate.plan.washType || '미입력')} · ${escapeHtml(candidate.plan.bayCount || '베이 수 미입력')}</p></div>` : ''}
-            <details class="preview-block" open><summary>12단계 상태·메모 · ${candidate.steps.length}단계 / 메모 ${candidate.notes.length}개</summary><ul class="step-note-preview">${candidate.steps.map((step) => {
+            <details class="preview-block" open><summary>20단계 상태·메모 · ${candidate.steps.length}단계 / 메모 ${candidate.notes.length}개</summary><ul class="step-note-preview">${candidate.steps.map((step) => {
               const stepNotes = candidate.notes.filter((note) => note.step === step.id);
               return `<li><div><span>${escapeHtml(step.label)}</span><b>${escapeHtml(stepStatusText(step.completed, step.status))}</b></div>${candidate.sharing.notes ? `<section>${stepNotes.map((note) => `<p><strong>${escapeHtml(note.label)}</strong><span>${escapeHtml(note.text)}</span></p>`).join('') || '<em>작성된 메모 없음</em>'}</section>` : '<section><em>메모 공유 안 함</em></section>'}</li>`;
             }).join('')}</ul></details>

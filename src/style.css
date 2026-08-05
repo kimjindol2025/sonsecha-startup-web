@@ -293,6 +293,20 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
   border: 1px solid #aebdd0; border-radius: 4px; font: 700 13px Pretendard, "Noto Sans KR", sans-serif;
 }
 .step-decision small { color: var(--muted); font-size: 11px; line-height: 1.45; text-align: right; }
+.stage-record-panel { margin: 0 0 16px; padding: 16px; background: #f6f8fc; border: 1px solid #dbe4ef; border-radius: 7px; }
+.stage-record-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.stage-record-head strong { color: var(--ink); font-size: 14px; }
+.stage-record-head small { color: var(--muted); font-size: 11px; }
+.stage-record-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stage-field { display: grid; gap: 6px; }
+.stage-field.stage-field-wide { grid-column: 1 / -1; }
+.stage-field span, .stage-evidence-block strong { color: var(--ink); font-size: 11px; font-weight: 800; }
+.stage-field input, .stage-field textarea, .stage-evidence-row input { width: 100%; min-height: 42px; padding: 10px 12px; color: var(--ink); background: white; border: 1px solid #bbc8d9; border-radius: 5px; font: 14px/1.5 Pretendard, "Noto Sans KR", sans-serif; }
+.stage-field textarea { min-height: 92px; resize: vertical; }
+.stage-field input:focus, .stage-field textarea:focus, .stage-evidence-row input:focus { outline: 3px solid rgba(20,87,255,.14); border-color: var(--blue); }
+.stage-evidence-block { display: grid; gap: 8px; margin-top: 12px; }
+.stage-evidence-list { display: grid; gap: 8px; }
+.stage-evidence-row { display: grid; grid-template-columns: minmax(170px, .8fr) minmax(0, 1.2fr); gap: 8px; }
 .detail-check-item {
   display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 9px;
   align-items: start; padding: 5px 7px; margin-left: -7px;
@@ -365,9 +379,14 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .candidate-card-status { display: flex; justify-content: space-between; gap: 10px; margin-top: 11px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.14); }
 .candidate-card-status b, .candidate-card-metrics b { color: #aebbd0; font-size: 9px; }
 .candidate-card-status em, .candidate-card-metrics em { color: white; font-size: 11px; font-style: normal; font-weight: 800; }
+.candidate-card-dashboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.12); border-bottom: 1px solid rgba(255,255,255,.12); }
+.candidate-card-dashboard > span, .candidate-card-metrics > span { display: grid; gap: 3px; min-width: 0; }
+.candidate-card-dashboard b, .candidate-card-metrics b, .candidate-card-schedule b { color: #aebbd0; font-size: 9px; }
+.candidate-card-dashboard em, .candidate-card-metrics em, .candidate-card-schedule em { color: white; font-size: 11px; font-style: normal; font-weight: 800; }
 .candidate-card-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
-.candidate-card-metrics > span { display: grid; gap: 3px; min-width: 0; }
 .candidate-card-metrics b { line-height: 1.25; word-break: keep-all; }
+.candidate-card-schedule { display: grid; gap: 4px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); }
+.candidate-card-schedule em { line-height: 1.45; white-space: normal; }
 .candidate-tab.active { background: var(--blue); border-color: white; box-shadow: inset 0 0 0 2px #79a2ff, 0 0 0 2px #79a2ff; }
 .candidate-tab.active small { color: #d8e5ff; }
 .candidate-add {
@@ -1243,6 +1262,8 @@ body.consultation-open { overflow: hidden; }
   .step-decision label { justify-content: space-between; }
   .step-decision select { min-width: 150px; font-size: 16px; }
   .step-decision small { text-align: left; }
+  .stage-record-head { align-items: flex-start; flex-direction: column; }
+  .stage-record-grid, .stage-evidence-row { grid-template-columns: 1fr; }
   .guide-content h3 { line-height: 1.45; }
   .guide-content ul, .guide-content ol { padding-left: 18px; }
   .guide-content li { margin: 9px 0; }

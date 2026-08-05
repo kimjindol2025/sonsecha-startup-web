@@ -1,0 +1,120 @@
+{
+  "project": "단계별 세부 앱",
+  "description": "한 번에 하나씩 완료하고 다음 단계로 넘어가는 순차형 구현 투두",
+  "updatedAt": "2026-08-05",
+  "rules": {
+    "mode": "sequential",
+    "allowMultipleInProgress": false,
+    "nextRule": "completed 항목 다음의 첫 pending 항목을 다음 작업으로 사용"
+  },
+  "current": {
+    "lastCompletedId": "stage-ui-1-5",
+    "nextId": "dashboard",
+    "nextTitle": "후보지 대시보드에 20단계 진행률과 다음 일정 반영"
+  },
+  "items": [
+    {
+      "id": "doc-spec",
+      "order": 1,
+      "title": "구현 문서 작성",
+      "status": "completed",
+      "doneAt": "2026-08-05",
+      "output": [
+        "docs/16-stage-app-implementation.md"
+      ],
+      "notes": "단계별 세부 앱 목적, 공통 데이터 모델, 1~20단계 입력 항목을 문서화함"
+    },
+    {
+      "id": "data-model",
+      "order": 2,
+      "title": "stageRecords JSON 데이터 모델과 저장 구조 추가",
+      "status": "completed",
+      "output": [
+        "src/main.js",
+        "src/consultations.js",
+        "src/business-plan.js"
+      ],
+      "notes": "기존 candidate 구조에 stageRecords를 추가하고 현재 단계 체크, 판정, 메모를 새 구조와 동기화함",
+      "doneAt": "2026-08-05"
+    },
+    {
+      "id": "stage-ui-1-5",
+      "order": 3,
+      "title": "1~5단계 입력형 UI 프로토타입 구현",
+      "status": "completed",
+      "output": [
+        "index.html",
+        "src/main.js",
+        "src/style.css"
+      ],
+      "notes": "1~5단계 카드에 stageRecords 입력 패널을 추가하고 요약, 담당자, 기관, 일정, 금액, 다음 행동, 메모, 증빙 3칸 저장을 연결함",
+      "doneAt": "2026-08-05"
+    },
+    {
+      "id": "dashboard",
+      "order": 4,
+      "title": "후보지 대시보드에 20단계 진행률과 다음 일정 반영",
+      "status": "pending",
+      "output": [
+        "src/main.js",
+        "src/style.css"
+      ],
+      "notes": "불가/조건부/미확인 수, 예정금액, 가장 가까운 다음 일정 3개 표시"
+    },
+    {
+      "id": "stage-ui-6-12",
+      "order": 5,
+      "title": "6~12단계 입력형 UI 확장",
+      "status": "pending",
+      "output": [
+        "index.html",
+        "src/main.js",
+        "src/style.css"
+      ],
+      "notes": "건축, 배수, 공사, 시운전, 사업자등록, 보험 단계 확장"
+    },
+    {
+      "id": "stage-ui-13-20",
+      "order": 6,
+      "title": "13~20단계 운영형 UI 확장",
+      "status": "pending",
+      "output": [
+        "index.html",
+        "src/main.js",
+        "src/style.css"
+      ],
+      "notes": "운영 안정화, 동선, 가격, 민원, 재고, 정비, 분석, 확장 판단 단계 확장"
+    },
+    {
+      "id": "consultation-link",
+      "order": 7,
+      "title": "상담 요청서에 stageRecords 연결",
+      "status": "pending",
+      "output": [
+        "src/consultations.js",
+        "src/admin.js"
+      ],
+      "notes": "단계별 판정, 메모, 다음 행동, 증빙 요약을 요청서/관리자 화면에 반영"
+    },
+    {
+      "id": "plan-link",
+      "order": 8,
+      "title": "사업계획서에 stageRecords 연결",
+      "status": "pending",
+      "output": [
+        "src/business-plan.js"
+      ],
+      "notes": "후보지 단계 진행상태, 조건부 위험, 금액/일정 요약을 계획서에 반영"
+    },
+    {
+      "id": "verify",
+      "order": 9,
+      "title": "빌드와 사용 흐름 검증",
+      "status": "pending",
+      "output": [
+        "npm run build"
+      ],
+      "notes": "후보지 생성, 단계 입력, 저장 유지, 상담/사업계획서 연결까지 점검"
+    }
+  ]
+}

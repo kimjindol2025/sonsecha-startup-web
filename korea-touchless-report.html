@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="2026년 8월 기준 한국 노터치 자동세차 창업 리서치 보고서. 업체 후보, 가격, 소비자 성향, 불만, 구매 욕구, 창업 질문을 한 페이지로 정리했습니다."
+    />
+    <title>한국 노터치 자동세차 리서치 보고서</title>
+    <style>
+      :root {
+        --bg: #f3f0e8;
+        --paper: #fffdf8;
+        --ink: #162230;
+        --muted: #58697a;
+        --line: #d9d1c3;
+        --accent: #0d5c63;
+        --accent-2: #d8893d;
+        --accent-3: #6f8f72;
+        --shadow: 0 24px 60px rgba(22, 34, 48, 0.09);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(216, 137, 61, 0.12), transparent 24rem),
+          radial-gradient(circle at top right, rgba(13, 92, 99, 0.1), transparent 28rem),
+          linear-gradient(180deg, #f5f1e8 0%, #ebe5d7 100%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .masthead {
+        padding: 72px 0 36px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .title-row {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1.8fr) minmax(260px, 0.8fr);
+        align-items: end;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 6vw, 4.8rem);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-copy p {
+        margin: 18px 0 0;
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 1.06rem;
+        line-height: 1.75;
+      }
+
+      .hero-card {
+        padding: 22px;
+        border: 1px solid rgba(13, 92, 99, 0.18);
+        border-radius: 22px;
+        background: rgba(255, 253, 248, 0.82);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(8px);
+      }
+
+      .hero-card strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+      }
+
+      .hero-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.65;
+      }
+
+      .hero-card small {
+        display: block;
+        margin-top: 12px;
+        color: var(--muted);
+      }
+
+      .top-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-top: 1px solid rgba(22, 34, 48, 0.06);
+        border-bottom: 1px solid rgba(22, 34, 48, 0.06);
+        background: rgba(245, 241, 232, 0.92);
+        backdrop-filter: blur(12px);
+      }
+
+      .top-nav .shell {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 12px 0;
+      }
+
+      .top-nav a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .top-nav a:hover {
+        background: rgba(13, 92, 99, 0.08);
+        color: var(--accent);
+      }
+
+      main {
+        padding: 34px 0 72px;
+      }
+
+      section {
+        margin-bottom: 28px;
+      }
+
+      .panel {
+        padding: 28px;
+        border: 1px solid rgba(22, 34, 48, 0.08);
+        border-radius: 28px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: clamp(1.45rem, 2.5vw, 2rem);
+        letter-spacing: -0.04em;
+      }
+
+      .section-head p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .metric {
+        padding: 18px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #fcfaf4 0%, #f2ede2 100%);
+        border: 1px solid rgba(22, 34, 48, 0.06);
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 700;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 10px;
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        letter-spacing: -0.05em;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .company {
+        border: 1px solid rgba(22, 34, 48, 0.08);
+        border-radius: 24px;
+        padding: 22px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(249,246,238,0.96) 100%);
+      }
+
+      .company h3 {
+        margin: 0 0 8px;
+        font-size: 1.3rem;
+      }
+
+      .company .type {
+        display: inline-block;
+        margin-bottom: 14px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(13, 92, 99, 0.1);
+        color: var(--accent);
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .company p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .list {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--ink);
+        line-height: 1.7;
+      }
+
+      .price-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid rgba(22, 34, 48, 0.08);
+      }
+
+      .price-table th,
+      .price-table td {
+        padding: 14px 16px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid rgba(22, 34, 48, 0.08);
+      }
+
+      .price-table th {
+        background: #f7f2e7;
+        font-size: 0.86rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .price-table td strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .price-table td small {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .note-box {
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(22, 34, 48, 0.08);
+        background: #fcfaf4;
+      }
+
+      .note-box h3 {
+        margin: 0 0 12px;
+        font-size: 1.12rem;
+      }
+
+      .note-box ul,
+      .note-box ol {
+        margin: 0;
+        padding-left: 18px;
+        line-height: 1.75;
+      }
+
+      .insight-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .insight {
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(22, 34, 48, 0.08);
+        background: linear-gradient(180deg, #fffefb 0%, #f5f0e5 100%);
+      }
+
+      .insight h3 {
+        margin: 0 0 10px;
+        font-size: 1.06rem;
+      }
+
+      .insight p,
+      .insight ul {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .insight ul {
+        padding-left: 18px;
+      }
+
+      .sources {
+        columns: 2;
+        column-gap: 28px;
+        padding-left: 18px;
+        line-height: 1.8;
+      }
+
+      .sources li {
+        break-inside: avoid;
+        margin-bottom: 8px;
+      }
+
+      .sources a {
+        color: var(--accent);
+        word-break: break-word;
+      }
+
+      footer {
+        padding: 0 0 54px;
+      }
+
+      .footer-card {
+        padding: 22px 24px;
+        border-radius: 24px;
+        background: #13212d;
+        color: #eef3f6;
+      }
+
+      .footer-card p {
+        margin: 0;
+        line-height: 1.75;
+        color: rgba(238, 243, 246, 0.82);
+      }
+
+      @media (max-width: 980px) {
+        .title-row,
+        .metrics,
+        .cards,
+        .split,
+        .insight-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sources {
+          columns: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="shell title-row">
+        <div class="hero-copy">
+          <p class="eyebrow">Korea Touchless Car Wash Report</p>
+          <h1>한국 노터치 자동세차<br />리서치 보고서</h1>
+          <p>
+            2026년 8월 5일 기준으로 한국 시장에서 보이는 노터치 자동세차 후보 업체, 공개 가격 신호,
+            소비자 성향, 불만 포인트, 구매 욕구, 창업 면담 질문을 한 페이지로 다시 정리한 웹 보고서입니다.
+          </p>
+        </div>
+        <aside class="hero-card">
+          <strong>이 페이지에서 바로 보는 핵심</strong>
+          <p>
+            한국 시장은 미국처럼 장비 브랜드 중심으로만 움직이지 않습니다.
+            실제로는 장비 공급, 운영 대행, 무인 시스템, 구독, 앱, 케미컬 공급뿐 아니라 손세차·셀프세차와의 결합 운영까지 묶어서 비교해야 합니다.
+          </p>
+          <small>정리 기준: 공식 페이지 우선, 가격은 공식 공개가와 제3자 참고가를 구분</small>
+        </aside>
+      </div>
+    </header>
+
+    <nav class="top-nav" aria-label="리포트 섹션">
+      <div class="shell">
+        <a href="#summary">요약</a>
+        <a href="#candidates">업체 후보</a>
+        <a href="#prices">가격 비교</a>
+        <a href="#building">건물·구조물</a>
+        <a href="#operations">운영 포인트</a>
+        <a href="#consumers">소비자 성향</a>
+        <a href="#complaints">불만과 욕구</a>
+        <a href="#questions">질문 리스트</a>
+        <a href="#sources">출처</a>
+      </div>
+    </nav>
+
+    <main class="shell">
+      <section id="summary" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>한눈 요약</h2>
+            <p>국내에서 실무적으로 먼저 볼 가치가 큰 후보군과 가격대의 윤곽을 압축했습니다.</p>
+          </div>
+        </div>
+        <div class="metrics">
+          <article class="metric">
+            <span>핵심 후보 수</span>
+            <strong>4개</strong>
+          </article>
+          <article class="metric">
+            <span>공식 공개 장비가 확인</span>
+            <strong>2개 축</strong>
+          </article>
+          <article class="metric">
+            <span>소비자 1회 세차가</span>
+            <strong>9천~2.5만</strong>
+          </article>
+          <article class="metric">
+            <span>중점 비교축</span>
+            <strong>복합 운영</strong>
+          </article>
+        </div>
+      </section>
+
+      <section id="candidates" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>업체 후보</h2>
+            <p>창업자 입장에서 한국 시장에서 먼저 비교할 만한 후보를 손세차·셀프 보완 가능성까지 포함해 실무형으로 묶었습니다.</p>
+          </div>
+        </div>
+        <div class="cards">
+          <article class="company">
+            <span class="type">국내 장비·창업 지원</span>
+            <h3>세차의고수</h3>
+            <p>
+              국내 납품 실적, 무인 운영, 유지관리, 전용 케미컬, 정기 점검을 전면에 둡니다.
+              노터치의 약점인 건조와 휠 오염 보완 메시지가 강합니다.
+            </p>
+            <ul class="list">
+              <li>광고 문구: “차를 씻는 것이 아니라, 기술을 경험하는 일입니다.”</li>
+              <li>광고 문구: “대한민국 1위 노터치세차기 전문 법인”</li>
+              <li>공개 장비가: 31,500,000원 ~ 65,500,000원</li>
+              <li>공개 소비자가: 9,000원 ~ 25,000원+</li>
+            </ul>
+          </article>
+
+          <article class="company">
+            <span class="type">프리미엄 체인·장비 공급</span>
+            <h3>컴인워시</h3>
+            <p>
+              프리미엄 노터치, 빠른 세차, 고급 부품, 도시형 브랜드 이미지를 강하게 가져갑니다.
+              공개 장비가가 비교적 명확한 편입니다.
+            </p>
+            <ul class="list">
+              <li>광고 문구: “Premium No Touch Car Wash”</li>
+              <li>광고 문구: “No 기스! No 스크래치!”</li>
+              <li>공개 장비가: 108,000,000원 / 394,000,000원 VAT 별도</li>
+              <li>공개 소비자가: 13,000원 / 17,000원 / 19,000원</li>
+            </ul>
+          </article>
+
+          <article class="company">
+            <span class="type">구독·앱 기반 운영형</span>
+            <h3>오토스테이</h3>
+            <p>
+              하드웨어 판매보다 구독 모델, 앱, 반복 방문, 전국 사용성을 중심에 둡니다.
+              장비 카탈로그형보다 서비스 플랫폼형에 가깝습니다.
+            </p>
+            <ul class="list">
+              <li>광고 문구: “국내 유일 전 매장 무제한 세차구독”</li>
+              <li>광고 문구: “세차, 구독의 시대를 열다.”</li>
+              <li>공식 장비가: 공개 확인 약함</li>
+              <li>제3자 참고가: 1회 12,000~15,000원 / 구독 39,900~49,900원</li>
+            </ul>
+          </article>
+
+          <article class="company">
+            <span class="type">창업 설계·운영지원형</span>
+            <h3>올댓워시</h3>
+            <p>
+              장비 도입만이 아니라 운영 시스템, 앱, 케미컬, 재방문 구조를 같이 팔려는 성격이 강합니다.
+              실매장 운영 노하우를 차별점으로 밀고 있습니다.
+            </p>
+            <ul class="list">
+              <li>광고 문구: “노터치 자동세차장 창업, 올댓워시가 함께 설계 합니다.”</li>
+              <li>광고 문구: “운영 부담을 낮춘 효율적인 창업”</li>
+              <li>공식 장비가: 공개 확인 약함</li>
+              <li>제3자 참고가: 11,000~22,000원대 사례 존재</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="prices" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>가격 비교</h2>
+            <p>공식 공개가와 소비자 가격을 분리했습니다. 장비가는 VAT 포함 여부와 설치 포함 범위를 반드시 다시 물어봐야 합니다.</p>
+          </div>
+        </div>
+        <div class="split">
+          <div>
+            <table class="price-table">
+              <thead>
+                <tr>
+                  <th>업체</th>
+                  <th>공개 장비 가격</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>세차의고수</strong></td>
+                  <td>31,500,000원 ~ 65,500,000원</td>
+                  <td><small>모델별 공개가. Radar X는 58,500,000원, 보상판매 예시는 54,500,000원.</small></td>
+                </tr>
+                <tr>
+                  <td><strong>컴인워시</strong></td>
+                  <td>108,000,000원 / 394,000,000원</td>
+                  <td><small>둘 다 VAT 별도. 단일 기계와 대형 익스프레스형 예시가 섞여 있어 단순 비교 금지.</small></td>
+                </tr>
+                <tr>
+                  <td><strong>오토스테이</strong></td>
+                  <td>공개 확인 약함</td>
+                  <td><small>기계 단가보다 구독·서비스 모델 중심 메시지.</small></td>
+                </tr>
+                <tr>
+                  <td><strong>올댓워시</strong></td>
+                  <td>공개 확인 약함</td>
+                  <td><small>상담·시연·설치 제안형. 공식 장비 리스트 가격은 이번 조사 범위에서 명확히 확인되지 않음.</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <table class="price-table">
+              <thead>
+                <tr>
+                  <th>브랜드</th>
+                  <th>소비자 세차 가격</th>
+                  <th>출처 성격</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>세차의고수</strong></td>
+                  <td>9,000원+ / 12,000원+ / 18,000원+ / 25,000원+</td>
+                  <td><small>공식 사이트 코스 기준</small></td>
+                </tr>
+                <tr>
+                  <td><strong>컴인워시 강남본점</strong></td>
+                  <td>13,000원 / 17,000원 / 19,000원</td>
+                  <td><small>공식 본점 안내 기준</small></td>
+                </tr>
+                <tr>
+                  <td><strong>오토스테이</strong></td>
+                  <td>1회 12,000~15,000원 / 구독 39,900~49,900원</td>
+                  <td><small>제3자 참고가</small></td>
+                </tr>
+                <tr>
+                  <td><strong>올댓워시</strong></td>
+                  <td>11,000 / 13,000 / 15,000 / 18,000원 또는 22,000원 사례</td>
+                  <td><small>제3자 지역 사례</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="building" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>왜 노터치는 기본적으로 건물 이슈가 붙는가</h2>
+            <p>한국에서는 노터치 자동세차가 단순 기계 반입으로 끝나는 경우가 드뭅니다. 실제 매장에서는 손세차·셀프세차·드라잉존과 함께 묶이는 경우가 많고, 세차 베이·기계실·배수와 처리 설비 때문에 건축·구조물 검토가 함께 들어갑니다.</p>
+          </div>
+        </div>
+        <div class="split">
+          <article class="note-box">
+            <h3>법령상 핵심 해석</h3>
+            <ul>
+              <li>별도 철골 구조물이나 덮개 구조를 설치하면 세차설비만이 아니라 자동차관련시설(세차장)로 구분될 가능성이 큽니다.</li>
+              <li>즉 "기계만 놓는다"고 생각해도, 실제로는 건축물대장 용도와 구조물 설치 적법성이 같이 따라옵니다.</li>
+              <li>주유소 부지 안이라도 지붕·기둥·벽이 있는 별도 구조물을 세우면 별도 세차장 판단이 붙을 수 있습니다.</li>
+            </ul>
+          </article>
+          <article class="note-box">
+            <h3>실무상 기본 공간</h3>
+            <ul>
+              <li>세차 베이 또는 드라이브스루 구조</li>
+              <li>기계실·제어반·통신 장비 공간</li>
+              <li>전기 인입, 분전, 온수·급수 설비 공간</li>
+              <li>폐수·재이용수 탱크, 펌프, 배수 라인 공간</li>
+              <li>키오스크, 소모품, 운영자 점검 동선</li><li>손세차·셀프 베이, 드라잉존, 실내 마감 구역 연계 공간</li>
+            </ul>
+          </article>
+        </div>
+        <div class="insight-grid">
+          <article class="insight">
+            <h3>포인트 1. "건물"은 상가건물만 뜻하지 않음</h3>
+            <p>노터치에서 말하는 건물 이슈는 완전한 실내 점포만 뜻하지 않습니다. 캐노피, 경량철골, 기계실 박스, 부대실처럼 작아 보여도 건축 허가·신고 검토 대상이 될 수 있습니다.</p>
+          </article>
+          <article class="insight">
+            <h3>포인트 2. 기계실이 사실상 필수</h3>
+            <p>국내 업체들도 노터치 창업을 이야기할 때 세차 인허가, 건축 인허가, 세차장 건축, 기계 설치를 한 묶음으로 설명합니다. 장비 뒤에 붙는 설비실이 빠지지 않기 때문입니다.</p>
+          </article>
+          <article class="insight">
+            <h3>포인트 3. 배수·폐수 때문에 토목이 붙음</h3>
+            <p>세차장은 공공하수도 연결용 배수설비를 설치해야 하고, 조건에 따라 폐수배출시설과 재이용수 설비를 검토해야 합니다. 그래서 바닥 경사, 집수, 맨홀, 배관 공사가 뒤따릅니다.</p>
+          </article>
+          <article class="insight">
+            <h3>포인트 4. 용도변경 가능성</h3>
+            <p>기존 건물을 활용하면 건축물대장상의 용도와 변경 가능 여부를 먼저 봐야 합니다. 세차장은 자동차관련시설로 보게 되므로, 기존 상가나 공장 일부를 그대로 쓰는 발상은 자주 막힙니다.</p>
+          </article>
+          <article class="insight">
+            <h3>포인트 5. 예산 구조가 바뀜</h3>
+            <p>창업비는 세차기 가격만이 아닙니다. 건축·토목·배수·전기·기계실·방지시설 예산이 같이 붙기 때문에, 장비가 1억이라도 총사업비는 훨씬 커질 수 있습니다.</p>
+          </article>
+          <article class="insight">
+            <h3>포인트 6. 부지형 창업이 많은 이유</h3>
+            <p>업계 자료에서도 노터치는 베이와 드라잉존을 고려한 넓은 부지 전제를 많이 깝니다. 단독 상가 임차보다 독립 부지나 주유소형 부지에서 많이 검토되는 이유입니다.</p>
+          </article>
+        </div>
+        <div class="split">
+          <article class="note-box">
+            <h3>창업자가 바로 확인할 질문</h3>
+            <ol>
+              <li>이 부지에서 세차장 용도로 건축 또는 용도변경이 가능한지?</li>
+              <li>세차 베이를 덮는 구조물이 허가 대상인지, 신고 대상인지?</li>
+              <li>기계실, 전기실, 폐수·재이용수 설비를 어디에 둘지?</li>
+              <li>배수설비를 공공하수도에 어떻게 연결할지?</li>
+              <li>공공하수도 미연결 시 개인하수처리시설이 필요한지?</li>
+              <li>장비 견적에 건축·토목·배수 공사가 포함인지 별도인지?</li>
+            </ol>
+          </article>
+          <article class="note-box">
+            <h3>이번 리서치 결론</h3>
+            <ul>
+              <li>노터치는 손세차와 분리된 단일 업종보다 "부지+구조물+설비+보완 서비스" 사업에 가깝습니다.</li>
+              <li>기본 건물은 대형 본관이 아니라도, 세차 베이와 부대실을 수용하는 구조를 뜻하는 경우가 많습니다.</li>
+              <li>그래서 후보지 검토에서 건축사·환경·하수 부서 협의가 장비 비교보다 먼저 나와야 합니다.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="operations" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>운영이 성패를 좌우</h2>
+            <p>노터치 자동세차는 장비를 사는 순간 끝나는 사업이 아니라, 손세차·셀프세차와 역할을 나누고 장애 대응 속도와 회전율을 관리해야 하는 복합 운영 업종입니다.</p>
+          </div>
+        </div>
+        <div class="split">
+          <article class="note-box">
+            <h3>운영에서 먼저 설계할 것</h3>
+            <ul>
+              <li>무인 운영 시간과 손세차·순회 관리 시간대를 분리할 것</li>
+              <li>오픈·마감 점검표를 만들어 약품, 노즐, 건조, 결제 상태를 매일 기록할 것</li>
+              <li>동파, 정전, 카드결제 오류, 통신 장애, 노즐 막힘 대응 연락망을 사전에 확정할 것</li>
+              <li>장비사 A/S와 별도로 현장 출동 가능한 지역 유지관리망을 확인할 것</li>
+            </ul>
+          </article>
+          <article class="note-box">
+            <h3>운영형 창업자가 보는 숫자</h3>
+            <ul>
+              <li>하루 차량 수와 시간대별 피크 분포</li>
+              <li>객단가와 옵션 선택률</li>
+              <li>재세차·환불·민원 건수</li>
+              <li>다운타임 시간과 A/S 응답 속도</li>
+              <li>회원·구독 비중과 재방문 주기</li>
+            </ul>
+          </article>
+        </div>
+        <div class="insight-grid">
+          <article class="insight">
+            <h3>인력 모델</h3>
+            <p>완전 무인보다 "노터치 + 손세차·순회 관리" 조합이 현실적입니다. 청소, 약품 보충, 동절기 대응, 부분 마감 세차와 민원 처리를 맡을 운영 인력이 필요합니다.</p>
+          </article>
+          <article class="insight">
+            <h3>세정 품질 관리</h3>
+            <p>소비자 불만의 대부분은 장비 스펙보다 현장 세팅 차이에서 나옵니다. 노즐 압력, 약품 희석, 건조기 각도, 예비세척 동선 관리가 중요합니다.</p>
+          </article>
+          <article class="insight">
+            <h3>고장 대응 체계</h3>
+            <p>매출 손실은 고장 자체보다 복구 지연에서 커집니다. 원격 관제, CCTV, 알림 체계, 부품 재고, 출동 SLA를 같이 계약해야 합니다.</p>
+          </article>
+          <article class="insight">
+            <h3>동절기 리스크</h3>
+            <p>한국은 겨울철 동파와 건조 성능 저하가 매출과 후기 모두에 직결됩니다. 보온, 열선, 배수, 결빙 대응을 장비 선택 단계에서 확인해야 합니다.</p>
+          </article>
+          <article class="insight">
+            <h3>재방문 구조</h3>
+            <p>1회 가격보다 멤버십, 정기권, 앱 적립이 운영 안정성을 높입니다. 반복 방문이 생겨야 광고비 의존도를 낮출 수 있습니다.</p>
+          </article>
+          <article class="insight">
+            <h3>현장 관리자 관점</h3>
+            <p>창업자는 월매출만 보지 말고 일매출, 시간대 회전율, 민원 사유, 환불 비율을 같이 봐야 합니다. 운영 데이터가 쌓여야 가격 정책도 조정할 수 있습니다.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="consumers" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>소비자 성향</h2>
+            <p>한국에서는 노터치를 손세차의 대체재로만 보지 않고, 빠른 기본 세차 뒤에 손세차 마감이나 셀프 보완을 붙이는 관리형 소비로 보는 경향도 큽니다.</p>
+          </div>
+        </div>
+        <div class="insight-grid">
+          <article class="insight">
+            <h3>도장 보호 민감형</h3>
+            <ul>
+              <li>브러시 접촉 자체를 싫어함</li>
+              <li>신차·수입차·관리차량에서 강함</li>
+              <li>“스월마크 방지” 문구에 반응</li>
+            </ul>
+          </article>
+          <article class="insight">
+            <h3>편의·시간 절약형</h3>
+            <ul>
+              <li>차에서 안 내리고 끝내길 원함</li>
+              <li>24시간 무인 운영 선호</li>
+              <li>간편 결제와 빠른 회전 중요</li>
+            </ul>
+          </article>
+          <article class="insight">
+            <h3>프리미엄 관리형</h3>
+            <ul>
+              <li>가격보다 안전성과 이미지 중시</li>
+              <li>코팅, 하부세차, 고급 건조 옵션 수용</li>
+              <li>세차를 차량 관리의 일부로 봄</li>
+            </ul>
+          </article>
+          <article class="insight">
+            <h3>구독 수용형</h3>
+            <ul>
+              <li>반복 방문이 잦은 사용자</li>
+              <li>앱, 패스, 정기권에 익숙함</li>
+              <li>오토스테이형 모델과 잘 맞음</li>
+            </ul>
+          </article>
+          <article class="insight">
+            <h3>가격 민감형</h3>
+            <ul>
+              <li>주유소 자동세차와 즉시 비교</li>
+              <li>1회 5천원대 대비 1.2~1.8만원이 비싸다고 느낌</li>
+              <li>가성비 설득이 필요</li>
+            </ul>
+          </article>
+          <article class="insight">
+            <h3>회의형</h3>
+            <ul>
+              <li>“비싼데 덜 닦인다” 인식이 있음</li>
+              <li>고착 오염·벌레·건조에서 불만</li>
+              <li>기술 개선 메시지에 반응 가능</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="complaints" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>불만과 구매 욕구</h2>
+            <p>창업 관점에서는 “무엇 때문에 안 사는가”와 “무엇 때문에 다시 오는가”를 같이 봐야 합니다.</p>
+          </div>
+        </div>
+        <div class="split">
+          <article class="note-box">
+            <h3>대표 불만</h3>
+            <ul>
+              <li>생각보다 안 닦임</li>
+              <li>벌레 사체, 묵은 때, 하단부 세정력 부족</li>
+              <li>건조가 완벽하지 않음</li>
+              <li>가격이 주유소 자동세차보다 너무 비쌈</li>
+              <li>주말 대기 시간이 길어짐</li>
+            </ul>
+          </article>
+          <article class="note-box">
+            <h3>구매·재방문 욕구</h3>
+            <ul>
+              <li>브러시 무접촉으로 기스 걱정이 적음</li>
+              <li>새 차에도 안심된다는 심리</li>
+              <li>빠른 이용과 무인 편의성</li>
+              <li>하부세차, 코팅, 폼 등 프리미엄 옵션 체감</li>
+              <li>구독·적립·회원제 등 반복 이용 보상</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="questions" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>현장 질문 리스트</h2>
+            <p>업체 면담과 소비자 인터뷰에서 바로 써먹을 수 있게 나눴습니다.</p>
+          </div>
+        </div>
+        <div class="split">
+          <article class="note-box">
+            <h3>업체에 물을 질문</h3>
+            <ol>
+              <li>이 가격이 기계만인지, 총 설치비인지?</li>
+              <li>토목, 배수, 폐수·재이용수, 전기 증설이 포함되는지?</li>
+              <li>VAT 포함인지?</li>
+              <li>실제 시간당 처리량은 몇 대인지?</li>
+              <li>월 유지보수 비용과 A/S 응답 시간은 얼마인지?</li>
+              <li>한국 내 부품 재고와 겨울철 고장 포인트는 무엇인지?</li>
+              <li>앱, 회원제, 무인 결제, 원격 관제가 기본 포함인지?</li>
+              <li>비슷한 한국 매장의 실제 객단가와 월 매출 데이터가 있는지?</li>
+            </ol>
+          </article>
+          <article class="note-box">
+            <h3>소비자에게 물을 질문</h3>
+            <ol>
+              <li>브러시 세차를 피하는 이유가 실제로 기스 때문인지?</li>
+              <li>노터치에서 가장 아쉬운 점이 세정력인지, 건조인지?</li>
+              <li>1회 세차에 적정하다고 느끼는 금액은 얼마인지?</li>
+              <li>건조 성능이 좋아지면 추가 지불 의향이 있는지?</li>
+              <li>월 구독이 있으면 몇 회 이상 사용할지?</li>
+              <li>속도와 마감 품질 중 무엇을 더 중요하게 보는지?</li>
+              <li>야간 무인 운영을 신뢰하는지?</li>
+              <li>가장 최근 세차장에서 실망한 이유가 무엇인지?</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section id="sources" class="panel">
+        <div class="section-head">
+          <div>
+            <h2>출처</h2>
+            <p>공식 사이트 우선으로 정리했고, 일부 소비자 가격과 후기 성격의 정보는 제3자 참고 자료임을 구분했습니다.</p>
+          </div>
+        </div>
+        <ul class="sources">
+          <li><a href="https://washgosu.com/" target="_blank" rel="noopener noreferrer">세차의고수 메인</a></li>
+          <li><a href="https://washgosu.com/notouch" target="_blank" rel="noopener noreferrer">세차의고수 노터치 페이지</a></li>
+          <li><a href="https://comeinwash.com/kr/production?slide=4" target="_blank" rel="noopener noreferrer">컴인워시 제품 및 사용법</a></li>
+          <li><a href="https://comeinwash.com/kr/headoffice" target="_blank" rel="noopener noreferrer">컴인워시 강남본점 가격</a></li>
+          <li><a href="https://comeinwash.com/kr/about" target="_blank" rel="noopener noreferrer">컴인워시 회사 소개·건축 인허가 언급</a></li>
+          <li><a href="https://autostay.co.kr/" target="_blank" rel="noopener noreferrer">오토스테이 메인</a></li>
+          <li><a href="https://autostay.co.kr/service" target="_blank" rel="noopener noreferrer">오토스테이 서비스</a></li>
+          <li><a href="https://www.autostay.co.kr/technology" target="_blank" rel="noopener noreferrer">오토스테이 기술</a></li>
+          <li><a href="https://www.newswire.co.kr/newsRead.php?no=1005793" target="_blank" rel="noopener noreferrer">오토스테이 매출 성장 기사</a></li>
+          <li><a href="https://www.newswire.co.kr/newsRead.php?no=997438" target="_blank" rel="noopener noreferrer">오토스테이 구독 상품 기사</a></li>
+          <li><a href="https://www.allthatwash.com/" target="_blank" rel="noopener noreferrer">올댓워시 메인</a></li>
+          <li><a href="https://allthatwash.com/Company-Overview" target="_blank" rel="noopener noreferrer">올댓워시 소개</a></li>
+          <li><a href="https://allthatwash.com/Company-Overview1" target="_blank" rel="noopener noreferrer">올댓워시 소개 보조 페이지</a></li>
+          <li><a href="https://allthatwash.com/99" target="_blank" rel="noopener noreferrer">올댓워시 운영 시스템</a></li>
+          <li><a href="https://www.law.go.kr/LSW/cgmExpcInfoP.do?cgmExpcDatSeq=278468&mode=2&ofiClsCd=350102" target="_blank" rel="noopener noreferrer">국토교통부 해석: 주유소 내 기계식 세차설비 용도 분류</a></li>
+          <li><a href="https://www.law.go.kr/DRF/lawService.do?MST=276803&OC=me_pr&efYd=20251001&mobileYn=Y&target=law&type=HTML" target="_blank" rel="noopener noreferrer">하수도법 제27조 배수설비 설치</a></li>
+          <li><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=95128" target="_blank" rel="noopener noreferrer">하수도법 시행규칙 제22조·제23조</a></li>
+          <li><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=246847" target="_blank" rel="noopener noreferrer">하수도법 제34조 개인하수처리시설</a></li>
+          <li><a href="https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=2&cciNo=1&cnpClsNo=1&csmSeq=1150&menuType=cnpcls&popMenu=ov" target="_blank" rel="noopener noreferrer">찾기쉬운 생활법령: 건축물 용도 확인</a></li>
+          <li><a href="https://oncarwash.com/%EC%84%B8%EC%B0%A8%EC%9E%A5-%EB%B6%80%EC%A7%80-%EC%84%A0%EC%A0%95-%ED%95%B5%EC%8B%AC-%EC%9A%94%EC%86%8C/" target="_blank" rel="noopener noreferrer">온동네 노터치 세차 부지 선정 요소</a></li>
+          <li><a href="https://glasswallet.com/blog/touchless-car-wash-cost-guide/" target="_blank" rel="noopener noreferrer">Glasswallet 노터치 세차 비용 가이드</a></li>
+          <li><a href="https://www.daangn.com/kr/local-profile/9k3r4ktgnqz1/" target="_blank" rel="noopener noreferrer">당근마켓 컴인워시 동백점 후기 사례</a></li>
+          <li><a href="https://life-inhome.tistory.com/88" target="_blank" rel="noopener noreferrer">인천 서구 노터치 세차 가격 사례</a></li>
+          <li><a href="https://plusk14.tistory.com/entry/notouchcarwash" target="_blank" rel="noopener noreferrer">브랜드별 노터치 세차 가격 비교 참고</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="shell">
+      <div class="footer-card">
+        <p>
+          이 페이지는 2026년 8월 5일 기준 공개 자료를 바탕으로 정리한 실무용 리포트입니다.
+          장비 가격, 설치 범위, 세차가, 구독가, A/S 범위는 지점·부지·옵션·부가세 포함 여부에 따라 달라질 수 있으므로
+          실제 계약 전에는 반드시 공식 견적과 현장 조건을 다시 확인해야 합니다.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

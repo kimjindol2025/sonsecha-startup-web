@@ -20,6 +20,7 @@ const candidateStatusLabels = {
   blocked: '불가',
 };
 let businessPlanApp = null;
+const stageAppPrototypeSteps = new Set(['1', '2', '3', '4', '5']);
 const stepOneCheckGroups = [
   {
     id: 'online',
@@ -335,24 +336,149 @@ function readStoredArray(key) {
   }
 }
 
+function normalizeEvidenceItems(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => item && typeof item === 'object')
+    .map((item) => ({
+      kind: typeof item.kind === 'string' ? item.kind : 'link',
+      label: typeof item.label === 'string' ? item.label : '',
+      value: typeof item.value === 'string' ? item.value : '',
+    }));
+}
+
+function normalizeStageChecks(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => item && typeof item === 'object' && item.id != null)
+    .map((item) => ({
+      id: String(item.id),
+      label: typeof item.label === 'string' ? item.label : '',
+      note: typeof item.note === 'string' ? item.note : '',
+      done: item.done === true,
+    }));
+}
+
+function makeStageRecord(seed = {}) {
+  return {
+    checked: seed.checked === true,
+    decision: typeof seed.decision === 'string' ? seed.decision : 'unreviewed',
+    summary: typeof seed.summary === 'string' ? seed.summary : '',
+    notes: typeof seed.notes === 'string' ? seed.notes : '',
+    owner: typeof seed.owner === 'string' ? seed.owner : '',
+    agency: typeof seed.agency === 'string' ? seed.agency : '',
+    dueDate: typeof seed.dueDate === 'string' ? seed.dueDate : '',
+    amount: typeof seed.amount === 'string' ? seed.amount : '',
+    evidence: normalizeEvidenceItems(seed.evidence),
+    checks: normalizeStageChecks(seed.checks),
+    nextAction: typeof seed.nextAction === 'string' ? seed.nextAction : '',
+    updatedAt: typeof seed.updatedAt === 'string' ? seed.updatedAt : '',
+  };
+}
+
+function normalizeStageRecords(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => /^\d+$/.test(String(key)))
+    .map(([key, record]) => [String(key), makeStageRecord(record)]));
+}
+
+function ensureStageRecord(candidate, stageId) {
+  const key = String(stageId);
+  if (!candidate.stageRecords[key]) candidate.stageRecords[key] = makeStageRecord();
+  return candidate.stageRecords[key];
+}
+
+function findStageCheck(record, detailId) {
+  return record.checks.find((item) => item.id === detailId);
+}
+
+function upsertStageCheck(candidate, detailId, patch = {}) {
+  const [stageId] = String(detailId).split('-');
+  const record = ensureStageRecord(candidate, stageId);
+  const existing = findStageCheck(record, detailId);
+  if (existing) {
+    if (patch.label != null) existing.label = patch.label;
+    if (patch.note != null) existing.note = patch.note;
+    if (patch.done != null) existing.done = patch.done;
+  } else {
+    record.checks.push({
+      id: String(detailId),
+      label: typeof patch.label === 'string' ? patch.label : '',
+      note: typeof patch.note === 'string' ? patch.note : '',
+      done: patch.done === true,
+    });
+  }
+  record.updatedAt = new Date().toISOString();
+  return record;
+}
+
+function syncLegacyFieldsFromStageRecords(candidate) {
+  const stageEntries = Object.entries(candidate.stageRecords);
+  candidate.stepChecks = stageEntries
+    .filter(([, record]) => record.checked)
+    .map(([stageId]) => stageId);
+  candidate.stepStatuses = Object.fromEntries(stageEntries
+    .filter(([, record]) => record.decision && record.decision !== 'unreviewed')
+    .map(([stageId, record]) => [stageId, record.decision]));
+  candidate.detailChecks = stageEntries
+    .flatMap(([, record]) => record.checks.filter((item) => item.done).map((item) => item.id));
+  candidate.detailNotes = Object.fromEntries(stageEntries
+    .flatMap(([stageId, record]) => {
+      const pairs = [];
+      if (record.notes.trim()) pairs.push([stageId, record.notes]);
+      record.checks.forEach((item) => {
+        if (item.note && String(item.note).trim()) pairs.push([item.id, item.note]);
+      });
+      return pairs;
+    }));
+}
+
+function migrateLegacyStageRecords(candidate) {
+  const stageRecords = normalizeStageRecords(candidate.stageRecords);
+  (candidate.stepChecks || []).forEach((stageId) => {
+    ensureStageRecord({ stageRecords }, stageId).checked = true;
+  });
+  Object.entries(candidate.stepStatuses || {}).forEach(([stageId, status]) => {
+    ensureStageRecord({ stageRecords }, stageId).decision = status;
+  });
+  (candidate.detailChecks || []).forEach((detailId) => {
+    upsertStageCheck({ stageRecords }, detailId, { done: true });
+  });
+  Object.entries(candidate.detailNotes || {}).forEach(([detailId, note]) => {
+    if (/^\d+$/.test(String(detailId))) {
+      ensureStageRecord({ stageRecords }, detailId).notes = typeof note === 'string' ? note : '';
+      return;
+    }
+    upsertStageCheck({ stageRecords }, detailId, { note: typeof note === 'string' ? note : '' });
+  });
+  return stageRecords;
+}
+
 function makeCandidate(seed = {}) {
   const fallbackId = `candidate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const allowedStatuses = ['unreviewed', 'possible', 'conditional', 'blocked'];
-  return {
+  const candidate = {
     id: typeof seed.id === 'string' && seed.id
       ? seed.id
       : globalThis.crypto?.randomUUID?.() || fallbackId,
     name: typeof seed.name === 'string' ? seed.name : '',
     address: typeof seed.address === 'string' ? seed.address : '',
     status: allowedStatuses.includes(seed.status) ? seed.status : 'unreviewed',
-    stepChecks: Array.isArray(seed.stepChecks) ? seed.stepChecks : [],
+    stepChecks: Array.isArray(seed.stepChecks) ? seed.stepChecks.map(String) : [],
     stepStatuses: seed.stepStatuses && typeof seed.stepStatuses === 'object' ? seed.stepStatuses : {},
-    detailChecks: Array.isArray(seed.detailChecks) ? seed.detailChecks : [],
+    detailChecks: Array.isArray(seed.detailChecks) ? seed.detailChecks.map(String) : [],
     detailNotes: seed.detailNotes && typeof seed.detailNotes === 'object' ? seed.detailNotes : {},
+    stageRecords: normalizeStageRecords(seed.stageRecords),
     washType: typeof seed.washType === 'string' ? seed.washType : '',
     bayCount: typeof seed.bayCount === 'string' ? seed.bayCount : '',
     consultationNotes: Array.isArray(seed.consultationNotes) ? seed.consultationNotes : [],
   };
+  if (!Object.keys(candidate.stageRecords).length) {
+    candidate.stageRecords = migrateLegacyStageRecords(candidate);
+  }
+  syncLegacyFieldsFromStageRecords(candidate);
+  return candidate;
 }
 
 function loadCandidateState() {
@@ -394,6 +520,31 @@ function candidateDisplayName(candidate, index) {
   return candidate.name.trim() || `후보지 ${index + 1}`;
 }
 
+function formatStageAmount(value) {
+  const digits = String(value || '').replace(/[^0-9.-]/g, '');
+  const amount = Number(digits);
+  if (!Number.isFinite(amount) || amount <= 0) return '';
+  return Math.round(amount).toLocaleString('ko-KR') + '원';
+}
+
+function candidateDashboardMetrics(candidate) {
+  const records = Object.entries(candidate.stageRecords || {});
+  const total = 20;
+  const completed = records.filter(([, record]) => record.checked).length;
+  const conditional = records.filter(([, record]) => record.decision === 'conditional').length;
+  const blocked = records.filter(([, record]) => record.decision === 'blocked').length;
+  const amountTotal = records.reduce((sum, [, record]) => {
+    const digits = String(record.amount || '').replace(/[^0-9.-]/g, '');
+    const value = Number(digits);
+    return sum + (Number.isFinite(value) && value > 0 ? value : 0);
+  }, 0);
+  const nextDates = records
+    .map(([stageId, record]) => ({ stageId, dueDate: record.dueDate || '' }))
+    .filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.dueDate))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 3);
+  return { completed, total, conditional, blocked, amountTotal, nextDates };
+}
 function stepOneCandidateMetrics(candidate) {
   const itemIds = [...document.querySelectorAll('[data-detail-check^="1-"]')]
     .map((box) => box.dataset.detailCheck);
@@ -415,6 +566,7 @@ function renderCandidatePanel(fields) {
   list.innerHTML = candidateState.candidates.map((candidate, index) => {
     const selected = candidate.id === active.id;
     const metrics = stepOneCandidateMetrics(candidate);
+    const dashboard = candidateDashboardMetrics(candidate);
     return `
       <button type="button" class="candidate-tab${selected ? ' active' : ''}" data-candidate-id="${escapeHtml(candidate.id)}" aria-current="${selected ? 'true' : 'false'}">
         <span class="candidate-card-head">
@@ -423,10 +575,20 @@ function renderCandidatePanel(fields) {
         </span>
         <small class="candidate-card-address">${escapeHtml(candidate.address.trim() || '주소 미입력')}</small>
         <span class="candidate-card-status"><b>종합 상태</b><em>${candidateStatusLabels[candidate.status]}</em></span>
+        <span class="candidate-card-dashboard">
+          <span><b>20단계</b><em>${dashboard.completed} / ${dashboard.total}</em></span>
+          <span><b>조건부</b><em>${dashboard.conditional}개</em></span>
+          <span><b>불가</b><em>${dashboard.blocked}개</em></span>
+          <span><b>예정금액</b><em>${dashboard.amountTotal > 0 ? formatStageAmount(dashboard.amountTotal) : '미입력'}</em></span>
+        </span>
         <span class="candidate-card-metrics">
           <span><b>1단계 진행률</b><em>${metrics.completed} / ${metrics.total}</em></span>
           <span><b>미확인 항목</b><em>${metrics.unchecked}</em></span>
           <span><b>조건부·부적합</b><em>${metrics.caution}</em></span>
+        </span>
+        <span class="candidate-card-schedule">
+          <b>가까운 다음 일정</b>
+          <em>${dashboard.nextDates.length ? dashboard.nextDates.map((item) => item.stageId + '단계 ' + item.dueDate).join(' · ') : '등록된 일정 없음'}</em>
         </span>
       </button>
     `;
@@ -451,7 +613,6 @@ function renderCandidatePanel(fields) {
     });
   });
 }
-
 function injectCandidateFields(group) {
   if (!group.closest('.step-card')?.querySelector('input[data-step="1"]')) return;
   const fields = document.createElement('div');
@@ -460,7 +621,7 @@ function injectCandidateFields(group) {
     <div class="candidate-heading">
       <span>MY CANDIDATE</span>
       <strong>주소별 독립 체크리스트</strong>
-      <small>후보지마다 12단계, 세부 체크, 판정과 메모가 따로 저장됩니다.</small>
+      <small>후보지마다 20단계, 세부 체크, 판정과 메모가 따로 저장됩니다.</small>
     </div>
     <ol class="candidate-quick-guide" aria-label="후보지 사전 확인 사용 순서">
       <li><span>1</span>후보지 이름과 주소 입력</li>
@@ -492,7 +653,7 @@ function injectCandidateFields(group) {
     </label>
     <label>
       <span>예상 세차장 형태</span>
-      <input type="text" data-candidate-field="washType" placeholder="예: 손세차·디테일링 복합형">
+      <input type="text" data-candidate-field="washType" placeholder="예: 노터치 인베이 2베이">
     </label>
     <label>
       <span>예상 베이 수</span>
@@ -567,6 +728,10 @@ function injectStepDecision(group, scope) {
   decision.querySelector('select').addEventListener('change', (event) => {
     const active = getActiveCandidate();
     active.stepStatuses[scope] = event.target.value;
+    const record = ensureStageRecord(active, scope);
+    record.decision = event.target.value;
+    record.updatedAt = new Date().toISOString();
+    syncLegacyFieldsFromStageRecords(active);
     saveCandidateState();
     group.closest('.step-card').dataset.decision = event.target.value;
     const fields = document.querySelector('.candidate-fields');
@@ -574,6 +739,88 @@ function injectStepDecision(group, scope) {
   });
 }
 
+function stagePanelValue(record, key) {
+  return typeof record?.[key] === 'string' ? record[key] : '';
+}
+
+function normalizeStageEvidence(record, length = 3) {
+  const evidence = Array.isArray(record?.evidence) ? record.evidence : [];
+  return Array.from({ length }, (_, index) => ({
+    label: typeof evidence[index]?.label === 'string' ? evidence[index].label : '',
+    value: typeof evidence[index]?.value === 'string' ? evidence[index].value : '',
+  }));
+}
+
+function saveStagePanel(group, scope) {
+  const active = getActiveCandidate();
+  const record = ensureStageRecord(active, scope);
+  record.summary = group.querySelector('[data-stage-field="summary"]')?.value.trim() || '';
+  record.owner = group.querySelector('[data-stage-field="owner"]')?.value.trim() || '';
+  record.agency = group.querySelector('[data-stage-field="agency"]')?.value.trim() || '';
+  record.dueDate = group.querySelector('[data-stage-field="dueDate"]')?.value || '';
+  record.amount = group.querySelector('[data-stage-field="amount"]')?.value.trim() || '';
+  record.nextAction = group.querySelector('[data-stage-field="nextAction"]')?.value.trim() || '';
+  record.notes = group.querySelector('[data-stage-field="notes"]')?.value.trim() || '';
+  record.evidence = Array.from(group.querySelectorAll('[data-stage-evidence-index]')).reduce((items, field) => {
+    const index = Number(field.dataset.stageEvidenceIndex);
+    if (!items[index]) items[index] = { kind: 'link', label: '', value: '' };
+    items[index][field.dataset.stageEvidencePart] = field.value.trim();
+    return items;
+  }, []).filter((item) => item && (item.label || item.value));
+  record.updatedAt = new Date().toISOString();
+  syncLegacyFieldsFromStageRecords(active);
+  saveCandidateState();
+  const state = group.querySelector('[data-stage-save-state]');
+  if (state) {
+    state.textContent = '단계 입력 저장됨 ✓';
+    clearTimeout(group.stageSaveTimer);
+    group.stageSaveTimer = setTimeout(() => { state.textContent = '이 단계 입력은 후보지별로 자동 저장됩니다.'; }, 1200);
+  }
+}
+
+function fillStagePanel(group, scope, candidate = getActiveCandidate()) {
+  if (!stageAppPrototypeSteps.has(String(scope))) return;
+  const record = ensureStageRecord(candidate, scope);
+  const evidence = normalizeStageEvidence(record, 3);
+  group.querySelectorAll('[data-stage-field]').forEach((field) => {
+    field.value = stagePanelValue(record, field.dataset.stageField);
+  });
+  group.querySelectorAll('[data-stage-evidence-index]').forEach((field) => {
+    const index = Number(field.dataset.stageEvidenceIndex);
+    field.value = evidence[index]?.[field.dataset.stageEvidencePart] || '';
+  });
+}
+
+function injectStageRecordPanel(group, scope) {
+  if (!stageAppPrototypeSteps.has(String(scope))) return;
+  const record = ensureStageRecord(getActiveCandidate(), scope);
+  const evidence = normalizeStageEvidence(record, 3);
+  const panel = document.createElement('section');
+  panel.className = 'stage-record-panel';
+  panel.dataset.stagePanel = scope;
+  panel.innerHTML = [
+    '<div class="stage-record-head"><strong>이 단계 실행 기록</strong><small data-stage-save-state>이 단계 입력은 후보지별로 자동 저장됩니다.</small></div>',
+    '<div class="stage-record-grid">',
+    '<label class="stage-field stage-field-wide"><span>한 줄 요약</span><input type="text" data-stage-field="summary" placeholder="예: 건축과 1차 통화 완료"></label>',
+    '<label class="stage-field"><span>담당자</span><input type="text" data-stage-field="owner" placeholder="예: 대표"></label>',
+    '<label class="stage-field"><span>문의 기관/업체</span><input type="text" data-stage-field="agency" placeholder="예: 양주시 건축과"></label>',
+    '<label class="stage-field"><span>다음 확인일</span><input type="date" data-stage-field="dueDate"></label>',
+    '<label class="stage-field"><span>관련 금액</span><input type="text" data-stage-field="amount" inputmode="numeric" placeholder="예: 8000000"></label>',
+    '<label class="stage-field stage-field-wide"><span>다음 행동</span><input type="text" data-stage-field="nextAction" placeholder="예: 환경과 제출서류 목록 요청"></label>',
+    '<label class="stage-field stage-field-wide"><span>단계 메모</span><textarea rows="4" data-stage-field="notes" placeholder="통화 내용, 판정 근거, 금액 조건, 주의사항을 적어두세요."></textarea></label>',
+    '</div>',
+    '<div class="stage-evidence-block"><strong>증빙 링크/자료</strong><div class="stage-evidence-list">',
+    evidence.map((item, index) => '<div class="stage-evidence-row"><input type="text" data-stage-evidence-index="' + index + '" data-stage-evidence-part="label" placeholder="증빙 이름" value="' + escapeHtml(item.label) + '"><input type="text" data-stage-evidence-index="' + index + '" data-stage-evidence-part="value" placeholder="링크 또는 파일명" value="' + escapeHtml(item.value) + '"></div>').join(''),
+    '</div></div>'
+  ].join('');
+  const guide = group.querySelector('.guide-content');
+  if (guide) guide.before(panel);
+  fillStagePanel(group, scope);
+  panel.querySelectorAll('input, textarea').forEach((field) => {
+    field.addEventListener('input', () => saveStagePanel(group, scope));
+    field.addEventListener('change', () => saveStagePanel(group, scope));
+  });
+}
 function organizeStepOneChecklist(group, scope) {
   if (scope !== '1') return;
   const guide = group.querySelector('.guide-content');
@@ -653,6 +900,7 @@ function hydrateDetailChecks() {
       || `field-${groupIndex}`;
 
     injectStepDecision(group, scope);
+    injectStageRecordPanel(group, scope);
 
     group.querySelectorAll('.guide-content li').forEach((item, itemIndex) => {
       const id = `${scope}-${itemIndex}`;
@@ -683,16 +931,28 @@ function hydrateDetailChecks() {
         if (box.checked) setTimeout(() => note.focus(), 80);
         const activeChecks = [...document.querySelectorAll('input[data-detail-check]:checked')]
           .map((checked) => checked.dataset.detailCheck);
-        getActiveCandidate().detailChecks = activeChecks;
+        const active = getActiveCandidate();
+        active.detailChecks = activeChecks;
+        upsertStageCheck(active, id, {
+          label: item.querySelector('.detail-check-copy')?.textContent.trim() || id,
+          done: box.checked,
+        });
+        syncLegacyFieldsFromStageRecords(active);
         saveCandidateState();
         updateDetailGroup(group);
         const fields = document.querySelector('.candidate-fields');
         if (fields) renderCandidatePanel(fields);
       });
       note.addEventListener('input', () => {
-        const notes = getActiveCandidate().detailNotes;
+        const active = getActiveCandidate();
+        const notes = active.detailNotes;
         if (note.value.trim()) notes[id] = note.value;
         else delete notes[id];
+        upsertStageCheck(active, id, {
+          label: item.querySelector('.detail-check-copy')?.textContent.trim() || id,
+          note: note.value,
+        });
+        syncLegacyFieldsFromStageRecords(active);
         saveCandidateState();
         item.classList.toggle('note-open', box.checked || Boolean(note.value));
         resizeNote(note);
@@ -732,7 +992,11 @@ function loadCandidateData() {
     select.value = value;
     select.closest('.step-card').dataset.decision = value;
   });
-  document.querySelectorAll('.step-detail, .field-panel').forEach(updateDetailGroup);
+  document.querySelectorAll('.step-detail, .field-panel').forEach((group) => {
+    const scope = group.closest('.step-card')?.querySelector('input[data-step]')?.dataset.step;
+    if (scope) fillStagePanel(group, scope, active);
+    updateDetailGroup(group);
+  });
   const fields = document.querySelector('.candidate-fields');
   if (fields) renderCandidatePanel(fields);
   updateProgress(false);
@@ -743,9 +1007,16 @@ function updateProgress(shouldSave = true) {
   progressText.textContent = `${completed} / ${checkboxes.length}`;
   progressBar.style.width = `${(completed / checkboxes.length) * 100}%`;
   if (shouldSave && candidateState) {
-    getActiveCandidate().stepChecks = checkboxes
+    const active = getActiveCandidate();
+    active.stepChecks = checkboxes
       .filter((box) => box.checked)
       .map((box) => box.dataset.step);
+    checkboxes.forEach((box) => {
+      const record = ensureStageRecord(active, box.dataset.step);
+      record.checked = box.checked;
+      record.updatedAt = new Date().toISOString();
+    });
+    syncLegacyFieldsFromStageRecords(active);
     saveCandidateState();
   }
 }
@@ -1088,7 +1359,7 @@ function closeCart() {
 async function copyCartInquiry() {
   if (!cart.length) return;
   const lines = [
-    '[손세차장 제품 문의]',
+    '[노터치 자동세차 제품 문의]',
     ...cart.map((item) => {
       const product = productById.get(item.productId);
       return `- ${product.name} / ${item.quantity}개 / ${formatPrice(product.price)}`;
@@ -1300,12 +1571,12 @@ function syncSiteView() {
   if (isPlanView) businessPlanApp?.activate();
   const detailProduct = productId === null ? null : productById.get(productId);
   document.title = detailProduct
-    ? `${detailProduct.name} · 손세차장 제품몰`
+    ? `${detailProduct.name} · 노터치 자동세차 제품몰`
     : isShopView
-      ? '제품몰 · 손세차장 창업 로드맵'
+      ? '제품몰 · 노터치 자동세차 창업 프로그램'
       : isPlanView
-        ? '나의 사업계획서 · 손세차장 창업 로드맵'
-      : '손세차장 창업 로드맵';
+        ? '나의 사업계획서 · 노터치 자동세차 창업 프로그램'
+      : '노터치 자동세차 창업 프로그램';
   if (isShopView || isPlanView) requestAnimationFrame(() => globalThis.scrollTo({ top: 0, behavior: 'auto' }));
 }
 
@@ -1383,7 +1654,7 @@ function suggestedFeedbackArea() {
   if (globalThis.location.hash === '#shop') return '제품몰';
   if (globalThis.location.hash === '#plan') return '사업계획서';
   const center = document.elementFromPoint(globalThis.innerWidth / 2, globalThis.innerHeight / 2);
-  if (center?.closest('#roadmap')) return '12단계 절차';
+  if (center?.closest('#roadmap')) return '20단계 절차';
   if (center?.closest('#field-guide')) return '후보지 체크';
   return '창업가이드';
 }
@@ -1488,6 +1759,7 @@ document.querySelector('#resetButton').addEventListener('click', () => {
   active.stepStatuses = {};
   active.detailChecks = [];
   active.detailNotes = {};
+  active.stageRecords = {};
   saveCandidateState();
   checkboxes.forEach((box) => {
     box.checked = false;

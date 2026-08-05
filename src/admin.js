@@ -387,11 +387,11 @@ function renderConsultationDetail() {
     const photos = consultation.attachments.filter((photo) => isBundle
       ? photo.candidateRef === candidate.candidateRef : !photo.candidateRef);
     return `<article class="consultation-admin-candidate">
-      <header><span>후보지 ${index + 1}</span><h4>${escapeHtml(candidate.candidateName || '후보지')}</h4><small>12단계 자료 · 진행 ${Number(candidate.progress?.completed || 0)}/${Number(candidate.progress?.total || 0)}</small></header>
+      <header><span>후보지 ${index + 1}</span><h4>${escapeHtml(candidate.candidateName || '후보지')}</h4><small>20단계 자료 · 진행 ${Number(candidate.progress?.completed || 0)}/${Number(candidate.progress?.total || 0)}</small></header>
       <section class="consultation-detail-block"><h4>공유된 기본정보</h4>
         <dl><div><dt>주소</dt><dd>${candidate.sharing?.address ? escapeHtml(candidate.address || '미입력') : '공유 안 함'}</dd></div><div><dt>예상 형태</dt><dd>${candidate.plan ? `${escapeHtml(candidate.plan.washType || '미입력')} · ${escapeHtml(candidate.plan.bayCount || '베이 수 미입력')}` : '공유 안 함'}</dd></div><div><dt>종합상태</dt><dd>${escapeHtml(candidateDecisionLabels[candidate.overallStatus] || candidate.overallStatus)}</dd></div></dl>
       </section>
-      <details class="consultation-detail-block" open><summary>12단계 상태·메모 · ${steps.length}단계 / 메모 ${notes.length}개</summary><div class="consultation-stage-records">${steps.map((step) => {
+      <details class="consultation-detail-block" open><summary>20단계 상태·메모 · ${steps.length}단계 / 메모 ${notes.length}개</summary><div class="consultation-stage-records">${steps.map((step) => {
         const stepNotes = notes.filter((note) => (note.step || String(note.id || '').split('-')[0]) === step.id);
         return `<article><header><span>${escapeHtml(step.label)}</span><strong>${escapeHtml(consultationStepStatus(step))}</strong></header><div>${candidate.sharing?.notes ? stepNotes.map((note) => `<p><b>${escapeHtml(note.label)}</b><span>${escapeHtml(note.text)}</span></p>`).join('') || '<em>작성된 메모 없음</em>' : '<em>메모 공유 안 함</em>'}</div></article>`;
       }).join('')}</div></details>
