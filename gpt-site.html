@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ChatGPT Sites로 만드는 대담한 랜딩 페이지 데모." />
+    <meta name="theme-color" content="#06101f" />
+    <title>GPT Site Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/gpt-site.css" />
+  </head>
+  <body class="gpt-site">
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="/index.html">
+        <span class="brand-mark" aria-hidden="true">GPT</span>
+        <span class="brand-copy">
+          <strong>GPT Site Builder</strong>
+          <small>prompt to publish</small>
+        </span>
+      </a>
+      <nav class="topnav" aria-label="페이지 섹션">
+        <a href="#features">기능</a>
+        <a href="#flow">흐름</a>
+        <a href="#prompts">프롬프트</a>
+        <a href="#limits">주의</a>
+      </nav>
+      <a class="topbar-cta" href="/index.html">기존 사이트로</a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">CHATGPT SITES DEMO</p>
+          <h1>
+            말 한 줄로 시작해
+            <span>디자인, 도메인, 배포까지</span>
+            끝내는 GPT 사이트
+          </h1>
+          <p class="hero-text">
+            이 페이지는 ChatGPT Sites를 시연하는 랜딩 페이지입니다. 아이디어를 프롬프트로 정리하고,
+            페이지를 생성하고, 공개 배포와 커스텀 도메인 연결까지 이어지는 흐름을 한 번에 보여줍니다.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#flow">작동 흐름 보기</a>
+            <a class="button button-secondary" href="#limits">한계 확인</a>
+          </div>
+          <dl class="hero-stats" aria-label="핵심 수치">
+            <div><dt>Prompt</dt><dd>기획 입력</dd></div>
+            <div><dt>Build</dt><dd>페이지 생성</dd></div>
+            <div><dt>Deploy</dt><dd>공개 배포</dd></div>
+          </dl>
+        </div>
+
+        <div class="hero-panel" aria-label="예시 화면">
+          <article class="mock-window prompt-card">
+            <div class="mock-bar"><span></span><span></span><span></span></div>
+            <p class="mock-label">SYSTEM</p>
+            <p class="mock-text">"블로그형 개인 사이트를 만들고, 시각적으로 강한 히어로, 기능 카드, 프롬프트 예시, 주의사항 섹션을 포함해."</p>
+          </article>
+          <article class="mock-window status-card">
+            <div class="status-head">
+              <span class="pill">LIVE PREVIEW</span>
+              <strong>deploy ready</strong>
+            </div>
+            <ul>
+              <li><span>Design</span><b>bold / editorial</b></li>
+              <li><span>Domain</span><b>custom hostname</b></li>
+              <li><span>Ops</span><b>analytics + updates</b></li>
+            </ul>
+          </article>
+          <div class="floating-chip chip-one">prompt</div>
+          <div class="floating-chip chip-two">publish</div>
+          <div class="floating-chip chip-three">iterate</div>
+        </div>
+      </section>
+
+      <section class="section band">
+        <div class="band-copy">
+          <p class="eyebrow">WHY IT MATTERS</p>
+          <h2>사이트 제작을 코드 프로젝트가 아니라 운영 가능한 결과물로 바꿉니다.</h2>
+        </div>
+        <p class="band-text">템플릿을 만들고, 요구사항을 줄이고, 공개 가능한 웹 결과물을 빠르게 반복하는 데 초점을 둡니다. 복잡한 백엔드보다 먼저 보여줄 수 있는 화면과 배포 경로를 만드는 것이 핵심입니다.</p>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-head">
+          <p class="eyebrow">FEATURE SET</p>
+          <h2>무엇을 할 수 있나</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card"><span>01</span><h3>프롬프트로 구조 잡기</h3><p>기획 문장을 넣고, 섹션 구조와 톤을 먼저 고정합니다.</p></article>
+          <article class="feature-card"><span>02</span><h3>도메인 연결</h3><p>기본 서브도메인이 아니라 내 도메인처럼 보이게 연결합니다.</p></article>
+          <article class="feature-card"><span>03</span><h3>데이터 저장</h3><p>게시글, 문의, 관리자 메모처럼 반복 운영이 필요한 항목을 담습니다.</p></article>
+          <article class="feature-card"><span>04</span><h3>운영 통계</h3><p>접속과 반응을 확인하고 다음 수정 지점을 찾습니다.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="flow">
+        <div class="section-head">
+          <p class="eyebrow">WORKFLOW</p>
+          <h2>흐름은 이렇게 간단합니다</h2>
+        </div>
+        <ol class="flow-list">
+          <li><span>1</span><div><strong>목표를 적는다</strong><p>무엇을 만들지, 누구에게 보여줄지, 어떤 톤인지 정합니다.</p></div></li>
+          <li><span>2</span><div><strong>구조를 만든다</strong><p>히어로, 기능, 사례, FAQ, 주의사항처럼 섹션을 배치합니다.</p></div></li>
+          <li><span>3</span><div><strong>공개한다</strong><p>배포와 도메인 연결을 끝내고 실제 URL로 테스트합니다.</p></div></li>
+          <li><span>4</span><div><strong>운영한다</strong><p>수정, 기록, 통계를 반영해 페이지를 계속 다듬습니다.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="section prompt-section" id="prompts">
+        <div class="section-head">
+          <p class="eyebrow">PROMPTS</p>
+          <h2>바로 쓸 수 있는 예시</h2>
+        </div>
+        <div class="prompt-grid">
+          <article class="prompt-example"><p class="prompt-title">랜딩 페이지</p><pre>“GPT 사이트 소개용 랜딩 페이지를 만들고 싶어.
+히어로, 기능 카드, 사용 흐름, 한계 섹션을 넣고
+시각적으로 강한 분위기로 구성해줘.”</pre></article>
+          <article class="prompt-example"><p class="prompt-title">서비스 소개</p><pre>“내 서비스를 설명하는 원페이지를 만들고,
+CTA 버튼, FAQ, 연락 섹션까지 포함해.
+모바일 우선으로 설계해줘.”</pre></article>
+          <article class="prompt-example"><p class="prompt-title">운영용 사이트</p><pre>“게시글, 공지, 문의 폼, 관리자 메모가 있는
+작은 운영 사이트를 만들고 싶어.
+기능이 단순하고 유지보수 쉬운 구조로.”</pre></article>
+        </div>
+      </section>
+
+      <section class="section limit-section" id="limits">
+        <div class="section-head">
+          <p class="eyebrow">LIMITS</p>
+          <h2>이 정도는 명확히 봐야 합니다</h2>
+        </div>
+        <div class="limit-grid">
+          <article><h3>프로토타입과 프로덕션은 다릅니다</h3><p>보여주는 데모가 곧 대규모 운영용 인프라는 아닙니다.</p></article>
+          <article><h3>복잡한 백엔드는 따로 검증해야 합니다</h3><p>결제, 권한, 장애 대응, 백업은 별도 설계가 필요합니다.</p></article>
+          <article><h3>속도보다 일관성이 중요합니다</h3><p>한 번 만든 뒤 계속 고쳐 쓰는 구조가 가장 실용적입니다.</p></article>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <p>사이트는 한 번에 완성되는 것보다, 한 번 공개하고 계속 다듬는 쪽이 더 강합니다.</p>
+        <h2>프롬프트 한 줄로 시작해, 실제 URL로 끝내세요.</h2>
+        <a href="/index.html">처음으로 돌아가기 ↑</a>
+      </section>
+    </main>
+  </body>
+</html>
