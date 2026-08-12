@@ -14,8 +14,6 @@ export default defineConfig({
         wastewaterApp: resolve(import.meta.dirname, 'wastewater-app.html'),
         equipmentApp: resolve(import.meta.dirname, 'equipment-app.html'),
         startupDiaryApp: resolve(import.meta.dirname, 'startup-diary-app.html'),
-        washPrice: resolve(import.meta.dirname, 'washprice.html'),
-        washPriceAdmin: resolve(import.meta.dirname, 'washprice-admin.html'),
         gptSite: resolve(import.meta.dirname, 'gpt-site.html'),
       },
     },

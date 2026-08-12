@@ -6,7 +6,6 @@ import { DatabaseSync } from 'node:sqlite';
 import { createConsultationStore } from './consultations-store.mjs';
 import { contentFields, defaultSiteContent } from './src/content.js';
 import { products as baselineProducts } from './src/products.js';
-import { createCarwashRecord, deleteCarwashRecord, decorateWashPriceState, loadWashPriceStore, replaceServicePrices, saveWashPriceStore, updateCarwashRecord, upsertPriceRecord } from './src/washprice-store.js';
 
 const root = import.meta.dirname;
 const distRoot = resolve(root, 'dist');
@@ -24,7 +23,6 @@ const loginAttempts = new Map();
 const analyticsAttempts = new Map();
 const feedbackAttempts = new Map();
 const consultationAttempts = new Map();
-const allowedWashPriceServiceTypes = new Set(['vacuum', 'foam', 'underbody', 'mat', 'air', 'etc']);
 const allowedCategories = new Set(['chemical', 'tool', 'equipment', 'safety']);
 const allowedFeedbackKinds = new Set(['helpful', 'problem', 'idea', 'other']);
 const allowedFeedbackStatuses = new Set(['new', 'reviewing', 'done']);
@@ -515,113 +513,8 @@ function isCrossSiteWrite(request) {
     && request.headers['sec-fetch-site'] === 'cross-site';
 }
 
-function validateWashPriceCarwash(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_WASHPRICE');
-  const numeric = (value, fallback = 0) => {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  };
-  return {
-    name: cleanText(input.name, 120, true),
-    address: cleanText(input.address, 200, true),
-    sido: cleanText(input.sido, 40, true),
-    sigungu: cleanText(input.sigungu, 60, true),
-    dong: cleanText(input.dong, 60, true),
-    latitude: numeric(input.latitude),
-    longitude: numeric(input.longitude),
-    phone: cleanText(input.phone, 40, true),
-    open_24h: Boolean(input.open_24h),
-    card_available: Boolean(input.card_available),
-  };
-}
-
-function validateWashPriceRecord(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_WASHPRICE');
-  const integer = (value, field, minimum = 0) => {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed < minimum) throw new Error('INVALID_' + field);
-    return Math.trunc(parsed);
-  };
-  return {
-    base_price: integer(input.base_price, 'WASHPRICE'),
-    base_seconds: integer(input.base_seconds, 'WASHPRICE', 1),
-    extra_price: integer(input.extra_price, 'WASHPRICE'),
-    extra_seconds: integer(input.extra_seconds, 'WASHPRICE', 1),
-    verified_at: cleanText(input.verified_at, 20, true),
-    source: cleanText(input.source, 120, true),
-  };
-}
-
-function validateWashPriceServices(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_WASHPRICE');
-  const services = Array.isArray(input.services) ? input.services : [];
-  return services
-    .map((service) => {
-      if (!service || typeof service !== 'object' || Array.isArray(service)) return null;
-      const serviceType = cleanText(service.service_type, 20, true);
-      if (!allowedWashPriceServiceTypes.has(serviceType)) throw new Error('INVALID_WASHPRICE');
-      const price = Number(service.price);
-      const seconds = Number(service.seconds);
-      const memo = cleanText(service.memo, 80);
-      if (!Number.isFinite(price) && !Number.isFinite(seconds) && !memo) return null;
-      return {
-        service_type: serviceType,
-        price: Number.isFinite(price) ? Math.trunc(price) : 0,
-        seconds: Number.isFinite(seconds) ? Math.trunc(seconds) : 0,
-        memo,
-      };
-    })
-    .filter(Boolean);
-}
-
 async function handleApi(request, response, url) {
   if (isCrossSiteWrite(request)) return sendError(response, 403, '허용되지 않은 요청입니다.');
-
-  if (request.method === 'GET' && url.pathname === '/api/washprice/state') {
-    const store = await loadWashPriceStore(dataRoot);
-    return sendJson(response, 200, { state: decorateWashPriceState(store) });
-  }
-
-  if (request.method === 'POST' && url.pathname === '/api/washprice/carwashes') {
-    const store = await loadWashPriceStore(dataRoot);
-    const carwash = createCarwashRecord(store, validateWashPriceCarwash(await readJsonBody(request)));
-    await saveWashPriceStore(dataRoot, store);
-    return sendJson(response, 201, { carwash, state: decorateWashPriceState(store) });
-  }
-
-  const washPriceCarwashMatch = url.pathname.match(/^\/api\/washprice\/carwashes\/(\d+)$/);
-  if (request.method === 'PUT' && washPriceCarwashMatch) {
-    const store = await loadWashPriceStore(dataRoot);
-    const carwash = updateCarwashRecord(store, washPriceCarwashMatch[1], validateWashPriceCarwash(await readJsonBody(request)));
-    if (!carwash) return sendError(response, 404, '세차장을 찾을 수 없습니다.');
-    await saveWashPriceStore(dataRoot, store);
-    return sendJson(response, 200, { carwash, state: decorateWashPriceState(store) });
-  }
-  if (request.method === 'DELETE' && washPriceCarwashMatch) {
-    const store = await loadWashPriceStore(dataRoot);
-    if (!deleteCarwashRecord(store, washPriceCarwashMatch[1])) return sendError(response, 404, '세차장을 찾을 수 없습니다.');
-    await saveWashPriceStore(dataRoot, store);
-    return sendJson(response, 200, { deleted: true, state: decorateWashPriceState(store) });
-  }
-
-  const washPriceServiceMatch = url.pathname.match(/^\/api\/washprice\/carwashes\/(\d+)\/services$/);
-  if (request.method === 'PUT' && washPriceServiceMatch) {
-    const store = await loadWashPriceStore(dataRoot);
-    const services = validateWashPriceServices(await readJsonBody(request));
-    const servicePrices = replaceServicePrices(store, washPriceServiceMatch[1], services);
-    if (!servicePrices) return sendError(response, 404, '세차장을 찾을 수 없습니다.');
-    await saveWashPriceStore(dataRoot, store);
-    return sendJson(response, 200, { servicePrices, state: decorateWashPriceState(store) });
-  }
-
-  const washPriceRecordMatch = url.pathname.match(/^\/api\/washprice\/carwashes\/(\d+)\/prices$/);
-  if (request.method === 'POST' && washPriceRecordMatch) {
-    const store = await loadWashPriceStore(dataRoot);
-    const price = upsertPriceRecord(store, washPriceRecordMatch[1], validateWashPriceRecord(await readJsonBody(request)));
-    if (!price) return sendError(response, 404, '세차장을 찾을 수 없습니다.');
-    await saveWashPriceStore(dataRoot, store);
-    return sendJson(response, 201, { price, state: decorateWashPriceState(store) });
-  }
 
   if (request.method === 'GET' && url.pathname === '/api/products') {
     const products = await loadProducts();
@@ -844,8 +737,6 @@ async function serveStatic(request, response, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname === '/admin') pathname = '/admin.html';
-  if (pathname === '/washprice') pathname = '/washprice.html';
-  if (pathname === '/washprice-admin') pathname = '/washprice-admin.html';
   const filePath = resolve(distRoot, `.${pathname}`);
   if (filePath !== distRoot && !filePath.startsWith(`${distRoot}${sep}`)) {
     response.writeHead(403, securityHeaders({ 'content-type': 'text/plain; charset=utf-8' }));
