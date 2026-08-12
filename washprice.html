@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="셀프세차장 단가를 지역별로 비교하는 WashPrice 포털입니다." />
+    <meta name="theme-color" content="#0d1320" />
+    <title>WashPrice · 셀프세차장 단가 포털</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/washprice.css" />
+  </head>
+  <body class="washprice-page">
+    <div class="wp-shell">
+      <header class="wp-header">
+        <a class="wp-brand" href="/washprice.html" aria-label="WashPrice 홈">
+          <span>W</span>
+          <div>
+            <strong>WashPrice</strong>
+            <small>셀프세차장 단가 포털</small>
+          </div>
+        </a>
+        <nav class="wp-nav" aria-label="주요 메뉴">
+          <a href="#home">홈</a>
+          <a href="#nearby">내 주변</a>
+          <a href="#region">지역별 단가</a>
+          <a href="#detail">세차장 상세</a>
+          <a href="/washprice-admin.html">관리자</a>
+        </nav>
+      </header>
+
+      <main class="wp-main">
+        <section class="wp-hero" id="home">
+          <div class="wp-hero-copy">
+            <p class="wp-kicker">SELF WASH PRICE PORTAL</p>
+            <h1>내 주변 셀프세차장 가격을 비교하세요</h1>
+            <p class="wp-lead">세차장 본체와 가격을 분리해서 저장하고, 기본요금과 5분 환산가격을 함께 보여줍니다.</p>
+            <div class="wp-hero-actions">
+              <a class="wp-button wp-primary" href="#region">지역 검색 시작</a>
+              <a class="wp-button wp-secondary" href="/washprice-admin.html">가격 등록 화면</a>
+            </div>
+          </div>
+          <aside class="wp-hero-card">
+            <p class="wp-card-title">가격 기준</p>
+            <dl class="wp-price-rule">
+              <div><dt>기본가격</dt><dd id="heroBasePrice">-</dd></div>
+              <div><dt>기본시간</dt><dd id="heroBaseTime">-</dd></div>
+              <div><dt>5분 환산</dt><dd id="heroFiveMinute">-</dd></div>
+              <div><dt>10분 환산</dt><dd id="heroTenMinute">-</dd></div>
+            </dl>
+          </aside>
+        </section>
+
+        <section class="wp-panel" id="searchPanel">
+          <div class="wp-section-head">
+            <div>
+              <p class="wp-kicker">SEARCH</p>
+              <h2>지역 검색</h2>
+            </div>
+            <p class="wp-section-note">시/도, 시/군/구, 동 선택 또는 주소 검색으로 찾습니다.</p>
+          </div>
+          <div class="wp-search-grid">
+            <label class="wp-field">
+              <span>시/도</span>
+              <select id="sidoSelect"></select>
+            </label>
+            <label class="wp-field">
+              <span>시/군/구</span>
+              <select id="sigunguSelect"></select>
+            </label>
+            <label class="wp-field">
+              <span>동</span>
+              <select id="dongSelect"></select>
+            </label>
+            <label class="wp-field wp-field-wide">
+              <span>주소 또는 세차장명</span>
+              <input id="queryInput" type="search" placeholder="예: 영통 / 권선 / 3,000원" />
+            </label>
+            <div class="wp-actions">
+              <button class="wp-button wp-primary" id="searchButton" type="button">검색</button>
+              <button class="wp-button wp-secondary" id="resetButton" type="button">초기화</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="wp-panel" id="nearby">
+          <div class="wp-section-head">
+            <div>
+              <p class="wp-kicker">NEARBY</p>
+              <h2>내 주변</h2>
+            </div>
+            <p class="wp-section-note">GPS는 제외하고, 선택한 지역을 기준으로 가까운 목록을 보여줍니다.</p>
+          </div>
+          <div class="wp-summary-grid" id="homeSummary"></div>
+          <div class="wp-recent" id="recentUpdates"></div>
+        </section>
+
+        <section class="wp-panel" id="region">
+          <div class="wp-section-head">
+            <div>
+              <p class="wp-kicker">REGION</p>
+              <h2>지역별 단가</h2>
+            </div>
+            <p class="wp-section-note" id="regionTitle">전체</p>
+          </div>
+          <div class="wp-summary-grid" id="regionSummary"></div>
+          <div class="wp-toolbar">
+            <div class="wp-sort-group" role="group" aria-label="정렬">
+              <button type="button" class="is-active" data-sort="base_price">기본요금 낮은순</button>
+              <button type="button" data-sort="five_minute">5분 환산 낮은순</button>
+              <button type="button" data-sort="recent">최근 확인순</button>
+              <button type="button" data-sort="name">이름순</button>
+            </div>
+          </div>
+          <div class="wp-list" id="carwashList"></div>
+        </section>
+
+        <section class="wp-panel" id="detail">
+          <div class="wp-section-head">
+            <div>
+              <p class="wp-kicker">DETAIL</p>
+              <h2>세차장 상세</h2>
+            </div>
+            <p class="wp-section-note">기본정보, 가격, 부가서비스, 가격이력을 한 화면에서 확인합니다.</p>
+          </div>
+          <div class="wp-detail" id="detailView"></div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/src/washprice.js"></script>
+  </body>
+</html>
+

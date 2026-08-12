@@ -408,6 +408,7 @@ function renderOperationsHub() {
     { href: '/wastewater-app.html', title: '폐수관리 앱', description: '유입량·처리량·슬러지·점검 기록', step: '5~7단계 연결' },
     { href: '/equipment-app.html', title: '장비관리 앱', description: '정비·AS·정지시간·다음 점검일 관리', step: '9, 18단계 연결' },
     { href: '/startup-diary-app.html', title: '창업 일지 앱', description: '오픈 1일차부터 매출·차량·민원 일지 기록', step: '12, 13단계 연결' },
+    { href: '/washprice.html', title: 'WashPrice', description: '셀프세차장 단가를 지역별로 비교합니다.', step: '신규 MVP' },
   ];
   root.innerHTML = `
     <section class="ops-app-shell">
@@ -425,7 +426,7 @@ function renderOperationsHub() {
       </header>
       <section class="ops-summary">
         <article><span>분리 운영 원칙</span><strong>단계에는 링크만</strong></article>
-        <article><span>구성 앱 수</span><strong>5개</strong></article>
+        <article><span>구성 앱 수</span><strong>6개</strong></article>
         <article><span>기록 저장 방식</span><strong>브라우저 로컬 저장</strong></article>
       </section>
       <section class="ops-hub-grid">
