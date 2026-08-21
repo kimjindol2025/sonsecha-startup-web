@@ -1,0 +1,25 @@
+;; 1인 손세차 입지분석 도메인 계산 — 외부 API/저장은 host adapter가 주입한다.
+(defn car-wash-revenue [unit-price cars-per-day work-days]
+  (* unit-price cars-per-day work-days))
+
+(defn operating-profit [revenue rent operating-cost owner-living]
+  (- revenue rent operating-cost owner-living))
+
+(defn grade-for-profit [profit]
+  (if (>= profit 10000000) "A"
+    (if (>= profit 5000000) "B"
+      (if (>= profit 3000000) "C"
+        (if (>= profit 2000000) "D"
+          (if (>= profit 1000000) "E" "부적합"))))))
+
+(defn recommendation-for-grade [grade]
+  (if (= grade "A") "적극 검토 추천"
+    (if (= grade "B") "진행 추천"
+      (if (= grade "C") "조건 확인 후 진행 가능"
+        (if (= grade "D") "신중 검토"
+          (if (= grade "E") "비추천" "다른 후보지 추천"))))))
+
+(defn revenue-scenarios [unit-price work-days]
+  {:conservative (car-wash-revenue unit-price 4 work-days)
+   :standard (car-wash-revenue unit-price 7 work-days)
+   :maximum-reference (car-wash-revenue unit-price 12 work-days)})

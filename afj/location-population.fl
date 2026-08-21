@@ -1,0 +1,28 @@
+;; SGIS 인구·가구 응답 정규화 계약
+;; 실제 API 호출과 비밀키 보관은 런타임 host adapter가 담당한다.
+
+(defn sum-field [rows field]
+  (if (= rows nil) 0
+    (if (= (len rows) 0) 0
+      (+ (to-number (get (first rows) field 0))
+         (sum-field (rest rows) field)))))
+
+(defn sgis-population-result [rows]
+  {:value (sum-field rows :population)
+   :status (if (> (sum-field rows :population) 0) "실측" "데이터 미제공")})
+
+(defn sgis-household-result [rows status]
+  {:value (sum-field rows :household_cnt)
+   :status (if (> (sum-field rows :household_cnt) 0) status "데이터 미제공")})
+
+(defn sgis-age-codes-35-to-50 []
+  "08,09,10")
+
+(defn population-contract [total male35to50 households one-person family23 year source]
+  {:total-population total
+   :male-35-to-50 male35to50
+   :households households
+   :one-person one-person
+   :family-2-to-3 family23
+   :reference-year year
+   :source source})

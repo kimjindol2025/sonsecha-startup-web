@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>손세차 입지분석 | 3km</title>
+  <link rel="stylesheet" href="/src/location-analysis.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><a class="brand" href="/">sonsecha<span>·</span>lab</a><span class="scope">1인 손세차 입지분석 · 반경 3km</span></header>
+    <section class="hero" id="input-view">
+      <div class="eyebrow">LOCATION CHECK / 01</div>
+      <h1>이 주소에서 혼자<br><em>먹고살 수 있을까?</em></h1>
+      <p>주소만으로 기본 입지분석이 가능합니다. 임대조건을 입력하면 사업성 분석이 더 정확해집니다.</p>
+      <form id="analysis-form">
+        <label for="address">후보지 주소</label>
+        <div class="address-row"><input id="address" required placeholder="예: 서울특별시 마포구 월드컵북로 120"><button>이 주소 분석하기 <span>→</span></button></div>
+        <div class="optional"><label>월세 <input id="rent" inputmode="numeric" placeholder="입력 선택"></label><label>보증금 <input id="deposit" inputmode="numeric" placeholder="입력 선택"></label><label>평수 <input id="area" inputmode="numeric" placeholder="15"></label><label>관리비 <input id="fee" inputmode="numeric" placeholder="입력 선택"></label></div>
+      </form>
+      <div class="trust"><span>◎</span> 정부·공공데이터 연결 상태를 결과에 표시합니다 <span>·</span> 입력한 주소는 저장하지 않습니다</div>
+    </section>
+    <section class="loading hidden" id="loading"><div class="spinner"></div><p>주소를 좌표로 변환하고 3km 데이터를 확인하는 중입니다…</p></section>
+    <section class="results hidden" id="results">
+      <div class="result-head"><div><div class="eyebrow">ANALYSIS RESULT</div><p class="address" id="result-address"></p><div class="grade-line"><strong id="grade">—</strong><span id="recommendation"></span></div></div><button class="ghost" id="save">후보지 저장</button></div>
+      <div class="metric-grid"><article class="primary"><small>기준 예상 월매출</small><strong id="revenue">데이터 부족</strong><span>하루 7대 · 월 27일 · 지역 단가 적용</span></article><article><small>예상 월 순수익</small><strong id="profit">데이터 부족</strong><span id="profit-note">월세 입력 시 계산</span></article><article><small>반경 3km</small><strong>3km</strong><span id="coords">좌표 확인 중</span></article></div>
+      <div class="map-card"><div class="map" id="map"><div class="radius"></div><div class="pin center">●</div><div class="map-label">실제 지도 API 연결 전 · 주변 POI는 아래 표에 표시</div></div></div>
+      <div class="section-title"><div><div class="eyebrow">DATA SNAPSHOT</div><h2>핵심 데이터</h2></div><span class="source-pill" id="source-status">조회 중</span></div>
+      <div class="data-grid" id="data-grid"></div>
+      <div class="section-title"><div><div class="eyebrow">WHY</div><h2>분석 이유</h2></div></div><div class="reasons"><article><h3>좋은 조건</h3><ul id="good"></ul></article><article><h3>주의 조건</h3><ul id="warn"></ul></article></div>
+      <div class="section-title"><div><div class="eyebrow">NEARBY</div><h2>주변 세차장</h2></div><span class="muted">OpenStreetMap · 3km</span></div><div class="wash-list" id="wash-list"></div>
+      <div class="compare"><div><h2>후보지 비교</h2><p>저장한 후보지는 최대 3개까지 비교합니다.</p></div><div id="saved-list"></div></div>
+      <button class="back" id="back">← 다른 주소 분석하기</button>
+    </section>
+    <div class="error hidden" id="error" role="alert"></div>
+  </main>
+  <script type="module" src="/src/location-analysis.js"></script>
+</body>
+</html>
