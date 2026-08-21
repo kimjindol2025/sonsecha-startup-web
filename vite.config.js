@@ -9,6 +9,7 @@ export default defineConfig({
         admin: resolve(import.meta.dirname, 'admin.html'),
         koreaTouchlessReport: resolve(import.meta.dirname, 'korea-touchless-report.html'),
         operationsApps: resolve(import.meta.dirname, 'operations-apps.html'),
+        carwashAppCatalog: resolve(import.meta.dirname, 'carwash-app-catalog.html'),
         inventoryApp: resolve(import.meta.dirname, 'inventory-app.html'),
         salesApp: resolve(import.meta.dirname, 'sales-app.html'),
         wastewaterApp: resolve(import.meta.dirname, 'wastewater-app.html'),
