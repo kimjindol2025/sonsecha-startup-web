@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "base": "http://127.0.0.1:35585",
+  "checks": [
+    "Storage write failure preserves input and a retry creates one local business",
+    "A local example candidate produces a clearly marked DEMO receipt",
+    "Local role views support assignment, reply and private-note separation",
+    "Reload restores IndexedDB business and answer without a server",
+    "Followup retains DEMO receipt; sample customer B view excludes customer A records",
+    "390px layout and dialog fit; Escape restores focus",
+    "No workspace API requests, server writes or JavaScript exceptions"
+  ],
+  "workspaceApiRequests": [],
+  "exceptions": [],
+  "deployment": "not published; static local preview only",
+  "storage": "IndexedDB in this browser",
+  "actualContactSent": false
+}

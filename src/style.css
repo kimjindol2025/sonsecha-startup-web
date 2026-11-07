@@ -1411,3 +1411,6 @@ body.consultation-open { overflow: hidden; }
   body.printing-business-plan .plan-document { margin: 0; padding: 0; border: 0; box-shadow: none; }
   body.printing-business-plan .plan-document > section { break-inside: avoid; }
 }
+
+/* Hide the disabled workspace link before scripts run. */
+[data-workspace-link][hidden] { display: none !important; }

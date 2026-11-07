@@ -10,6 +10,16 @@
     <link rel="stylesheet" href="/src/workspace.css" />
   </head>
   <body>
+    <main id="workspaceUnavailable" class="workspace-unavailable" aria-labelledby="workspaceUnavailableTitle">
+      <section class="workspace-unavailable-card">
+        <span class="workspace-unavailable-mark" aria-hidden="true">水</span>
+        <p class="eyebrow">손세차장 창업 지원</p>
+        <h1 id="workspaceUnavailableTitle">준비 중인 기능입니다</h1>
+        <p>더 나은 창업 준비를 도와드릴 수 있도록 기능을 준비하고 있습니다.<br>창업 가이드와 상품은 첫 화면에서 확인해 주세요.</p>
+        <a class="workspace-home-button" href="./index.html">첫 화면으로 돌아가기</a>
+      </section>
+    </main>
+    <div id="workspaceFeature" hidden>
     <a class="skip-link" href="#workspaceMain">본문으로 이동</a>
     <div class="demo-banner"><strong>개발 미리보기</strong><span>로그인 준비 전 시험 화면입니다. 실제 개인정보·고객 자료는 입력하지 마세요.</span></div>
     <header class="workspace-header">
@@ -27,6 +37,7 @@
       <div id="dialogBody"></div>
     </dialog>
     <footer class="workspace-footer">사전 검토는 허가 확정이 아닙니다. 최종 판단은 관할 기관과 확인하세요.</footer>
-    <script type="module" src="/src/workspace.js"></script>
+    </div>
+    <script type="module" src="/src/workspace-entry.js"></script>
   </body>
 </html>

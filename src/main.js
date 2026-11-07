@@ -1,9 +1,12 @@
+import { applySiteFeatureVisibility } from './site-features.js';
 import guideMarkdown from '../README.md?raw';
 import { installClickAnalytics } from './analytics.js';
 import { initializeBusinessPlan } from './business-plan.js';
 import { initializeConsultations } from './consultations.js';
 import { defaultSiteContent } from './content.js';
 import { productCategories, products } from './products.js';
+
+applySiteFeatureVisibility();
 
 const checkboxes = [...document.querySelectorAll('input[data-step]')];
 const progressText = document.querySelector('#progressText');

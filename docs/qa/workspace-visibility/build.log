@@ -1,0 +1,23 @@
+
+> sonsecha-startup-guide@1.0.0 build
+> vite build && node scripts/package.mjs
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 23 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/admin-login.html                             1.54 kB │ gzip:  0.82 kB
+dist/workspace.html                               3.08 kB │ gzip:  1.47 kB
+dist/admin.html                                  15.32 kB │ gzip:  4.11 kB
+dist/index.html                                  36.07 kB │ gzip:  9.35 kB
+dist/assets/workspace-zcnb8t64.css               11.65 kB │ gzip:  3.20 kB
+dist/assets/admin-LMbiX1Vo.css                   31.38 kB │ gzip:  5.85 kB
+dist/assets/main-CbA0mEkJ.css                    97.72 kB │ gzip: 18.40 kB
+dist/assets/modulepreload-polyfill-B5Qt9EMX.js    0.71 kB │ gzip:  0.40 kB
+dist/assets/adminLogin-BZHhBVPV.js                0.83 kB │ gzip:  0.57 kB
+dist/assets/product-images-e3xkxvF6.js            1.03 kB │ gzip:  0.55 kB
+dist/assets/admin-sTyEkKfr.js                    27.97 kB │ gzip:  8.39 kB
+dist/assets/main-DfbX-ZEs.js                    190.15 kB │ gzip: 57.99 kB
+✓ built in 530ms
+Packaged 33 static assets for Sites.

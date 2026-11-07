@@ -1,0 +1,45 @@
+{
+  "recordedAt": "2026-11-07T10:40:23.214414+00:00",
+  "runtimeFiles": [
+    "index.html",
+    "src/main.js",
+    "src/style.css",
+    "workspace.html",
+    "src/workspace.css",
+    "src/site-features.js",
+    "src/workspace-entry.js"
+  ],
+  "verificationFiles": [
+    "scripts/test-workspace-visibility-http.mjs",
+    "scripts/browser-smoke-workspace-visibility.mjs",
+    "scripts/run-workspace-visibility-checks.mjs"
+  ],
+  "setting": {
+    "file": "src/site-features.js",
+    "name": "WORKSPACE_ENABLED",
+    "value": false,
+    "requiresRebuild": true
+  },
+  "sourceServerUnchanged": true,
+  "liveSource": {
+    "checkedFiles": 55,
+    "changedFiles": []
+  },
+  "operatingDataCopied": false,
+  "pm2CommandsExecuted": false,
+  "existingProcessRestarts": [],
+  "nginxOrCertificatesChanged": false,
+  "committed": false,
+  "pushed": false,
+  "deployed": false,
+  "screenshots": [
+    "desktop-home.png",
+    "mobile-home-menu.png",
+    "desktop-workspace.png",
+    "mobile-workspace.png"
+  ],
+  "passedCheckGroups": 12,
+  "server23DirectAccessed": false,
+  "productionDomainBaseline": "GET-only status check",
+  "workingCopyPackage": "Parent worktree scripts retained; same build/dependencies as production; excluded from visibility patch"
+}

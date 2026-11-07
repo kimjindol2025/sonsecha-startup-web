@@ -1,0 +1,125 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "name": "Workspace disabled HTTP contract",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/test-workspace-visibility-http.mjs"
+      ],
+      "output": "{\"ok\":true,\"checks\":[\"Workspace holding document returns 200, noindex, static message and home link\",\"The menu link remains in source and is hidden in the initial HTML\",\"12 workspace API attempts stay 401; role selection cannot create a session\",\"Favicon bytes and admin login redirects remain unchanged\"],\"workspaceApiAttempts\":12,\"workspaceApiStatus\":401,\"productionDataUsed\":false}\n"
+    },
+    {
+      "name": "Desktop/mobile hidden menu and holding document",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/browser-smoke-workspace-visibility.mjs"
+      ],
+      "output": "{\n  \"ok\": true,\n  \"base\": \"http://127.0.0.1:33205\",\n  \"checks\": [\n    \"Desktop home: workspace link is hidden; 12 steps still render\",\n    \"390px expanded menu: workspace link is hidden; no horizontal overflow\",\n    \"Direct workspace: static holding message, home button, noindex, no visible role switch\",\n    \"Query parameters cannot enable the workspace; no workspace API calls or demo database initialization\",\n    \"Keyboard activation of home button returns to the existing first page\",\n    \"Without JavaScript: holding page and hidden initial menu still work\"\n  ],\n  \"workspaceApiRequests\": [],\n  \"exceptions\": [],\n  \"screenshots\": [\n    \"desktop-home.png\",\n    \"mobile-home-menu.png\",\n    \"desktop-workspace.png\",\n    \"mobile-workspace.png\"\n  ],\n  \"environment\": \"isolated local copy; not deployed\"\n}\n"
+    },
+    {
+      "name": "Existing regression: test-qa-regressions",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/test-qa-regressions.mjs"
+      ],
+      "output": "{\"ok\":true,\"checks\":[\"Unauthenticated GET/HEAD and encoded aliases redirect without dashboard HTML\",\"Login document contains no management dashboard\",\"All management data APIs deny unauthenticated access\",\"Every public product image is same-origin and returns image content\",\"Guide banners do not request external image servers\",\"Correct login grants dashboard and management API access\",\"Logout revokes dashboard and API access\"]}\n"
+    },
+    {
+      "name": "Existing regression: test-consultations",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/test-consultations.mjs"
+      ],
+      "output": "consultation smoke: PASS\n"
+    },
+    {
+      "name": "Existing regression: browser-smoke-business-plan",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/browser-smoke-business-plan.mjs"
+      ],
+      "output": "browser business plan smoke: PASS\n"
+    },
+    {
+      "name": "Existing regression: browser-smoke-shop",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/browser-smoke-shop.mjs"
+      ],
+      "output": "browser shop detail smoke: PASS\n"
+    },
+    {
+      "name": "Existing regression: browser-smoke-consultations",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/browser-smoke-consultations.mjs"
+      ],
+      "output": "browser consultation smoke: PASS\n"
+    },
+    {
+      "name": "Existing regression: browser-smoke-cart",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "scripts/browser-smoke-cart.mjs"
+      ],
+      "output": "{\n  \"ok\": true,\n  \"base\": \"http://127.0.0.1:33205\",\n  \"checks\": [\n    \"Closed cart rejects keyboard focus\",\n    \"button: close restores focus and skips hidden controls\",\n    \"backdrop: close restores focus and skips hidden controls\",\n    \"Escape: close restores focus and skips hidden controls\",\n    \"Rapid reopening keeps the backdrop visible\",\n    \"Adding a product returns focus to its product button\",\n    \"Quote handoff moves focus outside the closed cart\",\n    \"SVG and ICO favicons return valid image responses\"\n  ],\n  \"warnings\": [],\n  \"exceptions\": []\n}\n"
+    },
+    {
+      "name": "Retained workspace store and role guards: 20 tests",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "--test",
+        "scripts/test-workspace.mjs"
+      ],
+      "output": "TAP version 13\n# (node:2398543) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n# (Use `node --trace-warnings ...` to show where the warning was created)\n# Subtest: A01: customer registers, manager assigns, staff replies, same identity sees persisted result\nok 1 - A01: customer registers, manager assigns, staff replies, same identity sees persisted result\n  ---\n  duration_ms: 32.387327\n  type: 'test'\n  ...\n# Subtest: A02 A03 A05 A06: ownership, team scope and receipt cannot be forged\nok 2 - A02 A03 A05 A06: ownership, team scope and receipt cannot be forged\n  ---\n  duration_ms: 6.7919\n  type: 'test'\n  ...\n# Subtest: candidate input: missing differs from zero; bad units, negatives and unsafe URLs rejected\nok 3 - candidate input: missing differs from zero; bad units, negatives and unsafe URLs rejected\n  ---\n  duration_ms: 4.252928\n  type: 'test'\n  ...\n# Subtest: A07 A08: retried submission returns original receipt and rejects different contents\nok 4 - A07 A08: retried submission returns original receipt and rejects different contents\n  ---\n  duration_ms: 3.800716\n  type: 'test'\n  ...\n# Subtest: project and candidate creation use durable submission keys too\nok 5 - project and candidate creation use durable submission keys too\n  ---\n  duration_ms: 4.650934\n  type: 'test'\n  ...\n# Subtest: A24 A14: stale candidate writes fail; hold and new candidates preserve submitted snapshot\nok 6 - A24 A14: stale candidate writes fail; hold and new candidates preserve submitted snapshot\n  ---\n  duration_ms: 5.469376\n  type: 'test'\n  ...\n# Subtest: A10: only scoped manager can assign; staff cannot claim the unassigned queue\nok 7 - A10: only scoped manager can assign; staff cannot claim the unassigned queue\n  ---\n  duration_ms: 4.848293\n  type: 'test'\n  ...\n# Subtest: A11: reassignment revokes prior staff reads, mutations and cached retry paths\nok 8 - A11: reassignment revokes prior staff reads, mutations and cached retry paths\n  ---\n  duration_ms: 6.165654\n  type: 'test'\n  ...\n# Subtest: A13: allowed state transitions, public reasons and reopening preserve original receipt\nok 9 - A13: allowed state transitions, public reasons and reopening preserve original receipt\n  ---\n  duration_ms: 12.49515\n  type: 'test'\n  ...\n# Subtest: A16: review evidence, unknown fields and correction history remain distinct\nok 10 - A16: review evidence, unknown fields and correction history remain distinct\n  ---\n  duration_ms: 10.903659\n  type: 'test'\n  ...\n# Subtest: public answer corrections append a version and keep original content\nok 11 - public answer corrections append a version and keep original content\n  ---\n  duration_ms: 6.887823\n  type: 'test'\n  ...\n# Subtest: A12: notes and private events never enter customer serialization\nok 12 - A12: notes and private events never enter customer serialization\n  ---\n  duration_ms: 5.275829\n  type: 'test'\n  ...\n# Subtest: A04 A11 A12: file access checks owner, visibility and current assignment on every request\nok 13 - A04 A11 A12: file access checks owner, visibility and current assignment on every request\n  ---\n  duration_ms: 8.068338\n  type: 'test'\n  ...\n# Subtest: file validation rejects HTML, invalid MIME, over-limit bytes and private customer uploads\nok 14 - file validation rejects HTML, invalid MIME, over-limit bytes and private customer uploads\n  ---\n  duration_ms: 34.039318\n  type: 'test'\n  ...\n# Subtest: attachment retries do not create duplicate files or events\nok 15 - attachment retries do not create duplicate files or events\n  ---\n  duration_ms: 4.334405\n  type: 'test'\n  ...\n# Subtest: A22 A23: stale state and answer requests do not duplicate or overwrite\nok 16 - A22 A23: stale state and answer requests do not duplicate or overwrite\n  ---\n  duration_ms: 8.643959\n  type: 'test'\n  ...\n# Subtest: failed multi-record change rolls back messages, versions and events together\nok 17 - failed multi-record change rolls back messages, versions and events together\n  ---\n  duration_ms: 6.519059\n  type: 'test'\n  ...\n# Subtest: SQLite reopen preserves original receipt, revisions and retry key\nok 18 - SQLite reopen preserves original receipt, revisions and retry key\n  ---\n  duration_ms: 6.212704\n  type: 'test'\n  ...\n# Subtest: demo refuses implicit opt-in and production before creating any data\nok 19 - demo refuses implicit opt-in and production before creating any data\n  ---\n  duration_ms: 0.667953\n  type: 'test'\n  ...\n# Subtest: HTTP boundary: cookie identity, CSRF, lost response retry, parallel writes and revoked files\nok 20 - HTTP boundary: cookie identity, CSRF, lost response retry, parallel writes and revoked files\n  ---\n  duration_ms: 141.565204\n  type: 'test'\n  ...\n1..20\n# tests 20\n# suites 0\n# pass 20\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 572.821147\n"
+    },
+    {
+      "name": "Single flag enabled build in temporary copy",
+      "status": "passed",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "output": "\n> sonsecha-startup-guide@1.0.0 build\n> vite build && node scripts/package.mjs\n\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 23 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/admin-login.html                             1.54 kB │ gzip:  0.82 kB\ndist/workspace.html                               3.16 kB │ gzip:  1.49 kB\ndist/admin.html                                  15.32 kB │ gzip:  4.11 kB\ndist/index.html                                  36.07 kB │ gzip:  9.35 kB\ndist/assets/workspace-zcnb8t64.css               11.65 kB │ gzip:  3.20 kB\ndist/assets/admin-LMbiX1Vo.css                   31.38 kB │ gzip:  5.85 kB\ndist/assets/main-CbA0mEkJ.css                    97.72 kB │ gzip: 18.40 kB\ndist/assets/modulepreload-polyfill-B5Qt9EMX.js    0.71 kB │ gzip:  0.40 kB\ndist/assets/adminLogin-BZHhBVPV.js                0.83 kB │ gzip:  0.57 kB\ndist/assets/product-images-e3xkxvF6.js            1.03 kB │ gzip:  0.55 kB\ndist/assets/workspace-OkXaurc7.js                 1.35 kB │ gzip:  0.76 kB\ndist/assets/admin-sTyEkKfr.js                    27.97 kB │ gzip:  8.39 kB\ndist/assets/workspace-BV2a6wzy.js                38.57 kB │ gzip: 13.19 kB\ndist/assets/main-5oKYtTKA.js                    190.15 kB │ gzip: 57.99 kB\n✓ built in 630ms\nPackaged 35 static assets for Sites.\n"
+    },
+    {
+      "name": "Existing workspace forms survive feature re-enable",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "/home/kim/workbench/sonsecha-workspace-visibility/scripts/browser-smoke-workspace.mjs"
+      ],
+      "output": "{\n  \"ok\": true,\n  \"base\": \"http://127.0.0.1:35585\",\n  \"checks\": [\n    \"A09: failed network save retains input and retry saves one candidate\",\n    \"A24: stale draft conflict preserves input and requires explicit latest-version acknowledgement\",\n    \"Attachment is selected and stored through the actual photo form\",\n    \"Customer B does not see customer A business\",\n    \"A01 A16: manager assignment, manual review evidence and staff public reply work through forms\",\n    \"A12: customer screen excludes staff notes and internal assignment reason\",\n    \"Page reload restores saved customer result without implementing login\",\n    \"A13: followup preserves receipt and previous answer\",\n    \"A11: prior staff loses the business view and replacement staff receives it\",\n    \"A18: 390px page and dialog fit, Tab stays in dialog, Escape and successful save restore focus\"\n  ],\n  \"warnings\": [],\n  \"exceptions\": [],\n  \"login\": \"deferred by user; no authentication acceptance claimed\",\n  \"screenshots\": [\n    \"workspace-desktop.png\",\n    \"workspace-mobile.png\"\n  ]\n}\n"
+    },
+    {
+      "name": "Existing browser-only experience survives feature re-enable",
+      "status": "passed",
+      "command": [
+        "/usr/bin/node",
+        "/home/kim/workbench/sonsecha-workspace-visibility/scripts/browser-smoke-workspace-public.mjs"
+      ],
+      "output": "{\n  \"ok\": true,\n  \"base\": \"http://127.0.0.1:35585\",\n  \"checks\": [\n    \"Storage write failure preserves input and a retry creates one local business\",\n    \"A local example candidate produces a clearly marked DEMO receipt\",\n    \"Local role views support assignment, reply and private-note separation\",\n    \"Reload restores IndexedDB business and answer without a server\",\n    \"Followup retains DEMO receipt; sample customer B view excludes customer A records\",\n    \"390px layout and dialog fit; Escape restores focus\",\n    \"No workspace API requests, server writes or JavaScript exceptions\"\n  ],\n  \"workspaceApiRequests\": [],\n  \"exceptions\": [],\n  \"deployment\": \"not published; static local preview only\",\n  \"storage\": \"IndexedDB in this browser\",\n  \"actualContactSent\": false\n}\n"
+    }
+  ],
+  "productionDataUsed": false,
+  "committed": false,
+  "pushed": false,
+  "deployed": false,
+  "existingProcessOperations": [],
+  "temporary": "/tmp/sonsecha-visibility-pREYrc",
+  "evidence": "/home/kim/workbench/sonsecha-workspace-visibility/docs/qa/workspace-visibility",
+  "disabledBase": "http://127.0.0.1:33205",
+  "enabledBase": "http://127.0.0.1:35585",
+  "ownTestServersStopped": true
+}

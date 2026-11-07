@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "base": "http://127.0.0.1:33205",
+  "checks": [
+    "Desktop home: workspace link is hidden; 12 steps still render",
+    "390px expanded menu: workspace link is hidden; no horizontal overflow",
+    "Direct workspace: static holding message, home button, noindex, no visible role switch",
+    "Query parameters cannot enable the workspace; no workspace API calls or demo database initialization",
+    "Keyboard activation of home button returns to the existing first page",
+    "Without JavaScript: holding page and hidden initial menu still work"
+  ],
+  "workspaceApiRequests": [],
+  "exceptions": [],
+  "screenshots": [
+    "desktop-home.png",
+    "mobile-home-menu.png",
+    "desktop-workspace.png",
+    "mobile-workspace.png"
+  ],
+  "environment": "isolated local copy; not deployed"
+}
