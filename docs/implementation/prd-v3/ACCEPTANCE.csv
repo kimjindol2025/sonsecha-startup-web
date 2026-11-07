@@ -1,0 +1,25 @@
+id,release,item,procedure,expected,areas,status,evidence
+A01,first,첫 출시 정상 흐름,등록→의뢰→배정→답변→로그아웃→재로그인,본인 사업·접수·공개 결과가 이어진다,"customer,assignment,review",부분 검증·로그인 제외,evidence/workspace-tests.tap; evidence/browser-results.json
+A02,first,타인 사업 접근,고객 A로 B 사업의 직접 주소·API 요청,사업 내용과 존재 여부가 노출되지 않는다,authorization,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A03,first,타인 후보지 접근,A로 B 후보지의 직접 주소·API 요청,후보지·첨부 목록을 반환하지 않는다,authorization,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A04,first,타인 첨부 접근,A로 B 파일·미리보기·임시 주소 요청,파일과 우회 접근을 차단한다,"attachments,authorization",시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A05,first,접수번호와 개인정보,비로그인·다른 계정으로 번호 조회,접수번호만으로 개인정보·결과를 반환하지 않는다,authorization,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A06,first_pending_scope,기존 접수 계정 연결 제외,번호만으로 연결 시도,제안이 확정되면 연결 기능 미제공과 서버 우회 연결 불가를 확인한다,"legacy,scope",연결 기능 미제공 확인,evidence/workspace-tests.tap; evidence/browser-results.json
+A07,first,통신 단절 재시도,접수 저장 후 응답 유실·동일 식별값 재시도,중복 접수 없이 기존 번호·현재 상태를 반환한다,idempotency,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A08,first,식별값 충돌,같은 식별값으로 다른 내용 제출,기존 자료 변경·새 접수 없이 충돌을 안내한다,idempotency,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A09,first,저장 실패,저장 오류·재시도,입력 유지·미저장 표시·서버 성공 후에만 완료로 표시한다,saving,통신 실패·입력 유지·재시도 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A10,first,미배정 대기열,담당자·책임자로 각각 목록·배정 요청,범위 내 책임자만 열람·배정할 수 있다,assignment,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A11,first,재배정,재배정 후 이전 담당자로 열린 화면·직접 API·파일 요청,신규 조회·수정·다운로드 차단·새 담당자 허용·배정 이력 보존,"assignment,authorization",시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A12,first,내부 메모 분리,고유 시험 메모·비공개 첨부·내부 사유 후 고객 응답·화면·내려받기 검사,모든 고객 경로에 내부 내용이 없고 미출시 알림은 발송되지 않는다,visibility,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A13,first,보류·종료·재문의,허용·금지 전이와 종료 후 재문의,허용 전이만 처리·공개 사유·같은 번호·이전 답변을 보존한다,states,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A14,first,후보지 보류·변경,기존 후보지 보류·탈락 후 다른 후보지 선정,사업과 기존 검토·첨부 관계를 보존한다,versioning,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A15,second,계획·견적 후보지 변경,후보지 변경·새 문서 버전,이전 문서·관련 후보지 버전을 변경하지 않는다,future,미실시,
+A16,first,허가 정정 이력,검토 정정 후 이전 버전 조회,근거·작성자·확인일·재확인 필요와 이전 버전이 남는다,"review,versioning",시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A17,second,견적 기록,발행·수정·유효기간 경과,필수 항목·버전·만료 안내·전달 당시 내용을 보존한다,future,미실시,
+A18,first,휴대폰·접근성,등록·조회·오류·키보드·창 닫기,본문 가림 없음·원래 버튼 초점 복귀·오류 위치 명시,browser,390px·Tab·Esc·초점 복귀 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A19,first,기존 서비스 유지,계산기·상품·인쇄·접수·의견·관리자 통제,기능·기존 기록 유지·비로그인 관리자 노출 없음,regression,격리 회귀 통과·운영 자료 재검사 미실시,evidence/legacy-results.json; implementation-results.json
+A20,second,계약 점검,점검·동의·전문가 연결 기록,자동 계약·허가 확정 없이 결과를 보존한다,future,미실시,
+A21,third,일정·운영,일정 변경·고객 개업 확인·문의 답변,선행조건·변경 이력·고객 확인·문의 상태 보존,future,미실시,
+A22,first,동시 상태 변경,같은 담당자 두 화면에서 같은 버전에 다른 전이 제출,한 변경만 반영·다른 요청 충돌 또는 거부·최신 상태 재확인,concurrency,시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A23,first,답변 중복 제출,두 화면·연속 클릭·응답 지연 재시도·동일 식별값 내용 변경,같은 제출 중복 없음·내용 충돌 표시·기존 답변 불변,"idempotency,concurrency",시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json
+A24,first,오래된 후보지 초안 저장,두 화면 중 한쪽 저장 후 오래된 다른 화면 저장,최신본 덮어쓰기 없이 충돌·미저장 입력 유지,"concurrency,saving",시험 신원 기준 통과,evidence/workspace-tests.tap; evidence/browser-results.json

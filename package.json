@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "test:plan-browser": "node scripts/browser-smoke-business-plan.mjs",
     "test:shop-browser": "node scripts/browser-smoke-shop.mjs",
+    "test:workspace": "node --test scripts/test-workspace.mjs",
+    "workspace:preview": "node workspace-preview.mjs",
     "start": "node server.mjs"
   },
   "devDependencies": {

@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "base": "http://127.0.0.1:43475",
+  "checks": [
+    "A09: failed network save retains input and retry saves one candidate",
+    "A24: stale draft conflict preserves input and requires explicit latest-version acknowledgement",
+    "Attachment is selected and stored through the actual photo form",
+    "Customer B does not see customer A business",
+    "A01 A16: manager assignment, manual review evidence and staff public reply work through forms",
+    "A12: customer screen excludes staff notes and internal assignment reason",
+    "Page reload restores saved customer result without implementing login",
+    "A13: followup preserves receipt and previous answer",
+    "A11: prior staff loses the business view and replacement staff receives it",
+    "A18: 390px page and dialog fit, Tab stays in dialog, Escape and successful save restore focus"
+  ],
+  "warnings": [],
+  "exceptions": [],
+  "login": "deferred by user; no authentication acceptance claimed",
+  "screenshots": [
+    "workspace-desktop.png",
+    "workspace-mobile.png"
+  ]
+}

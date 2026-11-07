@@ -1,0 +1,74 @@
+{
+  "recordedAt": "2026-11-07T08:46:49.996913+00:00",
+  "authorization": "코딩 시작 로그인은 이번에는 패스",
+  "workspace": "/home/kim/workbench/sonsecha-prd-v3",
+  "branch": "feat/prd-v3-review-workspace",
+  "baseCommit": "3761f10a630a3ca83c9d81171ef4c0e17cc83b6f",
+  "newImplementationCommits": [],
+  "sourceFiles": {
+    "new": [
+      "workspace-store.mjs",
+      "workspace-preview.mjs",
+      "workspace.html",
+      "src/workspace.js",
+      "src/workspace.css",
+      "scripts/test-workspace.mjs",
+      "scripts/browser-smoke-workspace.mjs",
+      "scripts/test-legacy-isolated.mjs"
+    ],
+    "modified": [
+      "package.json",
+      "vite.config.js"
+    ],
+    "sha256": {
+      "workspace-store.mjs": "ff2c19fd2eaa7977aad7135438ad930494923dcce753565d705325b1801d9229",
+      "workspace-preview.mjs": "96921cf4804bfe6192819cb8928a07dd2c822304c97bbd895b10bdd3068c379c",
+      "workspace.html": "b5b5b13d9681d49c2c44e5ed7dc21b32b02487873e96eadb2fe7a372232827e9",
+      "src/workspace.js": "1a45806d5b7bfc2334b51df9e4e7064627da569cadca80775e28a93294da7df3",
+      "src/workspace.css": "5983a7d448639fb7be04e93f34eef0478ad2ea6396e6f5b4ef2cb7f3f54b88a9",
+      "scripts/test-workspace.mjs": "62665e3f9beb95eb493a9437ee92016b3958c1e40860648410bf3feafd1a344e",
+      "scripts/browser-smoke-workspace.mjs": "2c1d1bca0749cf7c2c62382aebfd311a3902b585761d09964f2ec12c566d91c6",
+      "scripts/test-legacy-isolated.mjs": "f222eefe1ea77c0ef6c60d193ae9d2a84470207bac2e4a6065ab5d09a37286dd",
+      "package.json": "3cb0081bdec5c70d6713d9a80a9ce3dbf8f2ef6c3ca65b17d49024138bc1831e",
+      "vite.config.js": "883752e69e374c1c59844300b1c4abb54796acd52b7ea98812021ae1b148e722"
+    }
+  },
+  "originalSource": {
+    "checkedFiles": 51,
+    "changedFiles": []
+  },
+  "checks": {
+    "build": "passed",
+    "workspaceTests": {
+      "passed": 20,
+      "failed": 0,
+      "evidence": "evidence/workspace-tests.tap"
+    },
+    "browser": {
+      "passed": 10,
+      "warnings": [],
+      "exceptions": [],
+      "evidence": "evidence/browser-results.json"
+    },
+    "legacy": {
+      "passed": 6,
+      "evidence": "evidence/legacy-results.json"
+    }
+  },
+  "deferred": [
+    "Real authentication and logout/relogin acceptance",
+    "Production customer data and staff onboarding",
+    "Malware scanning beyond image type and signature checks",
+    "Privacy retention and recovery policy",
+    "Production deployment"
+  ],
+  "productionDataChanged": false,
+  "existingServiceOperations": [],
+  "pushExecuted": false,
+  "deploymentExecuted": false,
+  "previewTestServerStopped": true,
+  "sourcePatchCheck": {
+    "command": "git apply --check docs/implementation/prd-v3/implementation.patch",
+    "status": "passed against original working source; not applied"
+  }
+}

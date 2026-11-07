@@ -1,0 +1,1356 @@
+--- a/package.json
++++ b/package.json
+@@ -9,6 +9,8 @@
+     "preview": "vite preview",
+     "test:plan-browser": "node scripts/browser-smoke-business-plan.mjs",
+     "test:shop-browser": "node scripts/browser-smoke-shop.mjs",
++    "test:workspace": "node --test scripts/test-workspace.mjs",
++    "workspace:preview": "node workspace-preview.mjs",
+     "start": "node server.mjs"
+   },
+   "devDependencies": {
+--- a/vite.config.js
++++ b/vite.config.js
+@@ -8,6 +8,7 @@
+         main: resolve(import.meta.dirname, 'index.html'),
+         admin: resolve(import.meta.dirname, 'admin.html'),
+         adminLogin: resolve(import.meta.dirname, 'admin-login.html'),
++        workspace: resolve(import.meta.dirname, 'workspace.html'),
+       },
+     },
+   },
+--- /dev/null
++++ b/workspace-store.mjs
+@@ -0,0 +1,300 @@
++import { DatabaseSync } from 'node:sqlite';
++import { createHash, randomUUID, randomBytes } from 'node:crypto';
++import { mkdirSync, chmodSync } from 'node:fs';
++import { dirname } from 'node:path';
++
++export class WorkspaceError extends Error {
++  constructor(status, code, message) { super(message); this.status = status; this.code = code; }
++}
++const fail = (status, code, message) => { throw new WorkspaceError(status, code, message); };
++const missing = () => fail(404, 'NOT_FOUND', '자료를 찾을 수 없습니다.');
++const now = () => new Date().toISOString();
++const seoulDay = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
++const text = (value, max, required = false) => {
++  if (value != null && typeof value !== 'string') fail(400, 'INVALID_INPUT', '문자 입력값을 확인해 주세요.');
++  const result = (value || '').trim();
++  if ((required && !result) || result.length > max) fail(400, 'INVALID_INPUT', '필수 항목과 입력 길이를 확인해 주세요.');
++  return result;
++};
++function number(value, integer = false) {
++  if (value === '' || value == null) return null;
++  const result = typeof value === 'number' ? value : typeof value === 'string' && /^\d+(\.\d+)?$/.test(value) ? Number(value) : NaN;
++  if (!Number.isFinite(result) || result < 0 || result > Number.MAX_SAFE_INTEGER || (integer && !Number.isSafeInteger(result))) fail(400, 'INVALID_INPUT', '면적·금액은 올바른 단위의 0 이상 숫자로 입력해 주세요.');
++  return result;
++}
++function canonical(value) {
++  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
++  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
++  return JSON.stringify(value);
++}
++const digest = value => createHash('sha256').update(canonical(value)).digest('hex');
++function version(input, row) {
++  if (!Number.isSafeInteger(input.version) || input.version !== row.version) fail(409, 'VERSION_CONFLICT', '다른 화면에서 자료가 바뀌었습니다. 입력은 유지되니 최신 자료를 확인한 뒤 다시 저장해 주세요.');
++}
++const statusLabels = { received: '접수', reviewing: '검토 중', more_info: '추가자료 요청', answered: '답변 완료', hold: '보류', reopened: '재문의', closed: '종료' };
++export { statusLabels };
++
++// Identity is supplied by the trusted server boundary, never by business request bodies.
++export function createWorkspaceStore(path) {
++  if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
++  const db = new DatabaseSync(path);
++  db.exec(`
++    PRAGMA foreign_keys=ON; PRAGMA busy_timeout=3000;
++    CREATE TABLE IF NOT EXISTS principals(id TEXT PRIMARY KEY,label TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('customer','staff','manager')),team_id TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES principals(id),team_id TEXT NOT NULL,title TEXT NOT NULL,assignee_id TEXT REFERENCES principals(id),version INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS candidates(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id),version INTEGER NOT NULL,name TEXT NOT NULL,address TEXT NOT NULL,area_sqm REAL,price_won INTEGER,listing_url TEXT NOT NULL,memo TEXT NOT NULL,lifecycle TEXT NOT NULL,updated_at TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS candidate_versions(candidate_id TEXT NOT NULL REFERENCES candidates(id),version INTEGER NOT NULL,snapshot_json TEXT NOT NULL,actor_id TEXT NOT NULL REFERENCES principals(id),created_at TEXT NOT NULL,PRIMARY KEY(candidate_id,version));
++    CREATE TABLE IF NOT EXISTS inquiries(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id),candidate_id TEXT NOT NULL REFERENCES candidates(id),candidate_version INTEGER NOT NULL,receipt TEXT NOT NULL UNIQUE,question TEXT NOT NULL,snapshot_json TEXT NOT NULL,status TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,FOREIGN KEY(candidate_id,candidate_version) REFERENCES candidate_versions(candidate_id,version));
++    CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY,inquiry_id TEXT NOT NULL REFERENCES inquiries(id),actor_id TEXT NOT NULL REFERENCES principals(id),kind TEXT NOT NULL,body TEXT NOT NULL,source TEXT NOT NULL DEFAULT '',checked_by TEXT NOT NULL DEFAULT '',checked_at TEXT NOT NULL DEFAULT '',recheck INTEGER NOT NULL DEFAULT 0,recheck_reason TEXT NOT NULL DEFAULT '',official_confirmed INTEGER NOT NULL DEFAULT 0,supersedes TEXT REFERENCES messages(id),created_at TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS reviews(id TEXT PRIMARY KEY,inquiry_id TEXT NOT NULL REFERENCES inquiries(id),item TEXT NOT NULL,state TEXT NOT NULL,body TEXT NOT NULL,source TEXT NOT NULL,checked_by TEXT NOT NULL,checked_at TEXT NOT NULL,recheck INTEGER NOT NULL,recheck_reason TEXT NOT NULL,official_confirmed INTEGER NOT NULL,actor_id TEXT NOT NULL REFERENCES principals(id),created_at TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS attachments(id TEXT PRIMARY KEY,inquiry_id TEXT NOT NULL REFERENCES inquiries(id),candidate_version INTEGER NOT NULL,actor_id TEXT NOT NULL REFERENCES principals(id),name TEXT NOT NULL,mime TEXT NOT NULL,visibility TEXT NOT NULL CHECK(visibility IN ('public','internal')),data BLOB NOT NULL,created_at TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id),inquiry_id TEXT REFERENCES inquiries(id),actor_id TEXT NOT NULL REFERENCES principals(id),kind TEXT NOT NULL,visibility TEXT NOT NULL,payload_json TEXT NOT NULL,created_at TEXT NOT NULL);
++    CREATE TABLE IF NOT EXISTS submissions(actor_id TEXT NOT NULL REFERENCES principals(id),scope TEXT NOT NULL,operation TEXT NOT NULL,request_id TEXT NOT NULL,fingerprint TEXT NOT NULL,result_json TEXT NOT NULL,PRIMARY KEY(actor_id,scope,operation,request_id));
++    CREATE INDEX IF NOT EXISTS projects_owner ON projects(owner_id);
++    CREATE INDEX IF NOT EXISTS projects_assignee ON projects(assignee_id);
++    CREATE INDEX IF NOT EXISTS candidates_project ON candidates(project_id);
++    CREATE INDEX IF NOT EXISTS inquiries_project ON inquiries(project_id);
++    CREATE INDEX IF NOT EXISTS messages_inquiry ON messages(inquiry_id,created_at);
++    CREATE INDEX IF NOT EXISTS reviews_inquiry ON reviews(inquiry_id,created_at);
++    CREATE INDEX IF NOT EXISTS attachments_inquiry ON attachments(inquiry_id);
++    CREATE INDEX IF NOT EXISTS events_project ON events(project_id,created_at);
++  `);
++  if (path !== ':memory:') chmodSync(path, 0o600);
++  const one = (sql, ...args) => db.prepare(sql).get(...args);
++  const all = (sql, ...args) => db.prepare(sql).all(...args);
++  const run = (sql, ...args) => db.prepare(sql).run(...args);
++  function actor(id) { const p = one('SELECT * FROM principals WHERE id=?', id); if (!p) fail(401, 'IDENTITY_REQUIRED', '시험 역할을 먼저 선택해 주세요.'); return p; }
++  function access(who, projectId) {
++    const p = one('SELECT * FROM projects WHERE id=?', projectId);
++    if (!p || !(who.role === 'customer' ? p.owner_id === who.id : who.role === 'manager' ? p.team_id === who.team_id : p.assignee_id === who.id && p.team_id === who.team_id)) missing();
++    return p;
++  }
++  function owner(who, p) { if (who.role !== 'customer' || p.owner_id !== who.id) fail(403, 'FORBIDDEN', '고객 본인만 제출하거나 수정할 수 있습니다.'); }
++  function staff(who) { if (!['staff', 'manager'].includes(who.role)) fail(403, 'FORBIDDEN', '담당자 권한이 필요합니다.'); }
++  function write(work) {
++    db.exec('BEGIN IMMEDIATE');
++    try { const result = work(); db.exec('COMMIT'); return result; } catch (e) { db.exec('ROLLBACK'); throw e; }
++  }
++  function idempotent(who, scope, operation, input, work) {
++    const key = text(input.requestId, 100, true);
++    if (!/^[a-zA-Z0-9_-]{8,100}$/.test(key)) fail(400, 'INVALID_REQUEST_ID', '제출 식별값을 확인해 주세요.');
++    const fingerprint = digest(input);
++    const previous = one('SELECT * FROM submissions WHERE actor_id=? AND scope=? AND operation=? AND request_id=?', who.id, scope, operation, key);
++    if (previous) {
++      if (previous.fingerprint !== fingerprint) fail(409, 'IDEMPOTENCY_CONFLICT', '같은 제출 식별값의 내용이 달라졌습니다. 기존 제출은 변경되지 않았습니다.');
++      return JSON.parse(previous.result_json);
++    }
++    const result = work();
++    run('INSERT INTO submissions VALUES(?,?,?,?,?,?)', who.id, scope, operation, key, fingerprint, JSON.stringify(result));
++    return result;
++  }
++  function event(who, projectId, inquiryId, kind, visibility, payload) {
++    run('INSERT INTO events VALUES(?,?,?,?,?,?,?,?)', randomUUID(), projectId, inquiryId, who.id, kind, visibility, JSON.stringify(payload), now());
++  }
++  function touchProject(id) { run('UPDATE projects SET updated_at=? WHERE id=?', now(), id); }
++  function candidateData(input) {
++    const url = text(input.listingUrl, 1500);
++    if (url) { try { if (!['http:', 'https:'].includes(new URL(url).protocol)) throw Error(); } catch { fail(400, 'INVALID_INPUT', '매물 주소는 http 또는 https 주소로 입력해 주세요.'); } }
++    const lifecycle = input.lifecycle || 'reviewing';
++    if (!['reviewing', 'selected', 'hold', 'rejected'].includes(lifecycle)) fail(400, 'INVALID_INPUT', '후보지 상태를 확인해 주세요.');
++    return { name: text(input.name, 160, true), address: text(input.address, 300, true), area_sqm: number(input.areaSqm), price_won: number(input.priceWon, true), listing_url: url, memo: text(input.memo, 4000), lifecycle };
++  }
++  function saveCandidateVersion(who, row) {
++    run('INSERT INTO candidate_versions VALUES(?,?,?,?,?)', row.id, row.version, JSON.stringify(row), who.id, now());
++  }
++  function inquiryAccess(who, id) {
++    const inquiry = one('SELECT * FROM inquiries WHERE id=?', id);
++    if (!inquiry) missing();
++    const project = access(who, inquiry.project_id);
++    return { inquiry, project };
++  }
++  function evidence(input, required = true) {
++    const result = { source: text(input.source, 2000, required), checkedBy: text(input.checkedBy, 160, required), checkedAt: text(input.checkedAt, 10, required), recheck: input.recheck === true, recheckReason: text(input.recheckReason, 2000), officialConfirmed: input.officialConfirmed === true };
++    if (result.checkedAt && (!/^\d{4}-\d{2}-\d{2}$/.test(result.checkedAt) || !Number.isFinite(Date.parse(result.checkedAt)) || new Date(result.checkedAt).toISOString().slice(0, 10) !== result.checkedAt || result.checkedAt > seoulDay())) fail(400, 'INVALID_INPUT', '확인일은 실제 확인한 날짜로 입력해 주세요.');
++    if (result.recheck && !result.recheckReason) fail(400, 'INVALID_INPUT', '재확인 사유를 입력해 주세요.');
++    return result;
++  }
++  function addMessage(who, inquiry, kind, body, proof = {}, supersedes = null) {
++    const id = randomUUID();
++    run('INSERT INTO messages VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)', id, inquiry.id, who.id, kind, body, proof.source || '', proof.checkedBy || '', proof.checkedAt || '', proof.recheck ? 1 : 0, proof.recheckReason || '', proof.officialConfirmed ? 1 : 0, supersedes, now());
++    return id;
++  }
++  function bumpInquiry(inquiry, status = inquiry.status) {
++    run('UPDATE inquiries SET status=?,version=version+1,updated_at=? WHERE id=?', status, now(), inquiry.id);
++    touchProject(inquiry.project_id);
++  }
++  function inquiryView(who, row) {
++    const publicOnly = who.role === 'customer';
++    return {
++      id: row.id, projectId: row.project_id, candidateId: row.candidate_id, candidateVersion: row.candidate_version,
++      receipt: row.receipt, question: row.question, snapshot: JSON.parse(row.snapshot_json), status: row.status, statusLabel: statusLabels[row.status], version: row.version, createdAt: row.created_at, updatedAt: row.updated_at,
++      messages: all(`SELECT m.*,p.label AS author FROM messages m JOIN principals p ON p.id=m.actor_id WHERE inquiry_id=? ${publicOnly ? "AND kind<>'note'" : ''} ORDER BY m.rowid`, row.id).map(m => ({ id: m.id, kind: m.kind, body: m.body, author: m.author, source: m.source, checkedBy: m.checked_by, checkedAt: m.checked_at, recheck: !!m.recheck, recheckReason: m.recheck_reason, officialConfirmed: !!m.official_confirmed, supersedes: m.supersedes, createdAt: m.created_at })),
++      reviews: all('SELECT * FROM reviews WHERE inquiry_id=? ORDER BY rowid', row.id).map(r => ({ id: r.id, item: r.item, state: r.state, body: r.body, source: r.source, checkedBy: r.checked_by, checkedAt: r.checked_at, recheck: !!r.recheck, recheckReason: r.recheck_reason, officialConfirmed: !!r.official_confirmed, createdAt: r.created_at })),
++      attachments: all(`SELECT id,name,mime,visibility,length(data) AS size,created_at FROM attachments WHERE inquiry_id=? ${publicOnly ? "AND visibility='public'" : ''} ORDER BY rowid`, row.id).map(a => ({ id: a.id, name: a.name, mime: a.mime, visibility: a.visibility, size: a.size, createdAt: a.created_at })),
++      events: all(`SELECT kind,payload_json,created_at FROM events WHERE inquiry_id=? ${publicOnly ? "AND visibility='public'" : ''} ORDER BY rowid`, row.id).map(e => ({ kind: e.kind, ...JSON.parse(e.payload_json), createdAt: e.created_at })),
++    };
++  }
++  function projectView(who, p) {
++    return {
++      id: p.id, title: p.title, version: p.version, assigned: !!p.assignee_id, createdAt: p.created_at, updatedAt: p.updated_at,
++      ...(who.role !== 'customer' ? { assigneeId: p.assignee_id, assignmentHistory: all("SELECT payload_json,created_at FROM events WHERE project_id=? AND kind='assignment' ORDER BY rowid", p.id).map(e => ({ ...JSON.parse(e.payload_json), createdAt: e.created_at })) } : {}),
++      candidates: all('SELECT * FROM candidates WHERE project_id=? ORDER BY rowid', p.id).map(c => ({ id: c.id, version: c.version, name: c.name, address: c.address, areaSqm: c.area_sqm, priceWon: c.price_won, listingUrl: c.listing_url, memo: c.memo, lifecycle: c.lifecycle, updatedAt: c.updated_at })),
++      inquiries: all('SELECT * FROM inquiries WHERE project_id=? ORDER BY rowid DESC', p.id).map(row => inquiryView(who, row)),
++    };
++  }
++  return {
++    close: () => db.close(),
++    registerPrincipal(p) {
++      if (!['customer', 'staff', 'manager'].includes(p.role)) throw Error('Invalid principal');
++      run('INSERT INTO principals(id,label,role,team_id) VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING', p.id, p.label, p.role, p.teamId);
++    },
++    principal(id) { const p = actor(id); return { id: p.id, label: p.label, role: p.role }; },
++    staffList(actorId) { const who = actor(actorId); if (who.role !== 'manager') fail(403, 'FORBIDDEN', '관리 책임자 권한이 필요합니다.'); return all("SELECT id,label FROM principals WHERE role='staff' AND team_id=?", who.team_id); },
++    listProjects(actorId) {
++      const who = actor(actorId);
++      const rows = who.role === 'customer' ? all('SELECT * FROM projects WHERE owner_id=? ORDER BY updated_at DESC', who.id) : who.role === 'manager' ? all('SELECT * FROM projects WHERE team_id=? ORDER BY updated_at DESC', who.team_id) : all('SELECT * FROM projects WHERE assignee_id=? AND team_id=? ORDER BY updated_at DESC', who.id, who.team_id);
++      return rows.map(p => ({ id: p.id, title: p.title, version: p.version, assigned: !!p.assignee_id, updatedAt: p.updated_at, candidateCount: one('SELECT count(*) AS n FROM candidates WHERE project_id=?', p.id).n, inquiryCount: one('SELECT count(*) AS n FROM inquiries WHERE project_id=?', p.id).n }));
++    },
++    project(actorId, id) { const who = actor(actorId); return projectView(who, access(who, id)); },
++    createProject(actorId, input) {
++      const who = actor(actorId); if (who.role !== 'customer') fail(403, 'FORBIDDEN', '고객만 사업을 등록할 수 있습니다.');
++      const result = write(() => idempotent(who, who.id, 'project', input, () => {
++        const id = randomUUID(), date = now();
++        run('INSERT INTO projects VALUES(?,?,?,?,NULL,1,?,?)', id, who.id, who.team_id, text(input.title, 160, true), date, date);
++        return { projectId: id };
++      }));
++      return projectView(who, access(who, result.projectId));
++    },
++    saveCandidate(actorId, projectId, candidateId, input) {
++      const who = actor(actorId);
++      const result = write(() => {
++        const p = access(who, projectId); owner(who, p);
++        return idempotent(who, projectId, `candidate:${candidateId || 'new'}`, input, () => {
++          const values = candidateData(input);
++          const current = candidateId ? one('SELECT * FROM candidates WHERE id=? AND project_id=?', candidateId, projectId) : null;
++          if (candidateId && !current) missing();
++          if (current) version(input, current);
++          const id = candidateId || randomUUID(), date = now();
++          if (current) run('UPDATE candidates SET version=version+1,name=?,address=?,area_sqm=?,price_won=?,listing_url=?,memo=?,lifecycle=?,updated_at=? WHERE id=?', ...Object.values(values), date, id);
++          else run('INSERT INTO candidates VALUES(?,?,1,?,?,?,?,?,?,?,?)', id, projectId, ...Object.values(values), date);
++          saveCandidateVersion(who, one('SELECT * FROM candidates WHERE id=?', id));
++          touchProject(projectId);
++          return { candidateId: id };
++        });
++      });
++      return { project: projectView(who, access(who, projectId)), candidateId: result.candidateId };
++    },
++    assign(actorId, projectId, input) {
++      const who = actor(actorId);
++      write(() => {
++        const p = access(who, projectId);
++        if (who.role !== 'manager') fail(403, 'FORBIDDEN', '관리 책임자만 배정할 수 있습니다.');
++        idempotent(who, projectId, 'assign', input, () => {
++          version(input, p);
++          const reason = text(input.reason, 1000, true);
++          const next = input.assigneeId ? one("SELECT * FROM principals WHERE id=? AND role='staff' AND team_id=?", input.assigneeId, p.team_id) : null;
++          if (input.assigneeId && !next) fail(400, 'INVALID_ASSIGNEE', '배정 가능한 담당자를 선택해 주세요.');
++          run('UPDATE projects SET assignee_id=?,version=version+1,updated_at=? WHERE id=?', next?.id || null, now(), projectId);
++          event(who, projectId, null, 'assignment', 'internal', { from: p.assignee_id, to: next?.id || null, reason, actor: who.label });
++          return { projectId };
++        });
++      });
++      return projectView(who, access(who, projectId));
++    },
++    submit(actorId, projectId, input) {
++      const who = actor(actorId);
++      const result = write(() => {
++        const p = access(who, projectId); owner(who, p);
++        return idempotent(who, projectId, 'submit', input, () => {
++          if (input.consent !== true) fail(400, 'CONSENT_REQUIRED', '검토 의뢰 내용과 자료 전달을 확인해 주세요.');
++          const c = one('SELECT * FROM candidates WHERE id=? AND project_id=?', input.candidateId, projectId);
++          if (!c) missing();
++          version(input, c);
++          const id = randomUUID(), date = now();
++          const receipt = `SWR-${seoulDay().replaceAll('-', '')}-${randomBytes(6).toString('hex').toUpperCase()}`;
++          run("INSERT INTO inquiries VALUES(?,?,?,?,?,?,?,'received',1,?,?)", id, projectId, c.id, c.version, receipt, text(input.question, 4000, true), JSON.stringify(c), date, date);
++          event(who, projectId, id, 'submitted', 'public', { status: 'received', consentAt: date });
++          touchProject(projectId);
++          return { inquiryId: id };
++        });
++      });
++      return inquiryView(who, inquiryAccess(who, result.inquiryId).inquiry);
++    },
++    inquiry(actorId, id) { const who = actor(actorId); return inquiryView(who, inquiryAccess(who, id).inquiry); },
++    act(actorId, inquiryId, action, input) {
++      const who = actor(actorId);
++      write(() => {
++        const { inquiry: q, project: p } = inquiryAccess(who, inquiryId);
++        if (['followup', 'additional'].includes(action)) owner(who, p); else staff(who);
++        idempotent(who, p.id, `${action}:${q.id}`, input, () => {
++          version(input, q);
++          const body = text(input.body, 6000, true);
++          let status = q.status;
++          if (action === 'transition') {
++            const target = input.status;
++            const allowed = { reviewing: ['received', 'hold', 'reopened'], more_info: ['reviewing', 'reopened'], hold: ['received', 'reviewing', 'more_info', 'reopened'], closed: ['received', 'reviewing', 'more_info', 'answered', 'hold', 'reopened'] };
++            if (!allowed[target]?.includes(q.status)) fail(409, 'INVALID_TRANSITION', '현재 상태에서 허용되지 않는 변경입니다.');
++            status = target;
++          } else if (action === 'reply') {
++            const proof = evidence(input);
++            let supersedes = null;
++            if (input.supersedes) {
++              const previous = one("SELECT * FROM messages WHERE id=? AND inquiry_id=? AND kind='reply'", input.supersedes, q.id);
++              if (!previous || q.status !== 'answered') fail(409, 'INVALID_CORRECTION', '정정할 기존 답변을 확인해 주세요.');
++              supersedes = previous.id;
++              text(input.reason, 1000, true);
++            } else if (q.status !== 'reviewing') fail(409, 'INVALID_TRANSITION', '검토 중 상태에서 공개 답변을 작성해 주세요.');
++            addMessage(who, q, 'reply', body, proof, supersedes);
++            status = 'answered';
++          } else if (action === 'followup') {
++            if (!['answered', 'hold', 'closed'].includes(q.status)) fail(409, 'INVALID_TRANSITION', '답변 완료·보류·종료 상태에서 재문의할 수 있습니다.');
++            addMessage(who, q, 'followup', body); status = 'reopened';
++          } else if (action === 'additional') {
++            if (q.status !== 'more_info') fail(409, 'INVALID_TRANSITION', '추가자료 요청 상태가 아닙니다.');
++            addMessage(who, q, 'additional', body); status = 'reviewing';
++          } else if (action === 'note') addMessage(who, q, 'note', body);
++          else if (action === 'review') {
++            if (!['reviewing', 'reopened'].includes(q.status)) fail(409, 'INVALID_TRANSITION', '검토 중에 항목을 기록해 주세요.');
++            if (!['land', 'building', 'water', 'access'].includes(input.item) || !['unreviewed', 'checking', 'recorded', 'needs_review'].includes(input.state)) fail(400, 'INVALID_INPUT', '검토 항목·확인 상태를 확인해 주세요.');
++            const proof = input.state === 'unreviewed' ? { source: '', checkedBy: '', checkedAt: '', recheck: false, recheckReason: '', officialConfirmed: false } : evidence(input, input.state === 'recorded');
++            run('INSERT INTO reviews VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)', randomUUID(), q.id, input.item, input.state, body, proof.source, proof.checkedBy, proof.checkedAt, proof.recheck ? 1 : 0, proof.recheckReason, proof.officialConfirmed ? 1 : 0, who.id, now());
++          } else fail(404, 'NOT_FOUND', '지원하지 않는 작업입니다.');
++          bumpInquiry(q, status);
++          event(who, p.id, q.id, action, action === 'note' ? 'internal' : 'public', { from: q.status, status, ...(action === 'transition' ? { reason: body } : {}), ...(input.supersedes ? { correctionReason: text(input.reason, 1000, true) } : {}) });
++          return { inquiryId: q.id };
++        });
++      });
++      return inquiryView(who, inquiryAccess(who, inquiryId).inquiry);
++    },
++    attach(actorId, inquiryId, input) {
++      const who = actor(actorId);
++      write(() => {
++        const { inquiry: q, project: p } = inquiryAccess(who, inquiryId);
++        idempotent(who, p.id, `attachment:${q.id}`, input, () => {
++          version(input, q);
++          const visibility = input.visibility || 'public';
++          if (!['public', 'internal'].includes(visibility) || (who.role === 'customer' && visibility !== 'public')) fail(403, 'FORBIDDEN', '첨부 공개 범위를 확인해 주세요.');
++          const raw = text(input.data, 2_800_000, true);
++          if (!/^[A-Za-z0-9+/]+={0,2}$/.test(raw)) fail(400, 'INVALID_FILE', '이미지 파일을 확인해 주세요.');
++          const data = Buffer.from(raw, 'base64');
++          const valid = input.mime === 'image/png' ? data.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && data.length > 24 : input.mime === 'image/jpeg' ? data[0] === 255 && data[1] === 216 && data[2] === 255 && data.at(-2) === 255 && data.at(-1) === 217 : input.mime === 'image/webp' ? data.toString('ascii', 0, 4) === 'RIFF' && data.toString('ascii', 8, 12) === 'WEBP' && data.length > 16 : false;
++          if (!valid || data.toString('base64') !== raw || data.length > 2_000_000) fail(400, 'INVALID_FILE', 'PNG·JPEG·WebP 이미지 파일만 2MB까지 첨부할 수 있습니다.');
++          if (one('SELECT count(*) AS n FROM attachments WHERE inquiry_id=?', q.id).n >= 10) fail(400, 'FILE_LIMIT', '접수 한 건에 사진은 10장까지 첨부할 수 있습니다.');
++          const name = text(input.name, 160, true).replace(/[\\/\u0000-\u001f\u007f]/g, '_');
++          run('INSERT INTO attachments VALUES(?,?,?,?,?,?,?,?,?)', randomUUID(), q.id, q.candidate_version, who.id, name, input.mime, visibility, data, now());
++          bumpInquiry(q);
++          event(who, p.id, q.id, 'attachment', visibility, { name });
++          return { inquiryId: q.id };
++        });
++      });
++      return inquiryView(who, inquiryAccess(who, inquiryId).inquiry);
++    },
++    attachment(actorId, id) {
++      const who = actor(actorId), a = one('SELECT * FROM attachments WHERE id=?', id);
++      if (!a) missing();
++      inquiryAccess(who, a.inquiry_id);
++      if (who.role === 'customer' && a.visibility !== 'public') missing();
++      return { name: a.name, mime: a.mime, data: Buffer.from(a.data) };
++    },
++  };
++}
+--- /dev/null
++++ b/workspace-preview.mjs
+@@ -0,0 +1,139 @@
++import { createServer } from 'node:http';
++import { readFile, realpath } from 'node:fs/promises';
++import { resolve, extname, sep, isAbsolute } from 'node:path';
++import { randomBytes } from 'node:crypto';
++import { existsSync } from 'node:fs';
++import { pathToFileURL } from 'node:url';
++import { createWorkspaceStore, WorkspaceError, statusLabels } from './workspace-store.mjs';
++import { products } from './src/products.js';
++import { defaultSiteContent } from './src/content.js';
++
++export const demoPrincipals = [
++  { id: 'customer-a', label: '고객 가', role: 'customer', teamId: 'demo-team' },
++  { id: 'customer-b', label: '고객 나', role: 'customer', teamId: 'demo-team' },
++  { id: 'manager', label: '관리 책임자', role: 'manager', teamId: 'demo-team' },
++  { id: 'staff-a', label: '담당자 가', role: 'staff', teamId: 'demo-team' },
++  { id: 'staff-b', label: '담당자 나', role: 'staff', teamId: 'demo-team' },
++];
++const headers = {
++  'cache-control': 'no-store',
++  'x-content-type-options': 'nosniff',
++  'referrer-policy': 'no-referrer',
++  'x-frame-options': 'DENY',
++  'content-security-policy': "default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
++};
++const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp' };
++async function jsonBody(req) {
++  let size = 0; const chunks = [];
++  for await (const chunk of req) {
++    size += chunk.length;
++    if (size > 3_000_000) throw new WorkspaceError(413, 'BODY_LIMIT', '요청 크기를 줄여 주세요.');
++    chunks.push(chunk);
++  }
++  try {
++    const input = JSON.parse(Buffer.concat(chunks).toString());
++    if (!input || Array.isArray(input) || typeof input !== 'object') throw Error();
++    return input;
++  } catch { throw new WorkspaceError(400, 'INVALID_JSON', '입력 내용을 확인해 주세요.'); }
++}
++
++// Deliberately separate from server.mjs: no demo identity endpoints in the production server.
++export function createWorkspacePreview({ dataDir, distDir = resolve(import.meta.dirname, 'dist'), demo = false, environment = process.env.NODE_ENV } = {}) {
++  if (!demo || environment === 'production' || process.env.NODE_ENV === 'production') throw new Error('Workspace demo requires explicit opt-in and cannot run in production');
++  if (!dataDir || !isAbsolute(dataDir)) throw new Error('An absolute, isolated workspace demo data directory is required');
++  const productionData = resolve(import.meta.dirname, 'data');
++  if (resolve(dataDir) === productionData) throw new Error('Do not use the existing application data directory');
++  if (['consultations.sqlite', 'feedback.sqlite', 'admin-auth.json', 'products.json', 'content.json'].some(name => existsSync(resolve(dataDir, name)))) throw new Error('Workspace demo cannot use a legacy application data directory');
++  const store = createWorkspaceStore(resolve(dataDir, 'workspace.sqlite'));
++  for (const principal of demoPrincipals) store.registerPrincipal(principal);
++  const sessions = new Map();
++  function send(res, status, payload, extra = {}) {
++    res.writeHead(status, { ...headers, 'content-type': 'application/json; charset=utf-8', ...extra });
++    res.end(JSON.stringify(payload));
++  }
++  function actor(req) {
++    const cookie = (req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith('workspace_demo='))?.slice(15);
++    const session = sessions.get(cookie);
++    if (!session || session.expires < Date.now()) { if (cookie) sessions.delete(cookie); throw new WorkspaceError(401, 'IDENTITY_REQUIRED', '시험 역할을 선택해 주세요.'); }
++    return session.actorId;
++  }
++  const server = createServer(async (req, res) => {
++    try {
++      const host = req.headers.host || '';
++      if (!/^(127\.0\.0\.1|localhost):\d+$/.test(host)) throw new WorkspaceError(403, 'INVALID_HOST', '로컬 시험 환경에서만 사용할 수 있습니다.');
++      const url = new URL(req.url, `http://${host}`);
++      if (!['GET', 'HEAD'].includes(req.method)) {
++        if (req.headers['sec-fetch-site'] === 'cross-site' || (req.headers.origin && req.headers.origin !== url.origin)) throw new WorkspaceError(403, 'CROSS_SITE', '다른 사이트에서 보낸 요청은 처리하지 않습니다.');
++        if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) throw new WorkspaceError(415, 'JSON_REQUIRED', 'JSON 요청만 처리합니다.');
++      }
++      if (url.pathname === '/api/workspace/demo' && req.method === 'GET') {
++        let current = null;
++        try { current = store.principal(actor(req)); } catch (e) { if (e.status !== 401) throw e; }
++        return send(res, 200, { demo: true, principals: demoPrincipals.map(({ teamId, ...p }) => p), actor: current, statusLabels });
++      }
++      if (url.pathname === '/api/workspace/demo/actor' && req.method === 'POST') {
++        const input = await jsonBody(req);
++        if (!demoPrincipals.some(p => p.id === input.actorId)) throw new WorkspaceError(400, 'UNKNOWN_ACTOR', '시험 역할을 확인해 주세요.');
++        const previous = (req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith('workspace_demo='))?.slice(15);
++        if (previous) sessions.delete(previous);
++        // Bound demo sessions as well as giving them an expiry.
++        for (const [key, value] of sessions) if (value.expires < Date.now()) sessions.delete(key);
++        if (sessions.size >= 1000) throw new WorkspaceError(429, 'SESSION_LIMIT', '시험 세션 수를 줄여 주세요.');
++        const token = randomBytes(32).toString('base64url');
++        sessions.set(token, { actorId: input.actorId, expires: Date.now() + 8 * 60 * 60 * 1000 });
++        return send(res, 200, { actor: store.principal(input.actorId) }, { 'set-cookie': `workspace_demo=${token}; HttpOnly; SameSite=Strict; Path=/api/workspace; Max-Age=28800` });
++      }
++      if (url.pathname.startsWith('/api/workspace/')) {
++        const who = actor(req);
++        if (url.pathname === '/api/workspace/staff' && req.method === 'GET') return send(res, 200, { staff: store.staffList(who) });
++        if (url.pathname === '/api/workspace/projects') {
++          if (req.method === 'GET') return send(res, 200, { projects: store.listProjects(who) });
++          if (req.method === 'POST') return send(res, 200, { project: store.createProject(who, await jsonBody(req)) });
++        }
++        let match;
++        if ((match = url.pathname.match(/^\/api\/workspace\/projects\/([\w-]+)$/)) && req.method === 'GET') return send(res, 200, { project: store.project(who, match[1]) });
++        if ((match = url.pathname.match(/^\/api\/workspace\/projects\/([\w-]+)\/candidates(?:\/([\w-]+))?$/)) && ['POST', 'PATCH'].includes(req.method)) return send(res, 200, store.saveCandidate(who, match[1], match[2] || null, await jsonBody(req)));
++        if ((match = url.pathname.match(/^\/api\/workspace\/projects\/([\w-]+)\/assignment$/)) && req.method === 'POST') return send(res, 200, { project: store.assign(who, match[1], await jsonBody(req)) });
++        if ((match = url.pathname.match(/^\/api\/workspace\/projects\/([\w-]+)\/inquiries$/)) && req.method === 'POST') return send(res, 200, { inquiry: store.submit(who, match[1], await jsonBody(req)) });
++        if ((match = url.pathname.match(/^\/api\/workspace\/inquiries\/([\w-]+)$/)) && req.method === 'GET') return send(res, 200, { inquiry: store.inquiry(who, match[1]) });
++        if ((match = url.pathname.match(/^\/api\/workspace\/inquiries\/([\w-]+)\/(transition|reply|followup|additional|note|review)$/)) && req.method === 'POST') return send(res, 200, { inquiry: store.act(who, match[1], match[2], await jsonBody(req)) });
++        if ((match = url.pathname.match(/^\/api\/workspace\/inquiries\/([\w-]+)\/attachments$/)) && req.method === 'POST') return send(res, 200, { inquiry: store.attach(who, match[1], await jsonBody(req)) });
++        if ((match = url.pathname.match(/^\/api\/workspace\/attachments\/([\w-]+)$/)) && req.method === 'GET') {
++          const file = store.attachment(who, match[1]);
++          res.writeHead(200, { ...headers, 'content-type': file.mime, 'content-disposition': `attachment; filename="photo${file.mime === 'image/jpeg' ? '.jpg' : file.mime === 'image/png' ? '.png' : '.webp'}"`, 'content-length': file.data.length });
++          return res.end(file.data);
++        }
++        throw new WorkspaceError(404, 'NOT_FOUND', '자료를 찾을 수 없습니다.');
++      }
++      if (req.method === 'GET' && url.pathname === '/api/products') return send(res, 200, { products });
++      if (req.method === 'GET' && url.pathname === '/api/content') return send(res, 200, { content: defaultSiteContent });
++      if (url.pathname.startsWith('/api/')) throw new WorkspaceError(404, 'NOT_FOUND', '이 시험 환경에서는 기존 접수를 보내지 않습니다.');
++      if (!['GET', 'HEAD'].includes(req.method)) throw new WorkspaceError(405, 'METHOD_NOT_ALLOWED', '허용되지 않는 요청입니다.');
++      const route = url.pathname === '/' ? '/workspace.html' : decodeURIComponent(url.pathname);
++      if (!['/workspace.html', '/index.html', '/favicon.svg', '/favicon.ico'].includes(route) && !route.startsWith('/assets/') && !route.startsWith('/product-images/')) throw new WorkspaceError(404, 'NOT_FOUND', '파일을 찾을 수 없습니다.');
++      const file = resolve(distDir, `.${route}`);
++      const root = await realpath(distDir);
++      let real;
++      try { real = await realpath(file); } catch { throw new WorkspaceError(404, 'NOT_FOUND', '파일을 찾을 수 없습니다.'); }
++      if (!real.startsWith(root + sep)) throw new WorkspaceError(404, 'NOT_FOUND', '파일을 찾을 수 없습니다.');
++      const content = await readFile(real);
++      res.writeHead(200, { ...headers, 'content-type': types[extname(real)] || 'application/octet-stream' });
++      res.end(req.method === 'HEAD' ? undefined : content);
++    } catch (error) {
++      const known = error instanceof WorkspaceError;
++      send(res, known ? error.status : 500, { error: known ? error.message : '저장하지 못했습니다. 입력은 유지되니 다시 시도해 주세요.', code: known ? error.code : 'INTERNAL_ERROR' });
++    }
++  });
++  server.once('close', () => { sessions.clear(); store.close(); });
++  return { server, store, listen(port = 0) { return new Promise((resolveListen, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.removeListener('error', reject); resolveListen(`http://127.0.0.1:${server.address().port}`); }); }); } };
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
++  const app = createWorkspacePreview({ demo: process.env.WORKSPACE_DEMO === '1', dataDir: resolve(process.env.WORKSPACE_DATA_DIR || '/tmp/sonsecha-workspace-demo') });
++  const port = Number(process.env.WORKSPACE_PORT || 40435);
++  if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error('Invalid workspace preview port');
++  const base = await app.listen(port);
++  console.log(`Workspace preview: ${base}/workspace.html (local synthetic data; login deferred)`);
++  process.once('SIGTERM', () => app.server.close());
++  process.once('SIGINT', () => app.server.close());
++}
+--- /dev/null
++++ b/workspace.html
+@@ -0,0 +1,32 @@
++<!doctype html>
++<html lang="ko">
++  <head>
++    <meta charset="UTF-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1" />
++    <meta name="robots" content="noindex,nofollow" />
++    <meta name="theme-color" content="#10243f" />
++    <title>내 창업 진행판 · 손세차장</title>
++    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
++    <link rel="stylesheet" href="/src/workspace.css" />
++  </head>
++  <body>
++    <a class="skip-link" href="#workspaceMain">본문으로 이동</a>
++    <div class="demo-banner"><strong>개발 미리보기</strong><span>로그인 준비 전 시험 화면입니다. 실제 개인정보·고객 자료는 입력하지 마세요.</span></div>
++    <header class="workspace-header">
++      <a class="workspace-brand" href="/workspace.html"><span aria-hidden="true">水</span><strong>손세차장<span>창업 지원 공간</span></strong></a>
++      <a class="guide-link" href="/index.html">기존 창업가이드 ↗</a>
++      <label class="actor-control">시험 역할<select id="actorSelect" aria-label="시험 역할" disabled></select></label>
++    </header>
++    <main id="workspaceMain" tabindex="-1">
++      <section class="page-intro"><div><p class="eyebrow">START YOUR NEXT CHAPTER</p><h1>내 창업 진행판</h1><p>후보지의 가능성을 살피고, 확인된 내용으로 다음 단계를 준비하세요.</p></div><button class="primary" id="newProjectButton" type="button" hidden>+ 새 창업 사업</button></section>
++      <p id="globalStatus" role="status" aria-live="polite"></p>
++      <div id="workspaceApp"><div class="empty-state"><h2>진행 내용을 불러오고 있어요</h2><p>저장된 사업과 검토 의뢰를 확인합니다.</p></div></div>
++    </main>
++    <dialog id="workspaceDialog" aria-labelledby="dialogTitle">
++      <header class="dialog-header"><div><p class="eyebrow">MY BUSINESS</p><h2 id="dialogTitle"></h2></div><button type="button" id="closeDialog" class="icon-button" aria-label="창 닫기">×</button></header>
++      <div id="dialogBody"></div>
++    </dialog>
++    <footer class="workspace-footer">사전 검토는 허가 확정이 아닙니다. 최종 판단은 관할 기관과 확인하세요.</footer>
++    <script type="module" src="/src/workspace.js"></script>
++  </body>
++</html>
+--- /dev/null
++++ b/src/workspace.js
+@@ -0,0 +1,268 @@
++const $ = selector => document.querySelector(selector);
++const app = $('#workspaceApp');
++const dialog = $('#workspaceDialog');
++const body = $('#dialogBody');
++const status = $('#globalStatus');
++const state = { actor: null, projects: [], project: null, projectId: null, inquiryId: null, staff: [] };
++const lifecycleLabels = { reviewing: '검토 중', selected: '선정', hold: '보류', rejected: '탈락' };
++const reviewLabels = { land: '용도지역·토지', building: '건축물 현황', water: '하수·폐수', access: '도로·진입' };
++const reviewStates = { unreviewed: '미확인', checking: '확인 중', recorded: '확인 내용 있음', needs_review: '추가 검토 필요' };
++const messageLabels = { reply: '공개 답변', followup: '고객 재문의', additional: '고객 추가자료', note: '내부 메모 · 고객 비공개' };
++const e = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
++const date = value => value ? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '아직 저장하지 않음';
++const money = value => value == null ? '미입력' : new Intl.NumberFormat('ko-KR').format(value) + '원';
++let returnSelector = '#newProjectButton';
++let refreshSequence = 0;
++const pendingSubmissions = new Map();
++
++async function api(path, payload) {
++  let response;
++  try { response = await fetch('/api/workspace/' + path, { credentials: 'same-origin', cache: 'no-store', ...(payload ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) } : {}) }); }
++  catch { throw new Error('통신이 끊겼습니다. 입력은 유지되니 같은 내용으로 다시 시도해 주세요.'); }
++  const result = await response.json().catch(() => ({}));
++  if (!response.ok) { const error = new Error(result.error || '요청을 처리하지 못했습니다.'); error.status = response.status; error.code = result.code; throw error; }
++  return result;
++}
++function announce(message, error = false) { status.textContent = message; status.classList.toggle('error', error); }
++function field(name, label, value = '', { type = 'text', required = false, max = 160, help = '', wide = false } = {}) {
++  return `<label class="field${wide ? ' wide' : ''}">${e(label)}${type === 'textarea' ? `<textarea name="${name}" maxlength="${max}" ${required ? 'required' : ''}>${e(value)}</textarea>` : `<input name="${name}" type="${type}" value="${e(value)}" ${['number'].includes(type) ? 'min="0" step="any"' : `maxlength="${max}"`} ${required ? 'required' : ''}>`}${help ? `<small>${e(help)}</small>` : ''}<span class="field-error"></span></label>`;
++}
++function select(name, label, options, value = '') {
++  return `<label class="field">${e(label)}<select name="${name}">${Object.entries(options).map(([key, text]) => `<option value="${e(key)}" ${key === value ? 'selected' : ''}>${e(text)}</option>`).join('')}</select><span class="field-error"></span></label>`;
++}
++function evidenceFields() {
++  return `${field('source', '근거·출처', '', { required: true, max: 2000, help: '문서명·공식 안내·담당기관 회신 등 실제 확인한 근거' })}<div class="field-grid">${field('checkedBy', '확인 주체', '', { required: true })}${field('checkedAt', '확인일', '', { type: 'date', required: true })}</div><label class="check-field"><input name="officialConfirmed" type="checkbox">관할 담당기관에 확인한 내용입니다.</label><label class="check-field"><input name="recheck" type="checkbox">추가 확인이 필요합니다.</label>${field('recheckReason', '재확인 사유', '', { max: 2000 })}`;
++}
++function formShell(contents, submit = '저장하기') {
++  return `<form>${contents}<div class="form-error" role="alert" tabindex="-1"></div><p class="save-status" role="status" aria-live="polite">아직 저장하지 않았습니다.</p><div class="form-actions"><button type="button" data-close>취소</button><button type="submit" class="primary">${e(submit)}</button></div></form>`;
++}
++function modal(title, contents, trigger) {
++  $('#dialogTitle').textContent = title;
++  returnSelector = trigger?.id ? '#' + CSS.escape(trigger.id) : trigger?.dataset.action ? `[data-action="${trigger.dataset.action}"]${trigger.dataset.id ? `[data-id="${CSS.escape(trigger.dataset.id)}"]` : ''}` : '#newProjectButton';
++  body.innerHTML = contents;
++  dialog.showModal();
++  dialog.querySelector('input:not([type=checkbox]),textarea,select')?.focus();
++  body.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
++  body.querySelector('form')?.addEventListener('invalid', event => { event.target.setAttribute('aria-invalid', 'true'); const error = event.target.closest('.field')?.querySelector('.field-error'); if (error) error.textContent = event.target.validationMessage; }, true);
++  body.querySelector('form')?.addEventListener('input', event => { event.target.removeAttribute('aria-invalid'); const error = event.target.closest('.field')?.querySelector('.field-error'); if (error) error.textContent = ''; if (event.target.name === 'recheck') body.querySelector('[name=recheckReason]').required = event.target.checked; });
++}
++function restoreDialogFocus() {
++  const target = document.querySelector(returnSelector);
++  if (target && !target.hidden) target.focus({ preventScroll: true });
++  else $('#workspaceMain').focus({ preventScroll: true });
++}
++$('#closeDialog').addEventListener('click', () => { if (dialog.dataset.saving !== 'true') dialog.close(); });
++dialog.addEventListener('cancel', event => { if (dialog.dataset.saving === 'true') event.preventDefault(); });
++dialog.addEventListener('keydown', event => {
++  if (event.key !== 'Tab') return;
++  const focusable = [...dialog.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(el => el.getClientRects().length);
++  const first = focusable[0], last = focusable.at(-1);
++  if (!first) { event.preventDefault(); dialog.focus(); return; }
++  if ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last) || !dialog.contains(document.activeElement)) {
++    event.preventDefault(); (event.shiftKey ? last : first).focus();
++  }
++});
++dialog.addEventListener('close', restoreDialogFocus);
++
++// Only opaque submission IDs and content hashes are kept; no draft bodies or contacts.
++async function execute(operation, target, payload) {
++  const key = `workspace-submit:${state.actor.id}:${operation}:${target}`;
++  const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload))))].map(b => b.toString(16).padStart(2, '0')).join('');
++  let previous = pendingSubmissions.get(key) || null;
++  try { const saved = JSON.parse(sessionStorage.getItem(key) || 'null'); if (saved) previous = saved; } catch { /* storage may be unavailable */ }
++  if (previous && previous.hash !== hash) {
++    const error = new Error('이전 제출의 응답을 아직 확인하지 못했습니다. 기존 내용으로 재시도하거나 창업 진행판에서 접수 결과를 먼저 확인해 주세요.'); error.code = 'PENDING_SUBMISSION'; throw error;
++  }
++  const requestId = previous?.requestId || crypto.randomUUID();
++  pendingSubmissions.set(key, { hash, requestId });
++  try { sessionStorage.setItem(key, JSON.stringify({ hash, requestId })); } catch { /* in-memory form ID still prevents repeated clicks */ }
++  try {
++    const result = await api(operation, { ...payload, requestId });
++    pendingSubmissions.delete(key);
++    try { sessionStorage.removeItem(key); } catch { /* optional storage */ }
++    return result;
++  } catch (error) {
++    if (error.status && error.status < 500) { pendingSubmissions.delete(key); try { sessionStorage.removeItem(key); } catch { /* optional storage */ } }
++    throw error;
++  }
++}
++async function refresh() {
++  const sequence = ++refreshSequence;
++  const { projects } = await api('projects');
++  if (sequence !== refreshSequence) return;
++  state.projects = projects;
++  if (!projects.some(p => p.id === state.projectId)) state.projectId = projects[0]?.id || null;
++  const project = state.projectId ? (await api(`projects/${state.projectId}`)).project : null;
++  if (sequence !== refreshSequence) return;
++  state.project = project;
++  if (!project?.inquiries.some(q => q.id === state.inquiryId)) state.inquiryId = project?.inquiries[0]?.id || null;
++  render();
++}
++function conflictHelp(form, payload) {
++  const area = form.querySelector('.form-error');
++  const button = document.createElement('button'); button.type = 'button'; button.textContent = '최신 자료 확인 · 입력 유지';
++  button.addEventListener('click', async () => {
++    try {
++      await refresh();
++      const row = payload.candidateId ? state.project?.candidates.find(c => c.id === payload.candidateId) : payload.inquiryId ? state.project?.inquiries.find(q => q.id === payload.inquiryId) : state.project;
++      if (!row) throw new Error('현재 자료에 접근할 수 없습니다. 입력 내용은 보존됩니다.');
++      const copy = document.createElement('p');
++      copy.textContent = '최신 자료: ' + (row.name ? `${row.name} · ${row.address} · ${row.memo || '메모 없음'}` : row.statusLabel || row.title) + ` (버전 ${row.version}). 입력 내용과 비교해 주세요.`;
++      const use = document.createElement('button'); use.type = 'button'; use.textContent = '최신 내용을 확인했어요 · 내 입력으로 재시도 준비';
++      use.addEventListener('click', () => { payload.version = row.version; form.querySelector('.save-status').textContent = '최신 버전을 확인했습니다. 입력을 검토하고 저장 버튼을 눌러 주세요.'; area.textContent = ''; });
++      area.replaceChildren(copy, use);
++    } catch (error) { area.textContent = error.message; }
++  });
++  area.append(button);
++}
++function bindForm(operation, target, payloadBase, transform, success) {
++  const form = body.querySelector('form');
++  form.addEventListener('submit', async event => {
++    event.preventDefault();
++    const button = form.querySelector('[type=submit]'); if (button.disabled) return;
++    const fields = new FormData(form);
++    const payload = { ...payloadBase, ...transform(fields) };
++    button.disabled = true; dialog.dataset.saving = 'true'; $('#closeDialog').disabled = true; form.querySelector('[data-close]').disabled = true;
++    const area = form.querySelector('.form-error'); area.textContent = '';
++    form.querySelector('.save-status').textContent = '서버에 저장하고 있습니다…';
++    try {
++      const result = await execute(operation, target, payload);
++      if (result.project) state.projectId = result.project.id;
++      if (result.inquiry) state.inquiryId = result.inquiry.id;
++      // A successful write stays successful even if the following read fails.
++      form.querySelector('.save-status').textContent = `저장 완료 · ${date(result.inquiry?.updatedAt || result.project?.updatedAt || result.project?.createdAt || new Date().toISOString())}`;
++      dialog.close(); announce(success);
++      try { await refresh(); restoreDialogFocus(); } catch (readError) { announce(`저장은 완료됐습니다. 목록을 다시 불러오지 못했습니다. ${readError.message}`, true); }
++    } catch (error) {
++      form.querySelector('.save-status').textContent = error.status && error.status < 500 ? '저장되지 않음 · 입력을 확인해 주세요.' : '저장 결과 미확인 · 같은 내용으로 재시도해 주세요.';
++      area.textContent = error.message;
++      if (error.code === 'VERSION_CONFLICT') conflictHelp(form, payloadBase);
++      area.focus();
++    } finally { button.disabled = false; delete dialog.dataset.saving; $('#closeDialog').disabled = false; form.querySelector('[data-close]').disabled = false; }
++  });
++}
++function showProject(trigger) {
++  modal('새 창업 사업', formShell(field('title', '사업 이름', '', { required: true, help: '예: 동두천 손세차장 창업' }), '사업 만들기'), trigger);
++  bindForm('projects', 'new', {}, f => ({ title: f.get('title') }), '창업 사업을 저장했습니다. 후보지를 등록해 주세요.');
++}
++function showCandidate(id, trigger) {
++  const c = state.project.candidates.find(c => c.id === id);
++  modal(c ? '후보지 수정' : '후보지 등록', formShell(`<p class="form-help">면적은 ㎡, 가격은 원 단위입니다. 빈칸과 실제 0원은 다르게 저장합니다.</p><div class="field-grid">${field('name', '후보지 이름', c?.name, { required: true, wide: true })}${field('address', '도로명주소·지번', c?.address, { required: true, max: 300, wide: true })}${field('areaSqm', '면적 (㎡)', c?.areaSqm, { type: 'number' })}${field('priceWon', '알려진 가격 (원)', c?.priceWon, { type: 'number' })}</div>${field('listingUrl', '매물 주소', c?.listingUrl, { type: 'url', max: 1500 })}${field('memo', '장단점·미확인 사항', c?.memo, { type: 'textarea', max: 4000 })}${select('lifecycle', '후보지 상태', lifecycleLabels, c?.lifecycle || 'reviewing')}<p class="form-help">보류·탈락은 삭제가 아닙니다. 기존 제출과 검토 기록은 보존됩니다.</p>`), trigger);
++  bindForm(`projects/${state.project.id}/candidates${c ? '/' + c.id : ''}`, c?.id || state.project.id, { ...(c ? { version: c.version, candidateId: c.id } : {}) }, f => Object.fromEntries(['name','address','areaSqm','priceWon','listingUrl','memo','lifecycle'].map(key => [key, f.get(key)])), '후보지를 저장했습니다.');
++}
++function showSubmit(id, trigger) {
++  const c = state.project.candidates.find(c => c.id === id);
++  modal('후보지 검토 의뢰', formShell(`<p class="form-help">아래 후보지의 현재 자료를 확인하고 제출해 주세요. 실제 연락이나 계약은 진행하지 않습니다.</p><div class="snapshot">${e(c.name)}\n${e(c.address)}\n면적 ${c.areaSqm == null ? '미입력' : e(c.areaSqm) + '㎡'} · 가격 ${e(money(c.priceWon))}\n${e(c.memo || '메모 없음')}\n후보지 자료 버전 ${c.version}</div>${field('question', '검토를 부탁할 내용', '', { type: 'textarea', max: 4000, required: true })}<label class="check-field"><input name="consent" type="checkbox" required>이 후보지 자료와 질문을 검토 담당자에게 전달하는 것을 확인했습니다.</label>`, '확인하고 검토 의뢰'), trigger);
++  bindForm(`projects/${state.project.id}/inquiries`, c.id, { version: c.version, candidateId: c.id }, f => ({ question: f.get('question'), consent: f.get('consent') === 'on' }), '검토 의뢰가 접수되었습니다. 접수번호와 처리 상태를 확인해 주세요.');
++}
++function showAssignment(trigger) {
++  modal('담당자 배정·변경', formShell(`${select('assigneeId', '배정 담당자', { '': '미배정으로 전환', ...Object.fromEntries(state.staff.map(p => [p.id, p.label])) }, state.project.assigneeId || '')}${field('reason', '배정·변경 사유 (내부 기록)', '', { type: 'textarea', required: true, max: 1000 })}<p class="form-help">확정 후 이전 담당자의 새 조회·수정·파일 요청은 차단됩니다.</p>`, '배정 확정'), trigger);
++  bindForm(`projects/${state.project.id}/assignment`, state.project.id, { version: state.project.version }, f => ({ assigneeId: f.get('assigneeId'), reason: f.get('reason') }), '담당자 배정을 저장했습니다.');
++}
++function proof(f) { return { source: f.get('source'), checkedBy: f.get('checkedBy'), checkedAt: f.get('checkedAt'), recheck: f.get('recheck') === 'on', recheckReason: f.get('recheckReason'), officialConfirmed: f.get('officialConfirmed') === 'on' }; }
++function showAction(action, trigger) {
++  const q = state.project.inquiries.find(q => q.id === state.inquiryId);
++  let contents = '', title = '', label = '저장하기';
++  if (action === 'transition') {
++    const allowed = { reviewing: ['received','hold','reopened'], more_info: ['reviewing','reopened'], hold: ['received','reviewing','more_info','reopened'], closed: ['received','reviewing','more_info','answered','hold','reopened'] };
++    const labels = { reviewing: '검토 중', more_info: '추가자료 요청', hold: '보류', closed: '종료' };
++    title = '처리 상태 변경'; contents = select('status', '다음 상태', Object.fromEntries(Object.entries(labels).filter(([key]) => allowed[key].includes(q.status)))) + field('body', '고객에게 보이는 사유·다음 행동', '', { type: 'textarea', required: true, max: 6000 });
++  } else if (action === 'reply' || action === 'correction') {
++    title = action === 'correction' ? '공개 답변 정정' : '공개 답변 작성'; label = '공개 답변 저장';
++    contents = field('body', '공개 답변', '', { type: 'textarea', required: true, max: 6000 }) + evidenceFields();
++    if (action === 'correction') contents += field('reason', '정정 사유 (고객 공개)', '', { required: true, max: 1000 });
++  } else if (action === 'review') {
++    title = '허가 사전 검토 항목 기록';
++    contents = select('item', '검토 항목', reviewLabels) + select('state', '확인 상태', reviewStates, 'recorded') + field('body', '검토 내용·미확인 사항', '', { type: 'textarea', required: true, max: 6000 }) + evidenceFields() + '<p class="form-help">확인 내용이 있어도 허가 확정을 뜻하지 않습니다. 정정 시 이전 기록도 보존됩니다.</p>';
++  } else { title = action === 'note' ? '내부 메모 작성' : action === 'followup' ? '같은 접수에 재문의' : '추가자료 내용 제출'; contents = field('body', action === 'note' ? '내부 메모 · 고객에게 공개되지 않음' : '추가로 전달할 내용', '', { type: 'textarea', required: true, max: 6000 }); }
++  modal(title, formShell(contents, label), trigger);
++  const input = { version: q.version, inquiryId: q.id, ...(action === 'correction' ? { supersedes: trigger.dataset.message } : {}) };
++  bindForm(`inquiries/${q.id}/${action === 'correction' ? 'reply' : action}`, q.id, input, f => ({ body: f.get('body'), ...(action === 'transition' ? { status: f.get('status') } : {}), ...(['reply','review','correction'].includes(action) ? proof(f) : {}), ...(action === 'review' ? { item: f.get('item'), state: f.get('state') } : {}), ...(action === 'correction' ? { reason: f.get('reason') } : {}) }), '기록을 저장했습니다.');
++  if (action === 'review') {
++    const form = body.querySelector('form');
++    form.querySelector('[name=state]').addEventListener('change', event => {
++      const required = event.target.value === 'recorded';
++      ['source','checkedBy','checkedAt'].forEach(name => { const el = form.elements.namedItem(name); el.required = required; if (event.target.value === 'unreviewed') el.value = ''; });
++    });
++  }
++}
++function showUpload(trigger) {
++  const q = state.project.inquiries.find(q => q.id === state.inquiryId);
++  const payloadBase = { version: q.version, inquiryId: q.id };
++  modal('현장 사진 첨부', formShell(`<label class="field">사진 선택<input type="file" name="photo" accept="image/png,image/jpeg,image/webp" required><small>시험 사진만 사용하세요. 한 장 2MB, 접수 한 건당 10장까지 저장합니다.</small><span class="field-error"></span></label>${state.actor.role === 'customer' ? '' : select('visibility', '공개 범위', { public: '고객 공개', internal: '내부 전용' })}`), trigger);
++  const form = body.querySelector('form');
++  form.addEventListener('submit', async event => {
++    event.preventDefault(); const button = form.querySelector('[type=submit]'); if (button.disabled) return;
++    const area = form.querySelector('.form-error'); area.textContent = ''; button.disabled = true; dialog.dataset.saving = 'true'; $('#closeDialog').disabled = true; form.querySelector('[data-close]').disabled = true;
++    try {
++      const file = form.elements.photo.files[0];
++      if (!file || file.size > 2_000_000 || !['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('PNG·JPEG·WebP 사진을 2MB 이하로 선택해 주세요.');
++      const data = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = () => reject(new Error('사진을 읽지 못했습니다.')); reader.readAsDataURL(file); });
++      await execute(`inquiries/${q.id}/attachments`, q.id, { ...payloadBase, name: file.name, mime: file.type, data, visibility: form.elements.visibility?.value || 'public' });
++      dialog.close(); announce('사진을 저장했습니다.');
++      try { await refresh(); restoreDialogFocus(); } catch { announce('사진은 저장됐습니다. 목록 새로고침이 필요합니다.'); }
++    } catch (error) { area.textContent = error.message; form.querySelector('.save-status').textContent = '저장 결과를 확인해 주세요. 선택한 사진은 유지됩니다.'; if (error.code === 'VERSION_CONFLICT') conflictHelp(form, payloadBase); area.focus(); }
++    finally { button.disabled = false; delete dialog.dataset.saving; $('#closeDialog').disabled = false; form.querySelector('[data-close]').disabled = false; }
++  });
++}
++function entryProof(m) { return `<div class="evidence">근거: ${e(m.source)}<br>확인: ${e(m.checkedBy)} · ${e(m.checkedAt)} · ${m.officialConfirmed ? '담당기관 확인 기록 있음' : '담당기관 확인 여부 미확인'}<br>${m.recheck ? '재확인 필요: ' + e(m.recheckReason) : '재확인 필요 표시 없음'}</div>`; }
++function renderInquiry(q) {
++  const customer = state.actor.role === 'customer';
++  const canReview = ['reviewing','reopened'].includes(q.status);
++  const currentReason = q.events.findLast(event => event.status === q.status && event.reason)?.reason;
++  return `<section class="inquiry-detail" id="inquiryDetail"><div class="detail-heading"><div><h3>${e(q.snapshot.name)}</h3><p class="receipt">${e(q.receipt)}</p></div><span class="badge ${q.status}">${e(q.statusLabel)}</span></div><p class="detail-question">${e(q.question)}</p>${currentReason ? `<p class="snapshot"><strong>안내·다음 행동</strong><br>${e(currentReason)}</p>` : ''}<p class="small-copy">마지막 저장 ${date(q.updatedAt)} · 후보지 제출 버전 ${q.candidateVersion}</p><details><summary>제출 당시 후보지 자료</summary><div class="snapshot">${e(q.snapshot.name)}\n${e(q.snapshot.address)}\n${e(q.snapshot.memo || '메모 없음')}\n면적 ${q.snapshot.area_sqm == null ? '미입력' : e(q.snapshot.area_sqm) + '㎡'} · 가격 ${e(money(q.snapshot.price_won))}</div></details><div class="inquiry-actions">${customer ? `${['answered','hold','closed'].includes(q.status) ? '<button data-action="followup">같은 접수에 재문의</button>' : ''}${q.status === 'more_info' ? '<button data-action="additional">추가자료 제출</button>' : ''}` : `${q.status !== 'closed' ? '<button data-action="transition">처리 상태 변경</button>' : ''}${canReview ? '<button data-action="review">허가 검토 항목 기록</button>' : ''}${q.status === 'reviewing' ? '<button class="primary" data-action="reply">공개 답변 작성</button>' : ''}<button data-action="note">내부 메모</button>`}<button data-action="upload">현장 사진 첨부</button></div>${q.attachments.length ? `<div class="attachment-list">${q.attachments.map(a => `<a href="/api/workspace/attachments/${e(a.id)}" download>${e(a.name)}${a.visibility === 'internal' ? ' · 내부 전용' : ''} ↓</a>`).join('')}</div>` : ''}${q.reviews.length ? `<h3 class="section-top">허가 검토 기록</h3>${q.reviews.map(r => `<article class="review-record"><strong>${e(reviewLabels[r.item])} · ${e(reviewStates[r.state])}</strong><p>${e(r.body)}</p>${r.state !== 'unreviewed' ? entryProof(r) : '<p class="small-copy">확인 주체·확인일 미확인</p>'}<span class="small-copy">기록 ${date(r.createdAt)}</span></article>`).join('')}` : ''}<h3 class="section-top">답변·대화 이력</h3>${q.messages.length ? q.messages.map(m => `<article class="thread-entry ${m.kind === 'note' ? 'note' : ''}"><div class="entry-meta"><strong>${e(messageLabels[m.kind])}${m.supersedes ? ' · 정정본' : ''}</strong><span>${e(m.author)} · ${date(m.createdAt)}</span></div><p>${e(m.body)}</p>${m.kind === 'reply' ? entryProof(m) : ''}${!customer && m.kind === 'reply' && q.status === 'answered' ? `<button class="text-button" data-action="correction" data-message="${e(m.id)}">이 답변 정정 기록 추가</button>` : ''}</article>`).join('') : '<p class="small-copy">아직 등록된 답변이 없습니다. 검토 상태는 이 화면에서 확인할 수 있습니다.</p>'}<details><summary>처리 이력 ${q.events.length}건</summary><ol class="event-list">${q.events.map(ev => `<li>${date(ev.createdAt)} · ${e(ev.status ? ({ received:'접수',reviewing:'검토 중',more_info:'추가자료 요청',answered:'답변 완료',hold:'보류',closed:'종료',reopened:'재문의' })[ev.status] : ev.kind === 'attachment' ? '사진 첨부' : ev.kind === 'note' ? '내부 메모' : '검토 기록')}${ev.reason ? ' · ' + e(ev.reason) : ''}${ev.correctionReason ? ' · 정정 사유: ' + e(ev.correctionReason) : ''}</li>`).join('')}</ol></details></section>`;
++}
++function render() {
++  const customer = state.actor.role === 'customer';
++  $('#newProjectButton').hidden = !customer;
++  if (!state.projects.length) {
++    app.innerHTML = `<div class="empty-state"><p class="eyebrow">ONE STEP AT A TIME</p><h2>${customer ? '첫 후보지부터 차근차근 준비해요' : '현재 확인할 사업이 없습니다'}</h2><p>${customer ? '사업을 만들고 후보지 주소와 궁금한 점을 정리하세요. 검토 결과와 이전 기록을 한곳에서 이어 볼 수 있습니다.' : state.actor.role === 'staff' ? '관리 책임자가 사업을 배정하면 이곳에 표시됩니다. 미배정 사업이나 다른 담당자의 자료는 표시되지 않습니다.' : '고객이 사업과 검토 의뢰를 등록하면 목록에서 확인하고 담당자를 배정할 수 있습니다.'}</p>${customer ? '<button class="primary" data-action="new-project">+ 첫 창업 사업 만들기</button>' : '<button data-action="refresh">새로고침</button>'}</div>`;
++    return;
++  }
++  const p = state.project;
++  const q = p?.inquiries.find(q => q.id === state.inquiryId);
++  const phase = !p?.candidates.length ? 0 : !p.inquiries.length ? 1 : !p.inquiries.some(q => q.status === 'answered') ? 2 : 3;
++  app.innerHTML = `<div class="workspace-layout"><aside class="project-sidebar" aria-label="내 사업 목록"><p class="sidebar-heading">${customer ? '내 창업 사업' : '확인 가능한 사업'} <span>${state.projects.length}</span></p>${state.projects.map(item => `<button class="project-link ${item.id === p?.id ? 'active' : ''}" data-action="project" data-id="${e(item.id)}" ${item.id === p?.id ? 'aria-current="true"' : ''}>${e(item.title)}<span>후보지 ${item.candidateCount} · 의뢰 ${item.inquiryCount}${!item.assigned ? ' · 미배정' : ''}</span></button>`).join('')}</aside><div class="project-content">${p ? `<div class="project-heading"><div><p class="eyebrow">MY BUSINESS</p><h2>${e(p.title)}</h2><p class="small-copy">마지막 변경 ${date(p.updatedAt)}</p></div><button data-action="refresh">새로고침</button></div><ol class="journey" aria-label="검토 진행 단계">${['후보지 정리','검토 의뢰','담당자 확인','결과 확인'].map((label,i) => `<li class="${i < phase ? 'done' : i === phase ? 'current' : ''}" ${i === phase ? 'aria-current="step"' : ''}><b>${i < phase ? '✓' : i + 1}</b>${label}</li>`).join('')}</ol>${state.actor.role === 'manager' ? `<section class="assignment-box"><h3>담당자 배정</h3><p class="small-copy">현재 ${e(state.staff.find(s => s.id === p.assigneeId)?.label || '미배정')}</p><button class="secondary" data-action="assign">담당자 배정·변경</button>${p.assignmentHistory.length ? `<details><summary>내부 배정 이력</summary><ul class="event-list">${p.assignmentHistory.map(h => `<li>${date(h.createdAt)} · ${e(h.actor)} · ${e(h.reason)}</li>`).join('')}</ul></details>` : ''}</section>` : ''}<div class="section-top"><h3>후보지 <span>${p.candidates.length}</span></h3>${customer ? '<button data-action="candidate">+ 후보지 등록</button>' : ''}</div>${p.candidates.length ? `<div class="candidate-grid">${p.candidates.map(c => `<article class="candidate-card"><span class="badge ${c.lifecycle}">${e(lifecycleLabels[c.lifecycle])}</span><h3>${e(c.name)}</h3><p class="candidate-address">${e(c.address)}</p><dl class="candidate-facts"><div><dt>면적</dt><dd>${c.areaSqm == null ? '미입력' : e(c.areaSqm) + '㎡'}</dd></div><div><dt>알려진 가격</dt><dd>${e(money(c.priceWon))}</dd></div></dl><div class="card-actions">${customer ? `<button class="secondary" data-action="submit" data-id="${e(c.id)}">후보지 검토 맡기기</button><button data-action="candidate" data-id="${e(c.id)}">후보지 수정</button>` : '<span class="small-copy">고객이 제출한 후보지 자료입니다.</span>'}</div><p class="small-copy">저장 ${date(c.updatedAt)} · 버전 ${c.version}</p></article>`).join('')}</div>` : '<div class="empty-state"><h3>아직 등록한 후보지가 없습니다</h3><p>후보지 이름과 주소를 정리해 검토를 준비하세요.</p></div>'}<div class="section-top"><h3>검토 의뢰 <span>${p.inquiries.length}</span></h3><span class="small-copy">구매 의무 없이 검토할 수 있어요</span></div>${p.inquiries.length ? `<div class="inquiry-list">${p.inquiries.map(item => `<button data-action="inquiry" data-id="${e(item.id)}" class="${item.id === q?.id ? 'active' : ''}" ${item.id === q?.id ? 'aria-current="true"' : ''}><span>${e(item.snapshot.name)}<small>${e(item.receipt)}</small></span><span class="badge ${item.status}">${e(item.statusLabel)}</span></button>`).join('')}</div>${q ? renderInquiry(q) : ''}` : '<p class="small-copy">후보지의 ‘검토 맡기기’를 눌러 내용을 확인한 뒤 제출하세요.</p>'}` : ''}</div></div>`;
++}
++app.addEventListener('click', async event => {
++  const button = event.target.closest('[data-action]'); if (!button) return;
++  const action = button.dataset.action;
++  try {
++    if (action === 'new-project') showProject(button);
++    else if (action === 'candidate') showCandidate(button.dataset.id, button);
++    else if (action === 'submit') showSubmit(button.dataset.id, button);
++    else if (action === 'assign') showAssignment(button);
++    else if (action === 'project') { state.projectId = button.dataset.id; state.inquiryId = null; await refresh(); }
++    else if (action === 'inquiry') { state.inquiryId = button.dataset.id; render(); $('#inquiryDetail').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
++    else if (action === 'refresh') { await refresh(); announce('최신 자료를 불러왔습니다.'); }
++    else if (action === 'upload') showUpload(button);
++    else showAction(action, button);
++  } catch (error) { announce(error.message, true); }
++});
++$('#newProjectButton').addEventListener('click', event => showProject(event.currentTarget));
++async function chooseActor(id) {
++  ++refreshSequence;
++  state.actor = (await api('demo/actor', { actorId: id })).actor;
++  state.projectId = null; state.inquiryId = null; state.project = null;
++  state.staff = state.actor.role === 'manager' ? (await api('staff')).staff : [];
++  await refresh(); announce(`${state.actor.label}의 시험 자료입니다.`);
++}
++$('#actorSelect').addEventListener('change', async event => {
++  event.target.disabled = true;
++  try { await chooseActor(event.target.value); } catch (error) { announce(error.message, true); app.textContent = '자료를 불러오지 못했습니다. 새로고침해서 시험 역할을 다시 선택해 주세요.'; }
++  finally { event.target.disabled = false; }
++});
++try {
++  const meta = await api('demo');
++  if (!meta.demo) throw new Error('이 진행판은 로그인 준비 전 로컬 시험 환경에서만 실행됩니다.');
++  $('#actorSelect').innerHTML = meta.principals.map(p => `<option value="${e(p.id)}">${e(p.label)}</option>`).join('');
++  if (meta.actor) {
++    state.actor = meta.actor; $('#actorSelect').value = meta.actor.id;
++    state.staff = meta.actor.role === 'manager' ? (await api('staff')).staff : [];
++    await refresh();
++  } else await chooseActor('customer-a');
++  $('#actorSelect').disabled = false;
++} catch (error) {
++  app.innerHTML = `<div class="empty-state"><h2>개발 미리보기 연결이 필요합니다</h2><p>${e(error.message)}</p></div>`;
++  announce('운영 로그인과 고객 접수는 이번 구현 범위에 포함하지 않았습니다.', true);
++}
+--- /dev/null
++++ b/src/workspace.css
+@@ -0,0 +1,125 @@
++:root { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #10243f; background: #f2f5f9; font-synthesis: none; line-height: 1.6; --blue: #245fe5; --muted: #5e6d80; --line: #dce3ed; }
++* { box-sizing: border-box; }
++body { margin: 0; }
++button,input,textarea,select { font: inherit; }
++button,a,input,select,textarea { -webkit-tap-highlight-color: transparent; }
++button { cursor: pointer; }
++button:disabled { cursor: wait; opacity: .6; }
++a { color: inherit; text-underline-offset: 4px; }
++:focus-visible { outline: 3px solid #2563eb; outline-offset: 4px; }
++button { min-height: 44px; border: 1px solid #b7c5d8; border-radius: 8px; background: white; color: #10243f; padding: 9px 15px; font-weight: 700; }
++.primary { color: white; background: #10243f; border-color: #10243f; }
++.secondary { background: #edf3ff; border-color: #b7ceff; color: #244c9c; }
++.text-button { padding: 4px 8px; border-color: transparent; background: transparent; color: #2454b3; text-decoration: underline; }
++.icon-button { width: 44px; padding: 0; font-size: 28px; }
++[hidden] { display: none !important; }
++.skip-link { position: fixed; top: -100px; left: 16px; z-index: 10; background: white; padding: 12px; }
++.skip-link:focus { top: 12px; }
++.demo-banner { display: flex; justify-content: center; gap: 12px; padding: 9px 24px; background: #e6edf8; color: #344e73; font-size: 12px; }
++.workspace-header { display: flex; align-items: center; gap: 25px; max-width: 1440px; margin: auto; padding: 20px 4%; border-bottom: 1px solid var(--line); }
++.workspace-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
++.workspace-brand > span { display: grid; place-items: center; width: 43px; height: 43px; background: #10243f; color: white; border-radius: 10px; font-size: 28px; font-family: serif; }
++.workspace-brand strong { font-size: 17px; line-height: 1.4; }
++.workspace-brand strong > span { display: block; font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: .12em; }
++.guide-link { margin-left: auto; font-size: 13px; }
++.actor-control { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
++.actor-control select { width: 150px; }
++main { max-width: 1320px; margin: 0 auto; padding: 45px 32px 65px; }
++.page-intro { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
++.eyebrow { color: #486998; font-size: 10px; font-weight: 800; letter-spacing: .16em; margin: 0 0 5px; }
++h1 { font-size: clamp(27px, 4vw, 37px); letter-spacing: -.055em; line-height: 1.3; margin: 0 0 12px; }
++h2 { margin: 0; font-size: 21px; letter-spacing: -.035em; }
++h3 { margin: 0; font-size: 16px; }
++.page-intro > div > p:last-child { margin: 0; color: var(--muted); font-size: 14px; }
++#globalStatus { min-height: 22px; color: #345375; font-size: 13px; overflow-wrap: anywhere; }
++#globalStatus.error { color: #ad2d36; }
++.workspace-layout { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 25px; align-items: start; }
++.project-sidebar { padding: 18px 0; }
++.sidebar-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 10px 12px; font-size: 12px; color: var(--muted); }
++.project-link { width: 100%; text-align: left; background: transparent; border: 1px solid transparent; margin-bottom: 8px; padding: 15px; font-weight: 600; overflow-wrap: anywhere; }
++.project-link.active { background: white; border-color: var(--line); box-shadow: 0 3px 15px #10243f05; }
++.project-link > span { display: block; color: var(--muted); margin-top: 5px; font-size: 11px; font-weight: 400; }
++.project-content { min-width: 0; }
++.project-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
++.project-heading h2 { font-size: 26px; overflow-wrap: anywhere; }
++.project-heading > button { flex-shrink: 0; white-space: nowrap; }
++.small-copy { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
++.journey { display: grid; grid-template-columns: repeat(4,1fr); padding: 24px 0; margin: 0 0 24px; list-style: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 12px; }
++.journey li { display: flex; align-items: center; gap: 9px; color: #7a8797; font-size: 12px; }
++.journey b { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #c8d3e0; border-radius: 50%; font-size: 11px; flex-shrink: 0; }
++.journey .done { color: #234b96; }
++.journey .done b { background: #dfebff; border-color: #c7dafe; }
++.journey .current { color: #10243f; font-weight: 700; }
++.journey .current b { background: #10243f; color: white; border-color: #10243f; }
++.section-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 25px 0 12px; }
++.section-top h3 > span { color: #5a73a0; margin-left: 6px; font-size: 12px; }
++.candidate-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
++.candidate-card,.assignment-box,.inquiry-detail,.empty-state,.inquiry-list { background: white; border: 1px solid var(--line); border-radius: 12px; }
++.candidate-card { padding: 21px; min-width: 0; }
++.candidate-card h3 { margin-top: 10px; overflow-wrap: anywhere; }
++.candidate-address { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; margin: 6px 0 16px; }
++.candidate-facts { display: flex; gap: 22px; margin: 15px 0 20px; }
++.candidate-facts dt { font-size: 10px; color: var(--muted); }
++.candidate-facts dd { margin: 2px 0 0; font-size: 14px; font-weight: 700; }
++.card-actions { display: flex; flex-wrap: wrap; gap: 7px; }
++.card-actions button { font-size: 12px; }
++.badge { display: inline-block; padding: 3px 9px; border-radius: 5px; background: #edf3fc; color: #375e97; font-size: 11px; font-weight: 700; }
++.badge.answered,.badge.selected { background: #e4f2ec; color: #256a4e; }
++.badge.hold,.badge.more_info { background: #fff0d9; color: #875a15; }
++.badge.rejected,.badge.closed { background: #eceef2; color: #626c7b; }
++.empty-state { padding: 45px 25px; text-align: center; }
++.empty-state p { color: var(--muted); font-size: 13px; max-width: 450px; margin: 12px auto 20px; }
++.assignment-box { padding: 22px; margin-bottom: 20px; }
++.assignment-box summary { font-size: 12px; color: var(--muted); cursor: pointer; }
++.assignment-box form { margin-bottom: 15px; }
++.inquiry-list { padding: 5px 18px; }
++.inquiry-list button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 18px 0; border: 0; border-bottom: 1px solid #eef1f6; border-radius: 0; }
++.inquiry-list button:last-child { border-bottom: 0; }
++.inquiry-list button.active { color: var(--blue); }
++.inquiry-list small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
++.inquiry-detail { margin-top: 18px; padding: 25px; scroll-margin-top: 20px; }
++.detail-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
++.receipt { font-size: 11px; color: #607b9f; margin: 4px 0; overflow-wrap: anywhere; }
++.detail-question { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; margin: 18px 0; }
++details { margin: 15px 0; }
++summary { cursor: pointer; font-size: 12px; color: #47618a; }
++.snapshot { margin-top: 12px; background: #f4f7fb; padding: 15px; border-radius: 8px; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
++.inquiry-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
++.inquiry-actions button { font-size: 12px; }
++.thread-entry { border-bottom: 1px solid #e8edf5; padding: 18px 0; }
++.thread-entry:last-child { border-bottom: 0; }
++.thread-entry.note { background: #f5f1fb; padding: 16px; border-radius: 8px; margin: 12px 0; }
++.entry-meta { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; color: #57708d; font-size: 11px; }
++.thread-entry p,.review-record p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0; font-size: 13px; }
++.evidence { color: var(--muted); font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
++.review-record { border-left: 3px solid #bed0eb; padding: 7px 14px; margin: 15px 0; }
++.attachment-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
++.attachment-list a { font-size: 12px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; }
++.event-list { color: var(--muted); font-size: 11px; padding-left: 18px; }
++.event-list li { margin: 8px 0; overflow-wrap: anywhere; }
++dialog { width: min(650px,calc(100% - 28px)); max-height: calc(100dvh - 36px); border: 1px solid #c9d3e2; border-radius: 15px; padding: 0; color: #10243f; box-shadow: 0 24px 90px #10243f30; }
++dialog::backdrop { background: #07152780; }
++.dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 25px 18px; border-bottom: 1px solid var(--line); }
++#dialogBody { padding: 22px 25px 28px; }
++form { margin: 0; }
++.field-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
++.field-grid > .wide { grid-column: 1 / -1; }
++label.field { display: block; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
++label.field small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; margin: 5px 0; }
++input,select,textarea { min-height: 44px; width: 100%; padding: 10px 12px; color: #10243f; background: #fff; border: 1px solid #bfcbdc; border-radius: 6px; min-width: 0; }
++textarea { resize: vertical; min-height: 100px; }
++label.field input,label.field select,label.field textarea { display: block; margin-top: 6px; }
++input[type=checkbox] { width: 18px; min-height: 18px; height: 18px; margin: 3px 0 0; flex-shrink: 0; }
++.check-field { display: flex; align-items: start; gap: 9px; font-size: 12px; margin-bottom: 16px; }
++.form-error { font-size: 12px; color: #aa2637; background: #fff0f0; border-radius: 7px; padding: 12px; margin: 14px 0; overflow-wrap: anywhere; }
++.form-error:empty { display: none; }
++.form-error button { display: block; margin-top: 10px; font-size: 12px; }
++.field-error { display: block; color: #aa2637; font-size: 11px; margin: 4px 0; }
++[aria-invalid=true] { border-color: #aa2637; }
++.form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
++.form-help { color: var(--muted); font-size: 12px; }
++.save-status { min-height: 22px; font-size: 12px; color: #446749; margin: 12px 0 0; }
++.workspace-footer { text-align: center; padding: 20px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); }
++@media(max-width:800px) { .workspace-layout { grid-template-columns: 1fr; gap: 12px; } .project-sidebar { display: flex; overflow-x: auto; gap: 8px; padding: 0 0 10px; } .sidebar-heading { display: none; } .project-link { min-width: 170px; max-width: 230px; flex-shrink: 0; margin: 0; } .workspace-header { flex-wrap: wrap; gap: 13px; } .actor-control { margin-left: auto; } .guide-link { font-size: 12px; } }
++@media(max-width:520px) { .demo-banner { flex-direction: column; gap: 0; padding: 8px 18px; font-size: 10px; } .workspace-header { padding: 15px 18px; } .workspace-brand strong { font-size: 15px; } .guide-link { margin-left: auto; } .actor-control { width: 100%; justify-content: space-between; } .actor-control select { width: 170px; } main { padding: 30px 18px 45px; } .page-intro { align-items: start; flex-direction: column; gap: 17px; } .page-intro > button { width: 100%; } .page-intro > div > p:last-child { font-size: 12px; } .project-heading h2 { font-size: 22px; } .journey { gap: 8px; padding: 17px 0; } .journey li { flex-direction: column; align-items: start; gap: 6px; font-size: 10px; } .candidate-grid { grid-template-columns: 1fr; } .inquiry-detail,.assignment-box { padding: 18px; } .detail-heading { flex-wrap: wrap; } .inquiry-actions > button { flex: 1 1 auto; } .field-grid { grid-template-columns: 1fr; } .dialog-header { padding: 17px 18px; } #dialogBody { padding: 18px; } .form-actions > button { flex: 1; } .inquiry-list { padding: 3px 14px; } }
++@media print { .demo-banner,.workspace-header,.project-sidebar,.page-intro button,.inquiry-actions,.card-actions,.assignment-box,#globalStatus,.workspace-footer { display:none !important; } body { background:white; } main { padding:0; } .workspace-layout { display:block; } .candidate-card,.inquiry-detail { break-inside:avoid; box-shadow:none; } }
+--- /dev/null
++++ b/scripts/test-workspace.mjs
+@@ -0,0 +1,255 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { randomUUID } from 'node:crypto';
++import { mkdtempSync, rmSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { request as httpRequest } from 'node:http';
++import { createWorkspaceStore, WorkspaceError } from '../workspace-store.mjs';
++import { createWorkspacePreview, demoPrincipals } from '../workspace-preview.mjs';
++
++const id = () => randomUUID();
++const proof = { source: '시험용 관할기관 회신', checkedBy: '시험 확인 주체', checkedAt: '2026-11-07', recheck: true, recheckReason: '현장과 실제 담당기관의 추가 확인 필요' };
++const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
++function expectError(work, status, code) { assert.throws(work, error => error instanceof WorkspaceError && error.status === status && (!code || error.code === code)); }
++function fixture(t, path = ':memory:') {
++  const s = createWorkspaceStore(path);
++  for (const p of demoPrincipals) s.registerPrincipal(p);
++  s.registerPrincipal({ id: 'manager-other', label: '다른 팀 책임자', role: 'manager', teamId: 'other-team' });
++  t.after(() => s.close());
++  const p = s.createProject('customer-a', { requestId: id(), title: '시험 창업 사업' });
++  const c = s.saveCandidate('customer-a', p.id, null, { requestId: id(), name: '후보지 가', address: '시험용 주소', areaSqm: '', priceWon: 0, memo: '최초 후보지 자료' }).project.candidates[0];
++  const input = { requestId: id(), candidateId: c.id, version: c.version, consent: true, question: '창업 가능성을 사전 검토해 주세요.' };
++  const q = s.submit('customer-a', p.id, input);
++  const assign = (actorId = 'staff-a') => s.assign('manager', p.id, { requestId: id(), version: s.project('manager', p.id).version, assigneeId: actorId, reason: '시험 배정 사유' });
++  const act = (actorId, action, body = {}) => s.act(actorId, q.id, action, { requestId: id(), version: s.inquiry(actorId, q.id).version, body: '시험 업무 기록', ...body });
++  return { s, p, c, q, input, assign, act };
++}
++
++test('A01: customer registers, manager assigns, staff replies, same identity sees persisted result', t => {
++  const { s, p, q, assign, act } = fixture(t);
++  assert.equal(s.listProjects('staff-a').length, 0);
++  assign(); act('staff-a', 'transition', { status: 'reviewing' });
++  const replied = act('staff-a', 'reply', { body: '회신을 참고하고 현장을 추가 확인하세요.', ...proof });
++  assert.equal(replied.status, 'answered');
++  const viewed = s.project('customer-a', p.id).inquiries[0];
++  assert.equal(viewed.receipt, q.receipt); assert.equal(viewed.messages.length, 1);
++  assert.equal(viewed.messages[0].checkedBy, proof.checkedBy);
++});
++test('A02 A03 A05 A06: ownership, team scope and receipt cannot be forged', t => {
++  const { s, p, c, q } = fixture(t);
++  for (const actor of ['customer-b', 'staff-a', 'staff-b', 'manager-other']) {
++    expectError(() => s.project(actor, p.id), 404);
++    expectError(() => s.inquiry(actor, q.id), 404);
++    expectError(() => s.saveCandidate(actor, p.id, c.id, { requestId: id(), version: c.version, name: '공격', address: '위조' }), 404);
++  }
++  expectError(() => s.inquiry('customer-b', q.receipt), 404);
++  assert.equal(s.listProjects('customer-b').length, 0);
++  const forged = s.createProject('customer-b', { requestId: id(), title: '내 사업', ownerId: 'customer-a', role: 'manager', assigneeId: 'staff-a' });
++  expectError(() => s.project('customer-a', forged.id), 404);
++});
++test('candidate input: missing differs from zero; bad units, negatives and unsafe URLs rejected', t => {
++  const { s, p, c } = fixture(t);
++  assert.equal(c.areaSqm, null); assert.equal(c.priceWon, 0);
++  for (const extra of [{ priceWon: -1 }, { areaSqm: '5평' }, { priceWon: Number.MAX_SAFE_INTEGER + 1 }, { listingUrl: 'javascript:alert(1)' }, { areaSqm: [] }]) {
++    expectError(() => s.saveCandidate('customer-a', p.id, null, { requestId: id(), name: '후보', address: '주소', ...extra }), 400);
++  }
++  assert.equal(s.project('customer-a', p.id).candidates.length, 1);
++});
++test('A07 A08: retried submission returns original receipt and rejects different contents', t => {
++  const { s, p, q, input } = fixture(t);
++  assert.equal(s.submit('customer-a', p.id, input).receipt, q.receipt);
++  expectError(() => s.submit('customer-a', p.id, { ...input, question: '다른 질문' }), 409, 'IDEMPOTENCY_CONFLICT');
++  assert.equal(s.project('customer-a', p.id).inquiries.length, 1);
++});
++test('project and candidate creation use durable submission keys too', t => {
++  const { s } = fixture(t);
++  const payload = { requestId: id(), title: '재시도 사업' };
++  const first = s.createProject('customer-b', payload), second = s.createProject('customer-b', payload);
++  assert.equal(first.id, second.id);
++  const candidate = { requestId: id(), name: '새 후보', address: '새 주소' };
++  assert.equal(s.saveCandidate('customer-b', first.id, null, candidate).candidateId, s.saveCandidate('customer-b', first.id, null, candidate).candidateId);
++  assert.equal(s.project('customer-b', first.id).candidates.length, 1);
++});
++test('A24 A14: stale candidate writes fail; hold and new candidates preserve submitted snapshot', t => {
++  const { s, p, c, q } = fixture(t);
++  const edited = { requestId: id(), version: c.version, name: '후보지 수정', address: '변경 주소', memo: '새 메모', lifecycle: 'rejected' };
++  s.saveCandidate('customer-a', p.id, c.id, edited);
++  expectError(() => s.saveCandidate('customer-a', p.id, c.id, { ...edited, requestId: id(), memo: '오래된 덮어쓰기' }), 409, 'VERSION_CONFLICT');
++  s.saveCandidate('customer-a', p.id, null, { requestId: id(), name: '대체 후보', address: '대체 주소', lifecycle: 'selected' });
++  const viewed = s.project('customer-a', p.id);
++  assert.equal(viewed.candidates.length, 2); assert.equal(viewed.candidates[0].lifecycle, 'rejected');
++  assert.equal(s.inquiry('customer-a', q.id).snapshot.memo, '최초 후보지 자료');
++  assert.equal(s.inquiry('customer-a', q.id).candidateVersion, 1);
++});
++test('A10: only scoped manager can assign; staff cannot claim the unassigned queue', t => {
++  const { s, p, assign } = fixture(t);
++  expectError(() => s.assign('customer-a', p.id, { requestId: id() }), 403);
++  expectError(() => s.assign('staff-a', p.id, { requestId: id() }), 404);
++  expectError(() => s.staffList('staff-a'), 403);
++  expectError(() => s.assign('manager', p.id, { requestId: id(), version: 1, assigneeId: 'customer-b', reason: '위조' }), 400);
++  assign();
++  expectError(() => s.assign('staff-a', p.id, { requestId: id() }), 403);
++  assert.equal(s.project('manager', p.id).assignmentHistory.length, 1);
++});
++test('A11: reassignment revokes prior staff reads, mutations and cached retry paths', t => {
++  const { s, p, q, assign } = fixture(t); assign();
++  const input = { requestId: id(), version: q.version, status: 'reviewing', body: '검토 시작' };
++  s.act('staff-a', q.id, 'transition', input);
++  assign('staff-b');
++  expectError(() => s.project('staff-a', p.id), 404);
++  expectError(() => s.act('staff-a', q.id, 'transition', input), 404);
++  expectError(() => s.act('staff-a', q.id, 'note', { requestId: id(), version: 2, body: '권한 회수 후 메모' }), 404);
++  assert.equal(s.listProjects('staff-a').length, 0); assert.equal(s.listProjects('staff-b').length, 1);
++  assert.equal(s.inquiry('staff-b', q.id).status, 'reviewing');
++});
++test('A13: allowed state transitions, public reasons and reopening preserve original receipt', t => {
++  const { s, q, assign, act } = fixture(t); assign();
++  expectError(() => act('staff-a', 'transition', { status: 'answered' }), 409, 'INVALID_TRANSITION');
++  expectError(() => act('customer-a', 'transition', { status: 'closed' }), 403);
++  expectError(() => act('staff-a', 'transition', { status: 'hold', body: '' }), 400);
++  act('staff-a', 'transition', { status: 'hold', body: '도로 확인을 기다립니다.' });
++  let current = act('customer-a', 'followup', { body: '도로 자료를 추가했습니다.' });
++  assert.equal(current.receipt, q.receipt); assert.equal(current.status, 'reopened');
++  act('staff-a', 'transition', { status: 'more_info' });
++  current = act('customer-a', 'additional', { body: '요청받은 자료 내용입니다.' });
++  assert.equal(current.status, 'reviewing');
++  act('staff-a', 'reply', { ...proof });
++  act('staff-a', 'transition', { status: 'closed' });
++  current = act('customer-a', 'followup');
++  assert.equal(current.status, 'reopened'); assert.equal(current.receipt, q.receipt);
++  assert.equal(current.messages.filter(m => m.kind === 'reply').length, 1);
++});
++test('A16: review evidence, unknown fields and correction history remain distinct', t => {
++  const { s, q, assign, act } = fixture(t); assign(); act('staff-a', 'transition', { status: 'reviewing' });
++  const before = s.inquiry('customer-a', q.id);
++  expectError(() => act('staff-a', 'review', { item: 'land', state: 'recorded' }), 400);
++  expectError(() => act('staff-a', 'review', { item: 'land', state: 'possible', ...proof }), 400);
++  assert.equal(s.inquiry('customer-a', q.id).version, before.version);
++  act('staff-a', 'review', { item: 'land', state: 'unreviewed', ...proof });
++  let current = s.inquiry('customer-a', q.id); assert.equal(current.reviews[0].checkedAt, ''); assert.equal(current.reviews[0].checkedBy, '');
++  act('staff-a', 'review', { item: 'land', state: 'recorded', ...proof });
++  act('staff-a', 'review', { item: 'land', state: 'needs_review', ...proof, source: '정정 근거', body: '후속 자료 검토 필요' });
++  current = s.inquiry('customer-a', q.id); assert.equal(current.reviews.length, 3); assert.equal(current.reviews[1].source, proof.source);
++});
++test('public answer corrections append a version and keep original content', t => {
++  const { s, q, assign, act } = fixture(t); assign(); act('staff-a', 'transition', { status: 'reviewing' });
++  const first = act('staff-a', 'reply', { ...proof, body: '최초 공개 답변' });
++  const corrected = act('staff-a', 'reply', { ...proof, body: '정정된 공개 답변', supersedes: first.messages[0].id, reason: '추가 회신 반영' });
++  assert.equal(corrected.messages[0].body, '최초 공개 답변'); assert.equal(corrected.messages[1].supersedes, first.messages[0].id);
++  assert.equal(s.inquiry('customer-a', q.id).events.at(-1).correctionReason, '추가 회신 반영');
++});
++test('A12: notes and private events never enter customer serialization', t => {
++  const { s, p, q, assign, act } = fixture(t); assign();
++  act('staff-a', 'note', { body: 'INTERNAL-ONLY-SENTINEL' });
++  const staff = JSON.stringify(s.project('staff-a', p.id)); assert(staff.includes('INTERNAL-ONLY-SENTINEL'));
++  const customer = JSON.stringify(s.project('customer-a', p.id)); assert(!customer.includes('INTERNAL-ONLY-SENTINEL')); assert(!customer.includes('assignmentHistory')); assert(!customer.includes('시험 배정 사유'));
++  assert.equal(s.inquiry('customer-a', q.id).events.length, 1);
++});
++test('A04 A11 A12: file access checks owner, visibility and current assignment on every request', t => {
++  const { s, q, assign } = fixture(t); assign();
++  let current = s.attach('staff-a', q.id, { requestId: id(), version: q.version, name: '내부.png', mime: 'image/png', data: png, visibility: 'internal' });
++  const privateId = current.attachments[0].id;
++  expectError(() => s.attachment('customer-a', privateId), 404);
++  assert.equal(s.inquiry('customer-a', q.id).attachments.length, 0);
++  current = s.attach('customer-a', q.id, { requestId: id(), version: current.version, name: '현장.png', mime: 'image/png', data: png });
++  const publicId = current.attachments[0].id;
++  assert(s.attachment('customer-a', publicId).data.length > 20);
++  expectError(() => s.attachment('customer-b', publicId), 404);
++  assign('staff-b');
++  expectError(() => s.attachment('staff-a', privateId), 404); expectError(() => s.attachment('staff-a', publicId), 404);
++  assert.equal(s.attachment('staff-b', privateId).mime, 'image/png');
++});
++test('file validation rejects HTML, invalid MIME, over-limit bytes and private customer uploads', t => {
++  const { s, q } = fixture(t);
++  for (const value of [
++    { mime: 'image/png', data: Buffer.from('<script>bad</script>').toString('base64') },
++    { mime: 'text/html', data: png }, { mime: 'image/png', data: '!!!!' },
++    { mime: 'image/png', data: Buffer.concat([Buffer.from(png, 'base64'), Buffer.alloc(2_000_001)]).toString('base64') },
++  ]) expectError(() => s.attach('customer-a', q.id, { requestId: id(), version: q.version, name: 'test.png', ...value }), 400);
++  expectError(() => s.attach('customer-a', q.id, { requestId: id(), version: q.version, name: 'test.png', mime: 'image/png', data: png, visibility: 'internal' }), 403);
++  assert.equal(s.inquiry('customer-a', q.id).attachments.length, 0);
++});
++test('attachment retries do not create duplicate files or events', t => {
++  const { s, q } = fixture(t);
++  const input = { requestId: id(), version: q.version, name: '현장.png', mime: 'image/png', data: png };
++  const first = s.attach('customer-a', q.id, input), retried = s.attach('customer-a', q.id, input);
++  assert.equal(first.attachments[0].id, retried.attachments[0].id); assert.equal(retried.attachments.length, 1); assert.equal(retried.events.length, 2);
++});
++test('A22 A23: stale state and answer requests do not duplicate or overwrite', t => {
++  const { s, q, assign } = fixture(t); assign();
++  s.act('staff-a', q.id, 'transition', { requestId: id(), version: 1, status: 'reviewing', body: '시작' });
++  expectError(() => s.act('staff-a', q.id, 'transition', { requestId: id(), version: 1, status: 'hold', body: '늦은 요청' }), 409, 'VERSION_CONFLICT');
++  const input = { requestId: id(), version: 2, body: '최종 시험 답변', ...proof };
++  const first = s.act('staff-a', q.id, 'reply', input);
++  assert.equal(s.act('staff-a', q.id, 'reply', input).messages.length, 1);
++  expectError(() => s.act('staff-a', q.id, 'reply', { ...input, requestId: id() }), 409, 'VERSION_CONFLICT');
++  expectError(() => s.act('staff-a', q.id, 'reply', { ...input, body: '변경 공격' }), 409, 'IDEMPOTENCY_CONFLICT');
++  assert.equal(first.messages[0].body, s.inquiry('customer-a', q.id).messages[0].body);
++});
++test('failed multi-record change rolls back messages, versions and events together', t => {
++  const { s, q, assign, act } = fixture(t); assign();
++  const before = s.inquiry('manager', q.id);
++  // This fails in event validation after note insertion and version bump.
++  expectError(() => act('staff-a', 'note', { body: '중간에 실패할 기록', supersedes: id(), reason: '' }), 400);
++  assert.deepEqual(s.inquiry('manager', q.id), before);
++});
++test('SQLite reopen preserves original receipt, revisions and retry key', t => {
++  const directory = mkdtempSync(join(tmpdir(), 'workspace-durable-')); t.after(() => rmSync(directory, { recursive: true, force: true }));
++  const path = join(directory, 'workspace.sqlite');
++  let s = createWorkspaceStore(path); for (const p of demoPrincipals) s.registerPrincipal(p);
++  const input = { requestId: id(), title: '재실행 보존 사업' }; const p = s.createProject('customer-a', input); s.close();
++  s = createWorkspaceStore(path);
++  try { assert.equal(s.createProject('customer-a', input).id, p.id); assert.equal(s.listProjects('customer-a').length, 1); } finally { s.close(); }
++});
++test('demo refuses implicit opt-in and production before creating any data', () => {
++  assert.throws(() => createWorkspacePreview({ dataDir: '/tmp/not-created-workspace' }), /explicit opt-in/);
++  assert.throws(() => createWorkspacePreview({ dataDir: '/tmp/not-created-workspace', demo: true, environment: 'production' }), /production/);
++});
++
++test('HTTP boundary: cookie identity, CSRF, lost response retry, parallel writes and revoked files', async t => {
++  const directory = mkdtempSync(join(tmpdir(), 'workspace-http-')); const app = createWorkspacePreview({ dataDir: directory, demo: true, environment: 'test' });
++  const base = await app.listen();
++  t.after(async () => { await new Promise(resolve => app.server.close(resolve)); rmSync(directory, { recursive: true, force: true }); });
++  const cookies = {};
++  async function login(who) { const r = await fetch(base + '/api/workspace/demo/actor', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ actorId: who }) }); assert.equal(r.status, 200); cookies[who] = r.headers.get('set-cookie').split(';')[0]; }
++  async function call(who, path, payload, extra = {}) {
++    const response = await fetch(base + '/api/workspace/' + path, { headers: { ...(cookies[who] ? { cookie: cookies[who] } : {}), ...(payload ? { 'content-type': 'application/json' } : {}), ...extra }, ...(payload ? { method: 'POST', body: JSON.stringify(payload) } : {}) });
++    return { response, payload: await response.json().catch(() => ({})) };
++  }
++  assert.equal((await call('none', 'projects')).response.status, 401);
++  for (const who of ['customer-a','customer-b','manager','staff-a','staff-b']) await login(who);
++  assert.equal((await call('customer-a', 'projects', { requestId: id(), title: '공격' }, { origin: 'https://evil.invalid' })).response.status, 403);
++  const invalidHostStatus = await new Promise((resolve, reject) => {
++    const req = httpRequest(base + '/api/workspace/demo', { headers: { host: 'evil.invalid' } }, res => { res.resume(); resolve(res.statusCode); });
++    req.on('error', reject); req.end();
++  });
++  assert.equal(invalidHostStatus, 403);
++  const original = app.server.listeners('request');
++  app.server.on('request', (req, res) => { if (req.headers['x-drop-response'] === '1') res.end = () => { res.destroy(); }; });
++  const input = { requestId: id(), title: '응답 유실 사업', ownerId: 'customer-b', role: 'manager' };
++  await assert.rejects(() => call('customer-a', 'projects', input, { 'x-drop-response': '1' }));
++  const p = (await call('customer-a', 'projects', input)).payload.project;
++  assert.equal((await call('customer-a', 'projects')).payload.projects.length, 1);
++  assert.equal((await call('customer-b', 'projects/' + p.id)).response.status, 404);
++  const candidateInput = { requestId: id(), name: 'HTTP 후보지', address: '시험 주소' };
++  const candidateResult = (await call('customer-a', `projects/${p.id}/candidates`, candidateInput)).payload;
++  const c = candidateResult.project.candidates[0];
++  const submitted = await Promise.all([1,2].map(() => call('customer-a', `projects/${p.id}/inquiries`, { requestId: 'same-parallel-submit', version: c.version, candidateId: c.id, question: '동시 제출', consent: true })));
++  assert.equal(submitted[0].response.status, 200); assert.equal(submitted[1].response.status, 200);
++  assert.equal(submitted[0].payload.inquiry.receipt, submitted[1].payload.inquiry.receipt);
++  const q = submitted[0].payload.inquiry;
++  assert.equal((await call('staff-a', 'projects/' + p.id)).response.status, 404);
++  await call('manager', `projects/${p.id}/assignment`, { requestId: id(), version: 1, assigneeId: 'staff-a', reason: 'HTTP 배정' });
++  const parallel = await Promise.all(['reviewing','hold'].map(status => call('staff-a', `inquiries/${q.id}/transition`, { requestId: id(), version: 1, status, body: '동시 상태 변경' })));
++  assert.deepEqual(parallel.map(r => r.response.status).sort(), [200,409]);
++  const current = (await call('customer-a', `inquiries/${q.id}`)).payload.inquiry;
++  const uploaded = (await call('customer-a', `inquiries/${q.id}/attachments`, { requestId: id(), version: current.version, name: '시험.png', mime: 'image/png', data: png })).payload.inquiry;
++  const attachment = uploaded.attachments[0].id;
++  const fileBefore = await fetch(base + '/api/workspace/attachments/' + attachment, { headers: { cookie: cookies['staff-a'] } }); assert.equal(fileBefore.status, 200);
++  await call('manager', `projects/${p.id}/assignment`, { requestId: id(), version: 2, assigneeId: 'staff-b', reason: '재배정' });
++  const fileAfter = await fetch(base + '/api/workspace/attachments/' + attachment, { headers: { cookie: cookies['staff-a'] } }); assert.equal(fileAfter.status, 404);
++  assert.equal((await call('customer-b', `inquiries/${q.receipt}`)).response.status, 404);
++  assert.equal((await call('customer-a', 'legacy-link', { receipt: q.receipt })).response.status, 404);
++  assert.equal(original.length, 1);
++});
+--- /dev/null
++++ b/scripts/browser-smoke-workspace.mjs
+@@ -0,0 +1,154 @@
++import assert from 'node:assert/strict';
++import { writeFile, mkdir } from 'node:fs/promises';
++import { resolve } from 'node:path';
++import { randomUUID } from 'node:crypto';
++
++const base = process.env.TEST_BASE_URL;
++assert(base && ['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Only an explicit local demo TEST_BASE_URL is allowed');
++assert.equal((await (await fetch(base + '/api/workspace/demo')).json()).demo, true);
++const port = process.env.CHROME_DEBUG_PORT || '9229';
++const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
++const target = targets.find(t => t.type === 'page' && t.url.startsWith(base + '/'));
++assert(target, 'Open a dedicated preview tab first');
++const socket = new WebSocket(target.webSocketDebuggerUrl);
++await new Promise((r, j) => { socket.onopen = r; socket.onerror = j; });
++let sequence = 0; const pending = new Map(); const warnings = [], exceptions = [];
++socket.onmessage = event => {
++  const message = JSON.parse(event.data);
++  if (message.method === 'Log.entryAdded' && /aria-hidden|retained focus/.test(message.params.entry.text)) warnings.push(message.params.entry.text);
++  if (message.method === 'Runtime.exceptionThrown') exceptions.push(message.params.exceptionDetails.text);
++  const item = pending.get(message.id); if (!item) return;
++  pending.delete(message.id); clearTimeout(item.timer);
++  if (message.error) item.reject(Error(message.error.message)); else item.resolve(message.result);
++};
++function command(method, params = {}) {
++  return new Promise((resolveCommand, reject) => {
++    const id = ++sequence; const timer = setTimeout(() => { pending.delete(id); reject(Error('CDP timeout: ' + method)); }, 10000);
++    pending.set(id, { resolve: resolveCommand, reject, timer }); socket.send(JSON.stringify({ id, method, params }));
++  });
++}
++async function evaluate(expression) {
++  const result = await command('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
++  assert(!result.exceptionDetails, JSON.stringify(result.exceptionDetails)); return result.result.value;
++}
++async function wait(expression) {
++  for (let i = 0; i < 160; i++) {
++    try { if (await evaluate(`Boolean(${expression})`)) return; } catch (e) { if (!/context|document|Cannot read/.test(e.message)) throw e; }
++    await new Promise(r => setTimeout(r, 50));
++  }
++  assert.fail('Timed out: ' + expression);
++}
++async function click(selector) {
++  const point = await evaluate(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)throw Error('Missing button');el.scrollIntoView({block:'center'});const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
++  await command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...point });
++  await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...point });
++}
++async function fill(name, value) {
++  await evaluate(`{const el=document.querySelector('#workspaceDialog [name="${name}"]');el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}`);
++}
++async function submit() { await click('#workspaceDialog [type=submit]'); }
++async function saved() { await wait("!document.querySelector('#workspaceDialog').open"); await wait("!document.querySelector('#globalStatus').classList.contains('error')"); }
++async function role(actorId) {
++  await evaluate(`{const el=document.querySelector('#actorSelect');el.value=${JSON.stringify(actorId)};el.dispatchEvent(new Event('change',{bubbles:true}));}`);
++  await wait(`!document.querySelector('#actorSelect').disabled && document.querySelector('#actorSelect').value === ${JSON.stringify(actorId)}`);
++}
++async function proof() {
++  await fill('source', '브라우저 시험용 회신 문서'); await fill('checkedBy', '시험 담당 주체'); await fill('checkedAt', '2026-11-07');
++  await click('#workspaceDialog [name=recheck]'); await fill('recheckReason', '실제 담당기관에 추가 확인 필요');
++}
++const checks = [], stamp = Date.now();
++const title = `동두천 창업 검토 ${String(stamp).slice(-4)}`;
++const evidence = resolve(process.env.TEST_EVIDENCE_DIR || 'docs/implementation/prd-v3/evidence');
++try {
++  await command('Runtime.enable'); await command('Log.enable'); await command('Log.clear'); await command('Network.enable');
++  await evaluate('globalThis.__oldWorkspaceSmokeDocument=true');
++  await command('Page.navigate', { url: `${base}/workspace.html?smoke=${stamp}` });
++  await wait("!globalThis.__oldWorkspaceSmokeDocument && document.readyState==='complete' && document.querySelector('#actorSelect') && !document.querySelector('#actorSelect').disabled");
++  await wait("!document.querySelector('#actorSelect').disabled");
++  await role('customer-a');
++  await click('#newProjectButton'); await fill('title', title); await submit(); await saved();
++  await wait(`document.querySelector('.project-heading h2')?.textContent === ${JSON.stringify(title)}`);
++  const projectId = await evaluate("document.querySelector('.project-link.active').dataset.id");
++  await click('[data-action=candidate]'); await fill('name', '브라우저 후보지'); await fill('address', '개인정보 없는 시험 주소'); await fill('priceWon', '0'); await fill('memo', '내가 작성한 후보지 메모');
++  await command('Network.setBlockedURLs', { urls: [base + `/api/workspace/projects/${projectId}/candidates`] });
++  await submit(); await wait("document.querySelector('.form-error').textContent.includes('통신')");
++  assert.equal(await evaluate("document.querySelector('#workspaceDialog [name=name]').value"), '브라우저 후보지');
++  assert(!await evaluate("document.querySelector('.save-status').textContent.includes('저장 완료')"));
++  await command('Network.setBlockedURLs', { urls: [] }); await submit(); await saved();
++  await wait("document.querySelectorAll('.candidate-card').length===1");
++  assert(await evaluate("document.activeElement.matches('[data-action=candidate]:not([data-id])')"));
++  checks.push('A09: failed network save retains input and retry saves one candidate');
++  const candidateId = await evaluate("document.querySelector('[data-action=submit]').dataset.id");
++  const edit = `[data-action=candidate][data-id="${candidateId}"]`;
++  await click(edit); await fill('memo', '오래된 화면의 보존할 입력');
++  await evaluate(`fetch('/api/workspace/projects/${projectId}/candidates/${candidateId}',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:${JSON.stringify(randomUUID())},version:1,name:'브라우저 후보지',address:'개인정보 없는 시험 주소',memo:'다른 화면에서 저장한 최신 메모',priceWon:0})}).then(r=>r.json())`);
++  await submit(); await wait("document.querySelector('.form-error').textContent.includes('다른 화면')");
++  assert.equal(await evaluate("document.querySelector('#workspaceDialog [name=memo]').value"), '오래된 화면의 보존할 입력');
++  await click('.form-error button'); await wait("document.querySelector('.form-error').textContent.includes('다른 화면에서 저장한 최신 메모')");
++  await click('.form-error button'); await submit(); await saved();
++  checks.push('A24: stale draft conflict preserves input and requires explicit latest-version acknowledgement');
++  await click(`[data-action=submit][data-id="${candidateId}"]`); await fill('question', '이 부지의 허가 미확인 사항을 검토해 주세요.');
++  await click('#workspaceDialog [name=consent]'); await submit(); await saved();
++  await wait("document.querySelector('.receipt')?.textContent.startsWith('SWR-')");
++  const receipt = await evaluate("document.querySelector('.receipt').textContent");
++  await click('[data-action=upload]');
++  const photoPath = resolve('/tmp', `sonsecha-workspace-${stamp}.png`);
++  await writeFile(photoPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'));
++  const document = await command('DOM.getDocument'); const fileNode = await command('DOM.querySelector', { nodeId: document.root.nodeId, selector: '#workspaceDialog input[type=file]' });
++  await command('DOM.setFileInputFiles', { nodeId: fileNode.nodeId, files: [photoPath] }); await submit(); await saved();
++  await wait("document.querySelector('.attachment-list a')"); checks.push('Attachment is selected and stored through the actual photo form');
++  await role('customer-b'); assert(!await evaluate(`document.querySelector('#workspaceApp').textContent.includes(${JSON.stringify(title)})`));
++  checks.push('Customer B does not see customer A business');
++  await role('manager'); await wait(`document.querySelector('.project-heading h2')?.textContent === ${JSON.stringify(title)}`);
++  await click('[data-action=assign]'); await fill('assigneeId','staff-a'); await fill('reason','INTERNAL-ASSIGNMENT-BROWSER'); await submit(); await saved();
++  await role('staff-a'); await wait("document.querySelector('[data-action=transition]')");
++  await click('[data-action=transition]'); await fill('status','reviewing'); await fill('body','검토를 시작합니다.'); await submit(); await saved();
++  await wait("document.querySelector('[data-action=review]')"); await click('[data-action=review]'); await fill('body','토지 조건에 대한 시험 기록'); await proof(); await submit(); await saved();
++  await wait("document.querySelectorAll('.review-record').length===1");
++  await click('[data-action=note]'); await fill('body','INTERNAL-BROWSER-NOTE'); await submit(); await saved();
++  await wait("document.querySelector('.thread-entry.note')");
++  await click('[data-action=reply]'); await fill('body','시험 검토 결과입니다. 담당기관과 현장 확인이 더 필요합니다.'); await proof(); await submit(); await saved();
++  await wait("document.querySelector('.detail-heading .badge').textContent==='답변 완료'");
++  checks.push('A01 A16: manager assignment, manual review evidence and staff public reply work through forms');
++  await role('customer-a'); await wait("document.querySelector('.detail-heading .badge').textContent==='답변 완료'");
++  const customerText = await evaluate("document.querySelector('#workspaceApp').textContent");
++  assert(!customerText.includes('INTERNAL-BROWSER-NOTE')); assert(!customerText.includes('INTERNAL-ASSIGNMENT-BROWSER'));
++  checks.push('A12: customer screen excludes staff notes and internal assignment reason');
++  await evaluate('globalThis.__oldWorkspaceDocument=true'); await command('Page.reload'); await wait("!globalThis.__oldWorkspaceDocument && document.readyState==='complete' && !document.querySelector('#actorSelect').disabled");
++  assert.equal(await evaluate("document.querySelector('.receipt').textContent"),receipt);
++  assert.equal(await evaluate("document.querySelector('.detail-heading .badge').textContent"),'답변 완료');
++  checks.push('Page reload restores saved customer result without implementing login');
++  await click('[data-action=followup]'); await fill('body','추가로 확인할 부분이 있습니다.'); await submit(); await saved();
++  await wait("document.querySelector('.detail-heading .badge').textContent==='재문의'");
++  assert.equal(await evaluate("document.querySelector('.receipt').textContent"),receipt);
++  assert(await evaluate("document.querySelector('#inquiryDetail').textContent.includes('시험 검토 결과입니다.')"));
++  checks.push('A13: followup preserves receipt and previous answer');
++  await role('manager'); await click('[data-action=assign]'); await fill('assigneeId','staff-b'); await fill('reason','브라우저 재배정 시험'); await submit(); await saved();
++  await role('staff-a'); assert(!await evaluate(`document.querySelector('#workspaceApp').textContent.includes(${JSON.stringify(title)})`));
++  await role('staff-b'); await wait(`document.querySelector('.project-heading h2')?.textContent===${JSON.stringify(title)}`);
++  checks.push('A11: prior staff loses the business view and replacement staff receives it');
++  await role('customer-a');
++  await mkdir(evidence,{recursive:true});
++  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
++  await evaluate('scrollTo(0,0)');
++  const desktop = await command('Page.captureScreenshot',{format:'png',captureBeyondViewport:false}); await writeFile(resolve(evidence,'workspace-desktop.png'),Buffer.from(desktop.data,'base64'));
++  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
++  assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'));
++  await click(edit); await wait("document.querySelector('#workspaceDialog').open");
++  assert(await evaluate("(()=>{const r=document.querySelector('#workspaceDialog').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()"));
++  for (let tab=0;tab<16;tab++) {
++    await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
++    await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
++    assert(await evaluate("document.querySelector('#workspaceDialog').contains(document.activeElement)"));
++  }
++  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
++  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
++  await wait("!document.querySelector('#workspaceDialog').open");
++  assert(await evaluate(`document.activeElement.matches(${JSON.stringify(edit)})`));
++  checks.push('A18: 390px page and dialog fit, Tab stays in dialog, Escape and successful save restore focus');
++  await evaluate('scrollTo(0,0)');
++  const mobile=await command('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(resolve(evidence,'workspace-mobile.png'),Buffer.from(mobile.data,'base64'));
++  assert.deepEqual(warnings,[]);assert.deepEqual(exceptions,[]);
++  const result={ok:true,base,checks,warnings,exceptions,login:'deferred by user; no authentication acceptance claimed',screenshots:['workspace-desktop.png','workspace-mobile.png']};
++  await writeFile(resolve(evidence,'browser-results.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));
++} finally { await command('Network.setBlockedURLs',{urls:[]}).catch(()=>{});socket.close(); }
+--- /dev/null
++++ b/scripts/test-legacy-isolated.mjs
+@@ -0,0 +1,38 @@
++import assert from 'node:assert/strict';
++import { spawn, spawnSync } from 'node:child_process';
++import { randomBytes, scryptSync } from 'node:crypto';
++import { mkdtemp, writeFile } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import { resolve, join } from 'node:path';
++import { createServer } from 'node:net';
++
++const root = resolve(import.meta.dirname, '..');
++const data = await mkdtemp(join(tmpdir(), 'sonsecha-legacy-regression-'));
++const password = randomBytes(30).toString('base64url'), salt = randomBytes(24).toString('hex');
++await writeFile(join(data, 'admin-auth.json'), JSON.stringify({ algorithm: 'scrypt-v1', salt, hash: scryptSync(password, salt, 64).toString('hex'), updatedAt: new Date().toISOString() }), { mode: 0o600 });
++const passwordFile = join(data, 'test-password'); await writeFile(passwordFile, password, { mode: 0o600 });
++const probe = createServer(); await new Promise((r, j) => { probe.once('error', j); probe.listen(0, '127.0.0.1', r); }); const port = probe.address().port; await new Promise(r => probe.close(r));
++const base = `http://127.0.0.1:${port}`;
++const server = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...process.env, PORT: String(port), ADMIN_DATA_DIR: data, NODE_ENV: 'test', TRUSTED_PROXY_IPS: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
++let logs = ''; server.stdout.on('data', d => { logs += d; }); server.stderr.on('data', d => { logs += d; });
++const results = { ok: false, testBase: base, syntheticData: data, checks: [], productionDataUsed: false };
++try {
++  let ready = false;
++  for (let n = 0; n < 100; n++) { if (server.exitCode !== null) throw Error('Isolated legacy server exited'); try { if ((await fetch(base + '/api/products')).ok) { ready = true; break; } } catch {} await new Promise(r => setTimeout(r, 50)); }
++  assert(ready, 'Isolated legacy server ready');
++  const scripts = ['test-qa-regressions.mjs', 'test-consultations.mjs'];
++  if (process.env.CHROME_DEBUG_PORT) scripts.push('browser-smoke-business-plan.mjs', 'browser-smoke-shop.mjs', 'browser-smoke-consultations.mjs', 'browser-smoke-cart.mjs');
++  for (const script of scripts) {
++    const run = spawnSync(process.execPath, ['scripts/' + script], { cwd: root, env: { ...process.env, TEST_BASE_URL: base, TEST_PASSWORD_FILE: passwordFile, TEST_ADMIN_PASSWORD: password }, encoding: 'utf8', timeout: 60000 });
++    const output = ((run.stdout || '') + '\n' + (run.stderr || '')).replaceAll(password, '[redacted]').trim();
++    results.checks.push({ command: 'node scripts/' + script, status: run.status === 0 ? 'passed' : 'failed', output });
++    if (run.status !== 0) throw Error('Legacy regression failed: ' + script);
++  }
++  results.ok = true;
++} catch (error) { results.error = error.message; process.exitCode = 1; }
++finally {
++  if (server.exitCode === null) { const closed = new Promise(r => server.once('exit', r)); server.kill('SIGTERM'); await closed; }
++  results.ownTestServerStopped = true;
++  await writeFile(resolve(root, 'docs/implementation/prd-v3/evidence/legacy-results.json'), JSON.stringify(results, null, 2) + '\n');
++  console.log(JSON.stringify({ ok: results.ok, checks: results.checks.map(({ command, status }) => ({ command, status })), ownTestServerStopped: true, ...(results.error ? { error: results.error, output: results.checks.at(-1)?.output } : {}) }, null, 2));
++}

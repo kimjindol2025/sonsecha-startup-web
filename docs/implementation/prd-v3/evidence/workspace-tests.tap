@@ -1,0 +1,136 @@
+
+> sonsecha-startup-guide@1.0.0 test:workspace
+> node --test scripts/test-workspace.mjs
+
+TAP version 13
+# (node:2391044) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: A01: customer registers, manager assigns, staff replies, same identity sees persisted result
+ok 1 - A01: customer registers, manager assigns, staff replies, same identity sees persisted result
+  ---
+  duration_ms: 32.513332
+  type: 'test'
+  ...
+# Subtest: A02 A03 A05 A06: ownership, team scope and receipt cannot be forged
+ok 2 - A02 A03 A05 A06: ownership, team scope and receipt cannot be forged
+  ---
+  duration_ms: 6.869455
+  type: 'test'
+  ...
+# Subtest: candidate input: missing differs from zero; bad units, negatives and unsafe URLs rejected
+ok 3 - candidate input: missing differs from zero; bad units, negatives and unsafe URLs rejected
+  ---
+  duration_ms: 4.421216
+  type: 'test'
+  ...
+# Subtest: A07 A08: retried submission returns original receipt and rejects different contents
+ok 4 - A07 A08: retried submission returns original receipt and rejects different contents
+  ---
+  duration_ms: 3.807782
+  type: 'test'
+  ...
+# Subtest: project and candidate creation use durable submission keys too
+ok 5 - project and candidate creation use durable submission keys too
+  ---
+  duration_ms: 4.54681
+  type: 'test'
+  ...
+# Subtest: A24 A14: stale candidate writes fail; hold and new candidates preserve submitted snapshot
+ok 6 - A24 A14: stale candidate writes fail; hold and new candidates preserve submitted snapshot
+  ---
+  duration_ms: 5.216314
+  type: 'test'
+  ...
+# Subtest: A10: only scoped manager can assign; staff cannot claim the unassigned queue
+ok 7 - A10: only scoped manager can assign; staff cannot claim the unassigned queue
+  ---
+  duration_ms: 4.874064
+  type: 'test'
+  ...
+# Subtest: A11: reassignment revokes prior staff reads, mutations and cached retry paths
+ok 8 - A11: reassignment revokes prior staff reads, mutations and cached retry paths
+  ---
+  duration_ms: 6.463209
+  type: 'test'
+  ...
+# Subtest: A13: allowed state transitions, public reasons and reopening preserve original receipt
+ok 9 - A13: allowed state transitions, public reasons and reopening preserve original receipt
+  ---
+  duration_ms: 12.381313
+  type: 'test'
+  ...
+# Subtest: A16: review evidence, unknown fields and correction history remain distinct
+ok 10 - A16: review evidence, unknown fields and correction history remain distinct
+  ---
+  duration_ms: 11.138315
+  type: 'test'
+  ...
+# Subtest: public answer corrections append a version and keep original content
+ok 11 - public answer corrections append a version and keep original content
+  ---
+  duration_ms: 6.547533
+  type: 'test'
+  ...
+# Subtest: A12: notes and private events never enter customer serialization
+ok 12 - A12: notes and private events never enter customer serialization
+  ---
+  duration_ms: 5.581611
+  type: 'test'
+  ...
+# Subtest: A04 A11 A12: file access checks owner, visibility and current assignment on every request
+ok 13 - A04 A11 A12: file access checks owner, visibility and current assignment on every request
+  ---
+  duration_ms: 8.254122
+  type: 'test'
+  ...
+# Subtest: file validation rejects HTML, invalid MIME, over-limit bytes and private customer uploads
+ok 14 - file validation rejects HTML, invalid MIME, over-limit bytes and private customer uploads
+  ---
+  duration_ms: 32.67205
+  type: 'test'
+  ...
+# Subtest: attachment retries do not create duplicate files or events
+ok 15 - attachment retries do not create duplicate files or events
+  ---
+  duration_ms: 4.274093
+  type: 'test'
+  ...
+# Subtest: A22 A23: stale state and answer requests do not duplicate or overwrite
+ok 16 - A22 A23: stale state and answer requests do not duplicate or overwrite
+  ---
+  duration_ms: 8.806954
+  type: 'test'
+  ...
+# Subtest: failed multi-record change rolls back messages, versions and events together
+ok 17 - failed multi-record change rolls back messages, versions and events together
+  ---
+  duration_ms: 6.366528
+  type: 'test'
+  ...
+# Subtest: SQLite reopen preserves original receipt, revisions and retry key
+ok 18 - SQLite reopen preserves original receipt, revisions and retry key
+  ---
+  duration_ms: 6.082674
+  type: 'test'
+  ...
+# Subtest: demo refuses implicit opt-in and production before creating any data
+ok 19 - demo refuses implicit opt-in and production before creating any data
+  ---
+  duration_ms: 0.654225
+  type: 'test'
+  ...
+# Subtest: HTTP boundary: cookie identity, CSRF, lost response retry, parallel writes and revoked files
+ok 20 - HTTP boundary: cookie identity, CSRF, lost response retry, parallel writes and revoked files
+  ---
+  duration_ms: 137.039004
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 563.948424

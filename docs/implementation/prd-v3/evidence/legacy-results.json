@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "testBase": "http://127.0.0.1:44935",
+  "syntheticData": "/tmp/sonsecha-legacy-regression-7pmoK7",
+  "checks": [
+    {
+      "command": "node scripts/test-qa-regressions.mjs",
+      "status": "passed",
+      "output": "{\"ok\":true,\"checks\":[\"Unauthenticated GET/HEAD and encoded aliases redirect without dashboard HTML\",\"Login document contains no management dashboard\",\"All management data APIs deny unauthenticated access\",\"Every public product image is same-origin and returns image content\",\"Guide banners do not request external image servers\",\"Correct login grants dashboard and management API access\",\"Logout revokes dashboard and API access\"]}"
+    },
+    {
+      "command": "node scripts/test-consultations.mjs",
+      "status": "passed",
+      "output": "consultation smoke: PASS"
+    },
+    {
+      "command": "node scripts/browser-smoke-business-plan.mjs",
+      "status": "passed",
+      "output": "browser business plan smoke: PASS"
+    },
+    {
+      "command": "node scripts/browser-smoke-shop.mjs",
+      "status": "passed",
+      "output": "browser shop detail smoke: PASS"
+    },
+    {
+      "command": "node scripts/browser-smoke-consultations.mjs",
+      "status": "passed",
+      "output": "browser consultation smoke: PASS"
+    },
+    {
+      "command": "node scripts/browser-smoke-cart.mjs",
+      "status": "passed",
+      "output": "{\n  \"ok\": true,\n  \"base\": \"http://127.0.0.1:44935\",\n  \"checks\": [\n    \"Closed cart rejects keyboard focus\",\n    \"button: close restores focus and skips hidden controls\",\n    \"backdrop: close restores focus and skips hidden controls\",\n    \"Escape: close restores focus and skips hidden controls\",\n    \"Rapid reopening keeps the backdrop visible\",\n    \"Adding a product returns focus to its product button\",\n    \"Quote handoff moves focus outside the closed cart\",\n    \"SVG and ICO favicons return valid image responses\"\n  ],\n  \"warnings\": [],\n  \"exceptions\": []\n}"
+    }
+  ],
+  "productionDataUsed": false,
+  "ownTestServerStopped": true
+}
