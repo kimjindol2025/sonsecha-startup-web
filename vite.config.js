@@ -2,10 +2,12 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS === 'true' ? '/sonsecha-startup-web/' : '/',
   build: {
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
+        workspace: resolve(import.meta.dirname, 'workspace.html'),
         admin: resolve(import.meta.dirname, 'admin.html'),
         koreaTouchlessReport: resolve(import.meta.dirname, 'korea-touchless-report.html'),
         operationsApps: resolve(import.meta.dirname, 'operations-apps.html'),
