@@ -1,3 +1,8 @@
+import { createBrowserWorkspace } from './workspace-browser-store.js';
+
+const browserMode = !['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname) || new URLSearchParams(location.search).get('storage') === 'browser';
+const browserWorkspace = browserMode ? createBrowserWorkspace() : null;
+
 const $ = selector => document.querySelector(selector);
 const app = $('#workspaceApp');
 const dialog = $('#workspaceDialog');
@@ -16,6 +21,7 @@ let refreshSequence = 0;
 const pendingSubmissions = new Map();
 
 async function api(path, payload) {
+  if (browserWorkspace) return browserWorkspace.request(path, payload);
   let response;
   try { response = await fetch('/api/workspace/' + path, { credentials: 'same-origin', cache: 'no-store', ...(payload ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) } : {}) }); }
   catch { throw new Error('통신이 끊겼습니다. 입력은 유지되니 같은 내용으로 다시 시도해 주세요.'); }
@@ -124,7 +130,7 @@ function bindForm(operation, target, payloadBase, transform, success) {
     const payload = { ...payloadBase, ...transform(fields) };
     button.disabled = true; dialog.dataset.saving = 'true'; $('#closeDialog').disabled = true; form.querySelector('[data-close]').disabled = true;
     const area = form.querySelector('.form-error'); area.textContent = '';
-    form.querySelector('.save-status').textContent = '서버에 저장하고 있습니다…';
+    form.querySelector('.save-status').textContent = browserMode ? '이 브라우저에 저장하고 있습니다…' : '서버에 저장하고 있습니다…';
     try {
       const result = await execute(operation, target, payload);
       if (result.project) state.projectId = result.project.id;
@@ -152,8 +158,8 @@ function showCandidate(id, trigger) {
 }
 function showSubmit(id, trigger) {
   const c = state.project.candidates.find(c => c.id === id);
-  modal('후보지 검토 의뢰', formShell(`<p class="form-help">아래 후보지의 현재 자료를 확인하고 제출해 주세요. 실제 연락이나 계약은 진행하지 않습니다.</p><div class="snapshot">${e(c.name)}\n${e(c.address)}\n면적 ${c.areaSqm == null ? '미입력' : e(c.areaSqm) + '㎡'} · 가격 ${e(money(c.priceWon))}\n${e(c.memo || '메모 없음')}\n후보지 자료 버전 ${c.version}</div>${field('question', '검토를 부탁할 내용', '', { type: 'textarea', max: 4000, required: true })}<label class="check-field"><input name="consent" type="checkbox" required>이 후보지 자료와 질문을 검토 담당자에게 전달하는 것을 확인했습니다.</label>`, '확인하고 검토 의뢰'), trigger);
-  bindForm(`projects/${state.project.id}/inquiries`, c.id, { version: c.version, candidateId: c.id }, f => ({ question: f.get('question'), consent: f.get('consent') === 'on' }), '검토 의뢰가 접수되었습니다. 접수번호와 처리 상태를 확인해 주세요.');
+  modal('후보지 검토 의뢰', formShell(`<p class="form-help">${browserMode ? '현재 자료를 이 브라우저에 저장하는 체험입니다. 실제 검토 신청은 전송되지 않습니다.' : '아래 후보지의 현재 자료를 확인하고 제출해 주세요. 실제 연락이나 계약은 진행하지 않습니다.'}</p><div class="snapshot">${e(c.name)}\n${e(c.address)}\n면적 ${c.areaSqm == null ? '미입력' : e(c.areaSqm) + '㎡'} · 가격 ${e(money(c.priceWon))}\n${e(c.memo || '메모 없음')}\n후보지 자료 버전 ${c.version}</div>${field('question', '검토를 부탁할 내용', '', { type: 'textarea', max: 4000, required: true })}<label class="check-field"><input name="consent" type="checkbox" required>${browserMode ? '실제 접수가 아닌 체험 자료를 이 브라우저에 저장하는 것을 확인했습니다.' : '이 후보지 자료와 질문을 검토 담당자에게 전달하는 것을 확인했습니다.'}</label>`, '확인하고 검토 의뢰'), trigger);
+  bindForm(`projects/${state.project.id}/inquiries`, c.id, { version: c.version, candidateId: c.id }, f => ({ question: f.get('question'), consent: f.get('consent') === 'on' }), browserMode ? '체험 자료를 이 브라우저에 저장했습니다. 실제 검토 신청은 전송되지 않았습니다.' : '검토 의뢰가 접수되었습니다. 접수번호와 처리 상태를 확인해 주세요.');
 }
 function showAssignment(trigger) {
   modal('담당자 배정·변경', formShell(`${select('assigneeId', '배정 담당자', { '': '미배정으로 전환', ...Object.fromEntries(state.staff.map(p => [p.id, p.label])) }, state.project.assigneeId || '')}${field('reason', '배정·변경 사유 (내부 기록)', '', { type: 'textarea', required: true, max: 1000 })}<p class="form-help">확정 후 이전 담당자의 새 조회·수정·파일 요청은 차단됩니다.</p>`, '배정 확정'), trigger);
@@ -210,7 +216,7 @@ function renderInquiry(q) {
   const customer = state.actor.role === 'customer';
   const canReview = ['reviewing','reopened'].includes(q.status);
   const currentReason = q.events.findLast(event => event.status === q.status && event.reason)?.reason;
-  return `<section class="inquiry-detail" id="inquiryDetail"><div class="detail-heading"><div><h3>${e(q.snapshot.name)}</h3><p class="receipt">${e(q.receipt)}</p></div><span class="badge ${q.status}">${e(q.statusLabel)}</span></div><p class="detail-question">${e(q.question)}</p>${currentReason ? `<p class="snapshot"><strong>안내·다음 행동</strong><br>${e(currentReason)}</p>` : ''}<p class="small-copy">마지막 저장 ${date(q.updatedAt)} · 후보지 제출 버전 ${q.candidateVersion}</p><details><summary>제출 당시 후보지 자료</summary><div class="snapshot">${e(q.snapshot.name)}\n${e(q.snapshot.address)}\n${e(q.snapshot.memo || '메모 없음')}\n면적 ${q.snapshot.area_sqm == null ? '미입력' : e(q.snapshot.area_sqm) + '㎡'} · 가격 ${e(money(q.snapshot.price_won))}</div></details><div class="inquiry-actions">${customer ? `${['answered','hold','closed'].includes(q.status) ? '<button data-action="followup">같은 접수에 재문의</button>' : ''}${q.status === 'more_info' ? '<button data-action="additional">추가자료 제출</button>' : ''}` : `${q.status !== 'closed' ? '<button data-action="transition">처리 상태 변경</button>' : ''}${canReview ? '<button data-action="review">허가 검토 항목 기록</button>' : ''}${q.status === 'reviewing' ? '<button class="primary" data-action="reply">공개 답변 작성</button>' : ''}<button data-action="note">내부 메모</button>`}<button data-action="upload">현장 사진 첨부</button></div>${q.attachments.length ? `<div class="attachment-list">${q.attachments.map(a => `<a href="/api/workspace/attachments/${e(a.id)}" download>${e(a.name)}${a.visibility === 'internal' ? ' · 내부 전용' : ''} ↓</a>`).join('')}</div>` : ''}${q.reviews.length ? `<h3 class="section-top">허가 검토 기록</h3>${q.reviews.map(r => `<article class="review-record"><strong>${e(reviewLabels[r.item])} · ${e(reviewStates[r.state])}</strong><p>${e(r.body)}</p>${r.state !== 'unreviewed' ? entryProof(r) : '<p class="small-copy">확인 주체·확인일 미확인</p>'}<span class="small-copy">기록 ${date(r.createdAt)}</span></article>`).join('')}` : ''}<h3 class="section-top">답변·대화 이력</h3>${q.messages.length ? q.messages.map(m => `<article class="thread-entry ${m.kind === 'note' ? 'note' : ''}"><div class="entry-meta"><strong>${e(messageLabels[m.kind])}${m.supersedes ? ' · 정정본' : ''}</strong><span>${e(m.author)} · ${date(m.createdAt)}</span></div><p>${e(m.body)}</p>${m.kind === 'reply' ? entryProof(m) : ''}${!customer && m.kind === 'reply' && q.status === 'answered' ? `<button class="text-button" data-action="correction" data-message="${e(m.id)}">이 답변 정정 기록 추가</button>` : ''}</article>`).join('') : '<p class="small-copy">아직 등록된 답변이 없습니다. 검토 상태는 이 화면에서 확인할 수 있습니다.</p>'}<details><summary>처리 이력 ${q.events.length}건</summary><ol class="event-list">${q.events.map(ev => `<li>${date(ev.createdAt)} · ${e(ev.status ? ({ received:'접수',reviewing:'검토 중',more_info:'추가자료 요청',answered:'답변 완료',hold:'보류',closed:'종료',reopened:'재문의' })[ev.status] : ev.kind === 'attachment' ? '사진 첨부' : ev.kind === 'note' ? '내부 메모' : '검토 기록')}${ev.reason ? ' · ' + e(ev.reason) : ''}${ev.correctionReason ? ' · 정정 사유: ' + e(ev.correctionReason) : ''}</li>`).join('')}</ol></details></section>`;
+  return `<section class="inquiry-detail" id="inquiryDetail"><div class="detail-heading"><div><h3>${e(q.snapshot.name)}</h3><p class="receipt">${e(q.receipt)}</p></div><span class="badge ${q.status}">${e(q.statusLabel)}</span></div><p class="detail-question">${e(q.question)}</p>${currentReason ? `<p class="snapshot"><strong>안내·다음 행동</strong><br>${e(currentReason)}</p>` : ''}<p class="small-copy">마지막 저장 ${date(q.updatedAt)} · 후보지 제출 버전 ${q.candidateVersion}</p><details><summary>제출 당시 후보지 자료</summary><div class="snapshot">${e(q.snapshot.name)}\n${e(q.snapshot.address)}\n${e(q.snapshot.memo || '메모 없음')}\n면적 ${q.snapshot.area_sqm == null ? '미입력' : e(q.snapshot.area_sqm) + '㎡'} · 가격 ${e(money(q.snapshot.price_won))}</div></details><div class="inquiry-actions">${customer ? `${['answered','hold','closed'].includes(q.status) ? '<button data-action="followup">같은 접수에 재문의</button>' : ''}${q.status === 'more_info' ? '<button data-action="additional">추가자료 제출</button>' : ''}` : `${q.status !== 'closed' ? '<button data-action="transition">처리 상태 변경</button>' : ''}${canReview ? '<button data-action="review">허가 검토 항목 기록</button>' : ''}${q.status === 'reviewing' ? '<button class="primary" data-action="reply">공개 답변 작성</button>' : ''}<button data-action="note">내부 메모</button>`}<button data-action="upload">현장 사진 첨부</button></div>${q.attachments.length ? `<div class="attachment-list">${q.attachments.map(a => `<a href="${browserMode ? '#' : '/api/workspace/attachments/' + e(a.id)}" data-browser-attachment="${e(a.id)}" download>${e(a.name)}${a.visibility === 'internal' ? ' · 내부 전용' : ''} ↓</a>`).join('')}</div>` : ''}${q.reviews.length ? `<h3 class="section-top">허가 검토 기록</h3>${q.reviews.map(r => `<article class="review-record"><strong>${e(reviewLabels[r.item])} · ${e(reviewStates[r.state])}</strong><p>${e(r.body)}</p>${r.state !== 'unreviewed' ? entryProof(r) : '<p class="small-copy">확인 주체·확인일 미확인</p>'}<span class="small-copy">기록 ${date(r.createdAt)}</span></article>`).join('')}` : ''}<h3 class="section-top">답변·대화 이력</h3>${q.messages.length ? q.messages.map(m => `<article class="thread-entry ${m.kind === 'note' ? 'note' : ''}"><div class="entry-meta"><strong>${e(messageLabels[m.kind])}${m.supersedes ? ' · 정정본' : ''}</strong><span>${e(m.author)} · ${date(m.createdAt)}</span></div><p>${e(m.body)}</p>${m.kind === 'reply' ? entryProof(m) : ''}${!customer && m.kind === 'reply' && q.status === 'answered' ? `<button class="text-button" data-action="correction" data-message="${e(m.id)}">이 답변 정정 기록 추가</button>` : ''}</article>`).join('') : '<p class="small-copy">아직 등록된 답변이 없습니다. 검토 상태는 이 화면에서 확인할 수 있습니다.</p>'}<details><summary>처리 이력 ${q.events.length}건</summary><ol class="event-list">${q.events.map(ev => `<li>${date(ev.createdAt)} · ${e(ev.status ? ({ received:'접수',reviewing:'검토 중',more_info:'추가자료 요청',answered:'답변 완료',hold:'보류',closed:'종료',reopened:'재문의' })[ev.status] : ev.kind === 'attachment' ? '사진 첨부' : ev.kind === 'note' ? '내부 메모' : '검토 기록')}${ev.reason ? ' · ' + e(ev.reason) : ''}${ev.correctionReason ? ' · 정정 사유: ' + e(ev.correctionReason) : ''}</li>`).join('')}</ol></details></section>`;
 }
 function render() {
   const customer = state.actor.role === 'customer';
@@ -225,6 +231,16 @@ function render() {
   app.innerHTML = `<div class="workspace-layout"><aside class="project-sidebar" aria-label="내 사업 목록"><p class="sidebar-heading">${customer ? '내 창업 사업' : '확인 가능한 사업'} <span>${state.projects.length}</span></p>${state.projects.map(item => `<button class="project-link ${item.id === p?.id ? 'active' : ''}" data-action="project" data-id="${e(item.id)}" ${item.id === p?.id ? 'aria-current="true"' : ''}>${e(item.title)}<span>후보지 ${item.candidateCount} · 의뢰 ${item.inquiryCount}${!item.assigned ? ' · 미배정' : ''}</span></button>`).join('')}</aside><div class="project-content">${p ? `<div class="project-heading"><div><p class="eyebrow">MY BUSINESS</p><h2>${e(p.title)}</h2><p class="small-copy">마지막 변경 ${date(p.updatedAt)}</p></div><button data-action="refresh">새로고침</button></div><ol class="journey" aria-label="검토 진행 단계">${['후보지 정리','검토 의뢰','담당자 확인','결과 확인'].map((label,i) => `<li class="${i < phase ? 'done' : i === phase ? 'current' : ''}" ${i === phase ? 'aria-current="step"' : ''}><b>${i < phase ? '✓' : i + 1}</b>${label}</li>`).join('')}</ol>${state.actor.role === 'manager' ? `<section class="assignment-box"><h3>담당자 배정</h3><p class="small-copy">현재 ${e(state.staff.find(s => s.id === p.assigneeId)?.label || '미배정')}</p><button class="secondary" data-action="assign">담당자 배정·변경</button>${p.assignmentHistory.length ? `<details><summary>내부 배정 이력</summary><ul class="event-list">${p.assignmentHistory.map(h => `<li>${date(h.createdAt)} · ${e(h.actor)} · ${e(h.reason)}</li>`).join('')}</ul></details>` : ''}</section>` : ''}<div class="section-top"><h3>후보지 <span>${p.candidates.length}</span></h3>${customer ? '<button data-action="candidate">+ 후보지 등록</button>' : ''}</div>${p.candidates.length ? `<div class="candidate-grid">${p.candidates.map(c => `<article class="candidate-card"><span class="badge ${c.lifecycle}">${e(lifecycleLabels[c.lifecycle])}</span><h3>${e(c.name)}</h3><p class="candidate-address">${e(c.address)}</p><dl class="candidate-facts"><div><dt>면적</dt><dd>${c.areaSqm == null ? '미입력' : e(c.areaSqm) + '㎡'}</dd></div><div><dt>알려진 가격</dt><dd>${e(money(c.priceWon))}</dd></div></dl><div class="card-actions">${customer ? `<button class="secondary" data-action="submit" data-id="${e(c.id)}">후보지 검토 맡기기</button><button data-action="candidate" data-id="${e(c.id)}">후보지 수정</button>` : '<span class="small-copy">고객이 제출한 후보지 자료입니다.</span>'}</div><p class="small-copy">저장 ${date(c.updatedAt)} · 버전 ${c.version}</p></article>`).join('')}</div>` : '<div class="empty-state"><h3>아직 등록한 후보지가 없습니다</h3><p>후보지 이름과 주소를 정리해 검토를 준비하세요.</p></div>'}<div class="section-top"><h3>검토 의뢰 <span>${p.inquiries.length}</span></h3><span class="small-copy">구매 의무 없이 검토할 수 있어요</span></div>${p.inquiries.length ? `<div class="inquiry-list">${p.inquiries.map(item => `<button data-action="inquiry" data-id="${e(item.id)}" class="${item.id === q?.id ? 'active' : ''}" ${item.id === q?.id ? 'aria-current="true"' : ''}><span>${e(item.snapshot.name)}<small>${e(item.receipt)}</small></span><span class="badge ${item.status}">${e(item.statusLabel)}</span></button>`).join('')}</div>${q ? renderInquiry(q) : ''}` : '<p class="small-copy">후보지의 ‘검토 맡기기’를 눌러 내용을 확인한 뒤 제출하세요.</p>'}` : ''}</div></div>`;
 }
 app.addEventListener('click', async event => {
+  const attachment = event.target.closest('[data-browser-attachment]');
+  if (attachment && browserWorkspace) {
+    event.preventDefault();
+    try {
+      const file = await browserWorkspace.download(attachment.dataset.browserAttachment);
+      const url = URL.createObjectURL(file.blob), link = document.createElement('a');
+      link.href = url; link.download = file.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { announce(error.message, true); }
+    return;
+  }
   const button = event.target.closest('[data-action]'); if (!button) return;
   const action = button.dataset.action;
   try {
@@ -245,7 +261,7 @@ async function chooseActor(id) {
   state.actor = (await api('demo/actor', { actorId: id })).actor;
   state.projectId = null; state.inquiryId = null; state.project = null;
   state.staff = state.actor.role === 'manager' ? (await api('staff')).staff : [];
-  await refresh(); announce(`${state.actor.label}의 시험 자료입니다.`);
+  await refresh(); announce(browserMode ? `${state.actor.label} 화면입니다. 현재 브라우저의 체험 자료만 표시됩니다.` : `${state.actor.label}의 시험 자료입니다.`);
 }
 $('#actorSelect').addEventListener('change', async event => {
   event.target.disabled = true;
@@ -253,6 +269,12 @@ $('#actorSelect').addEventListener('change', async event => {
   finally { event.target.disabled = false; }
 });
 try {
+  if (browserMode) {
+    document.querySelector('.demo-banner strong').textContent = '창업 진행판 체험';
+    document.querySelector('.demo-banner span').textContent = '이 브라우저에만 저장되며 실제 검토 접수는 전송되지 않습니다. 개인정보 대신 예시 자료를 입력하세요.';
+    document.querySelector('.actor-control').firstChild.textContent = '화면 살펴보기';
+    $('#actorSelect').setAttribute('aria-label', '체험 화면 선택');
+  }
   const meta = await api('demo');
   if (!meta.demo) throw new Error('이 진행판은 로그인 준비 전 로컬 시험 환경에서만 실행됩니다.');
   $('#actorSelect').innerHTML = meta.principals.map(p => `<option value="${e(p.id)}">${e(p.label)}</option>`).join('');
