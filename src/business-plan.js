@@ -359,12 +359,27 @@ function fullPlanText(plan, calc, candidate, candidateLabel = '') {
     `지원사업·정책자금: ${plan.research.supportMemo || '확인 필요'}`,
   ];
   if (candidate) {
-    lines.push('', `6. 후보지 검토 · ${candidateLabel}`, ...roadmapSteps.map((label, index) => {
-      const status = candidateStepState(candidate, index);
-      return `${index + 1}. ${label}: ${status.checked ? '체크 완료' : '미완료'} · ${status.decision}`;
-    }));
+    const metrics = candidateMetrics(candidate);
+    const candidateNotes = candidate.detailNotes && typeof candidate.detailNotes === 'object'
+      ? Object.values(candidate.detailNotes).map((value) => String(value).trim()).filter(Boolean) : [];
+    lines.push('', `6. 후보지 검토 · ${candidateLabel}`,
+      `주소: ${candidate.address || '주소 미입력'}`,
+      `진행: ${metrics.completed}/12 · 종합 판정: ${metrics.status}`,
+      ...roadmapSteps.map((label, index) => {
+        const status = candidateStepState(candidate, index);
+        return `${index + 1}. ${label}: ${status.checked ? '체크 완료' : '미완료'} · ${status.decision}`;
+      }),
+      '후보지 세부 메모:',
+      ...(candidateNotes.length ? candidateNotes.map((note) => `- ${note}`) : ['- 작성된 메모 없음']));
+  } else {
+    lines.push('', '6. 후보지 검토', '연결된 후보지가 없습니다.');
   }
-  lines.push('', '7. 위험과 다음 행동', `위험: ${plan.research.risks || '확인 필요'}`, `다음 행동: ${plan.actionPlan || '확인 필요'}`, '', `보완 항목: ${missing.length ? missing.map((item) => item.label).join(', ') : '핵심 항목 입력 완료'}`, '', '※ 사용자 입력과 가정을 자동 정리한 초안이며, 인허가·공사비·대출·지원·수익을 확정하지 않습니다.');
+  lines.push('', '7. 공식 자료 확인 경로', ...officialSources.flatMap((source) => [
+    `- ${source.kind} · ${source.title}: ${source.href}`,
+    `  ${source.description}`,
+    ...source.checks.map((check) => `  · ${check}`),
+  ]));
+  lines.push('', '8. 위험과 다음 행동', `위험: ${plan.research.risks || '확인 필요'}`, `다음 행동: ${plan.actionPlan || '확인 필요'}`, '', `보완 항목: ${missing.length ? missing.map((item) => item.label).join(', ') : '핵심 항목 입력 완료'}`, '', '※ 사용자 입력과 가정을 자동 정리한 초안이며, 인허가·공사비·대출·지원·수익을 확정하지 않습니다.');
   return lines.join('\n');
 }
 
@@ -392,14 +407,20 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
   function save(message = '이 기기에 자동 저장됨') {
     const plan = activePlan();
     plan.updatedAt = new Date().toISOString();
-    localStorage.setItem(planStorageKey, JSON.stringify(state));
     clearTimeout(saveTimer);
     const status = root.querySelector('[data-plan-save-status]');
+    try {
+      localStorage.setItem(planStorageKey, JSON.stringify(state));
+    } catch {
+      if (status) status.textContent = '저장되지 않았습니다. 브라우저 저장 공간을 확인해 주세요.';
+      return false;
+    }
     if (status) status.textContent = message;
     saveTimer = setTimeout(() => {
       const current = root.querySelector('[data-plan-save-status]');
       if (current) current.textContent = '이 기기에 자동 저장됨';
     }, 1600);
+    return true;
   }
 
   function render() {
@@ -568,7 +589,7 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
       save('후보지 기본정보를 불러왔습니다'); render();
     }
     if (action === 'fill-budget-example') {
-      if (budgetItems.some((item) => numberValue(plan.budget[item.key])) && !globalThis.confirm('현재 창업예산 금액을 작성 예시로 바꿀까요?')) return;
+      if (budgetItems.some((item) => String(plan.budget[item.key]).trim()) && !globalThis.confirm('현재 창업예산 금액을 작성 예시로 바꿀까요?')) return;
       budgetItems.forEach((item) => { plan.budget[item.key] = String(item.example); });
       save('작성 예시를 넣었습니다'); render();
     }
@@ -576,6 +597,9 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
       budgetItems.forEach((item) => { plan.budget[item.key] = ''; }); save('창업예산을 비웠습니다'); render();
     }
     if (action === 'fill-sales-example') {
+      const hasSalesInputs = Object.values(plan.sales).some((value) => String(value).trim())
+        || monthlyCostItems.some((item) => String(plan.monthlyCosts[item.key]).trim());
+      if (hasSalesInputs && !globalThis.confirm('현재 매출·월 운영비 입력을 작성 예시로 바꿀까요?')) return;
       plan.sales = { averageTicket: '35000', dailyCars: '10', operatingDays: '26' };
       monthlyCostItems.forEach((item) => { plan.monthlyCosts[item.key] = String(item.example); });
       save('월 운영 작성 예시를 넣었습니다'); render();

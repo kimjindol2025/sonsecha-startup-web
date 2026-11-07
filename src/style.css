@@ -1312,8 +1312,31 @@ body.consultation-open { overflow: hidden; }
   .feedback-submit-row button { width: 100%; min-height: 52px; }
 }
 
+/* Navigation fits tablet and phone screens without horizontal clipping. */
+.menu-toggle { display: none; }
+.product-image-unavailable { display: grid; place-items: center; width: 100%; min-height: 96px; padding: 16px; color: var(--muted); background: #e5ecf5; font-size: 12px; text-align: center; }
+@media (max-width: 1200px) {
+  html { scroll-padding-top: 84px; }
+  .site-header { min-height: 68px; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 10px 20px; }
+  .site-header .brand { min-width: 0; gap: 10px; font-size: 14px; }
+  .site-header .brand-mark { flex: 0 0 34px; width: 34px; height: 34px; }
+  .site-header .brand span:last-child { white-space: normal; overflow-wrap: anywhere; }
+  .site-header .menu-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 72px; min-height: 44px; padding: 0 10px; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 6px; font-weight: 700; cursor: pointer; }
+  .site-header nav { display: none; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-height: 60dvh; margin: 10px 0 0; padding: 12px 0 2px; gap: 8px; overflow-x: hidden; overflow-y: auto; border-top: 1px solid var(--line); }
+  .site-header.nav-open nav { display: grid; }
+  .site-header nav a, .site-header nav button { justify-content: center; min-height: 44px; margin: 0; padding: 10px 8px; font-size: 13px; white-space: normal; text-align: center; }
+  .site-header nav .print-button { display: inline-flex; align-items: center; }
+  .site-header nav .nav-divider, .shop-view .site-header .print-button, .plan-view .site-header .print-button { display: none; }
+}
+@media (max-width: 860px) {
+  .site-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px 20px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .site-actions .consultation-launcher, .site-actions .feedback-launcher { position: static; min-width: 0; min-height: 44px; justify-content: center; gap: 6px; padding: 8px; border: 0; border-radius: 6px; box-shadow: none; }
+  .site-actions button > strong { font-size: 12px; }
+  .site-actions button > span { font-size: 15px; }
+}
+
 @media print {
-  .site-header, .hero-visual, .hero-actions, .shop-section, .phase-tabs, .detail-toggle, .final-cta, .consultation-launcher, .feedback-launcher, .feedback-backdrop, .feedback-modal, .usage-guide-backdrop, .usage-guide-modal, .cart-backdrop, .cart-drawer { display: none !important; }
+  .site-header, .site-actions, .hero-visual, .hero-actions, .shop-section, .phase-tabs, .detail-toggle, .final-cta, .consultation-launcher, .feedback-launcher, .feedback-backdrop, .feedback-modal, .usage-guide-backdrop, .usage-guide-modal, .cart-backdrop, .cart-drawer { display: none !important; }
   .hero { min-height: auto; display: block; }
   .hero-copy, .roadmap-section, .documents-section, .risk-section { padding: 30px; }
   .step-card { break-inside: avoid; min-height: 100px; }

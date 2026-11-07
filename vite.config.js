@@ -7,6 +7,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         admin: resolve(import.meta.dirname, 'admin.html'),
+        adminLogin: resolve(import.meta.dirname, 'admin-login.html'),
       },
     },
   },

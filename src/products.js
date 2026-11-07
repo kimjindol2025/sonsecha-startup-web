@@ -33,7 +33,7 @@ export const products = [
 자료 기준
 K002 공식 상품 페이지의 제품 설명과 공식 설치 사진을 기준으로 작성했습니다.`,
     price: 3000000,
-    image: 'https://www.k002.com/mall/shop_image/202101/20160103_131052.jpg',
+    image: '/product-images/photo-unavailable.svg',
     shopUrl: 'https://www.k002.com/mall/m_mall_detail.php?ps_ctid=01000000&ps_goid=89',
     badge: '품절',
     inStock: false,
@@ -64,7 +64,7 @@ K002 공식 상품 페이지의 제품 설명과 공식 설치 사진을 기준�
 자료 기준
 K002 공식 상품 페이지의 상품정보고시와 공식 제품 사진을 기준으로 작성했습니다.`,
     price: 198000,
-    image: 'https://www.k002.com/mall/shop_image/202101/%C1%A4%BF%C02.jpg',
+    image: '/product-images/photo-unavailable.svg',
     shopUrl: 'https://www.k002.com/mall/m_mall_detail.php?ps_ctid=01000000&ps_goid=83',
     inStock: true,
     featured: 119,
@@ -75,7 +75,7 @@ K002 공식 상품 페이지의 상품정보고시와 공식 제품 사진을 �
     category: 'equipment',
     summary: '손세차장과 셀프세차장에서 사용하는 BWS2015 냉수 전용 고압세척기입니다.',
     price: 2090000,
-    image: 'https://www.k002.com/mall/shop_image/202004/2_sum_500%285%29_1544146108.jpg',
+    image: '/product-images/photo-unavailable.svg',
     shopUrl: 'https://www.k002.com/mall/m_mall_detail.php?ps_ctid=01000000&ps_goid=21',
     inStock: true,
     featured: 118,
@@ -104,7 +104,7 @@ K002 공식 상품 페이지의 상품정보고시와 공식 제품 사진을 �
 자료 기준
 K002 공식 상품 페이지의 상품명·대표 이미지와 안전보건공단의 MSDS 제공·확인 안내를 기준으로 작성했습니다.`,
     price: 66000,
-    image: 'https://www.k002.com/mall/shop_image/202004/2_sum_500%285%29_1547088472.jpg',
+    image: '/product-images/photo-unavailable.svg',
     shopUrl: 'https://www.k002.com/mall/m_mall_detail.php?ps_ctid=01000000&ps_goid=20',
     inStock: true,
     featured: 117,
@@ -231,7 +231,7 @@ K002 공식 상품명과 공식 제품 사진을 기준으로 작성했으며, �
   },
   {
     id: 'k002-6',
-    name: '셀프세차장 물필터 / 휠터 500mm',
+    name: '셀프세차장 물필터 500mm',
     category: 'equipment',
     summary: '세차장 급수 라인의 이물질을 걸러주는 500mm 권선형 교체 필터입니다. 하우징 길이와 여과 규격을 확인하세요.',
     details: `제품 개요
@@ -260,7 +260,7 @@ K002 공식 상품 페이지의 500mm 표기, 상품정보고시와 공식 제�
   },
   {
     id: 'k002-5',
-    name: '셀프세차장 물필터 / 휠터 750mm',
+    name: '셀프세차장 물필터 750mm',
     category: 'equipment',
     summary: '세차장 급수 라인의 이물질을 걸러주는 750mm 권선형 교체 필터입니다. 500mm 제품과 혼동하지 않도록 길이를 확인하세요.',
     details: `제품 개요

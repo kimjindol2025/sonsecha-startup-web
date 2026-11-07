@@ -2,10 +2,12 @@ import { createServer } from 'node:http';
 import { randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
+import { isIP } from 'node:net';
 import { DatabaseSync } from 'node:sqlite';
 import { createConsultationStore } from './consultations-store.mjs';
 import { contentFields, defaultSiteContent } from './src/content.js';
 import { products as baselineProducts } from './src/products.js';
+import { localProductImage } from './src/product-images.js';
 
 const root = import.meta.dirname;
 const distRoot = resolve(root, 'dist');
@@ -17,6 +19,10 @@ const analyticsDataPath = resolve(dataRoot, 'analytics.json');
 const feedbackDataPath = resolve(dataRoot, 'feedback.sqlite');
 const port = Number.parseInt(process.env.PORT || '40330', 10);
 const production = process.env.NODE_ENV === 'production';
+const trustedProxyAddresses = new Set((process.env.TRUSTED_PROXY_IPS || '')
+  .split(',')
+  .map(normalizeIpAddress)
+  .filter(Boolean));
 const sessionLifetime = 12 * 60 * 60 * 1000;
 const sessions = new Map();
 const loginAttempts = new Map();
@@ -146,7 +152,7 @@ function cloneBaselineProducts() {
 async function loadProducts() {
   try {
     const parsed = JSON.parse(await readFile(productDataPath, 'utf8'));
-    return Array.isArray(parsed) ? parsed : cloneBaselineProducts();
+    return Array.isArray(parsed) ? parsed.map((product) => ({ ...product, image: localProductImage(product.image) })) : cloneBaselineProducts();
   } catch (error) {
     if (error.code !== 'ENOENT') console.error('[products] Failed to read saved products:', error);
     return cloneBaselineProducts();
@@ -485,8 +491,26 @@ function clearSessionCookie() {
   return `sonsecha_admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${production ? '; Secure' : ''}`;
 }
 
+function normalizeIpAddress(value) {
+  const address = String(value || '').trim().replace(/^::ffff:/i, '');
+  return isIP(address) ? address : '';
+}
+
 function requestAddress(request) {
-  return String(request.headers['x-forwarded-for'] || request.socket.remoteAddress || 'unknown').split(',')[0].trim();
+  const remoteAddress = normalizeIpAddress(request.socket.remoteAddress) || 'unknown';
+  if (!trustedProxyAddresses.has(remoteAddress)) return remoteAddress;
+
+  const forwarded = request.headers['x-forwarded-for'];
+  if (typeof forwarded !== 'string') return remoteAddress;
+  const chain = forwarded.split(',').map(normalizeIpAddress);
+  if (!chain.length || chain.some((address) => !address)) return remoteAddress;
+
+  let address = remoteAddress;
+  for (let index = chain.length - 1; index >= 0; index -= 1) {
+    if (!trustedProxyAddresses.has(address)) return address;
+    address = chain[index];
+  }
+  return address || remoteAddress;
 }
 
 function loginBlocked(address) {
@@ -737,10 +761,21 @@ async function serveStatic(request, response, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname === '/admin') pathname = '/admin.html';
+  if (pathname === '/admin/login') pathname = '/admin-login.html';
   const filePath = resolve(distRoot, `.${pathname}`);
   if (filePath !== distRoot && !filePath.startsWith(`${distRoot}${sep}`)) {
     response.writeHead(403, securityHeaders({ 'content-type': 'text/plain; charset=utf-8' }));
     return response.end('Forbidden');
+  }
+  const adminPage = filePath === resolve(distRoot, 'admin.html');
+  const loginPage = filePath === resolve(distRoot, 'admin-login.html');
+  if (adminPage && !sessionFor(request)) {
+    response.writeHead(302, securityHeaders({ location: '/admin/login', 'cache-control': 'no-store' }));
+    return response.end();
+  }
+  if (loginPage && sessionFor(request)) {
+    response.writeHead(302, securityHeaders({ location: '/admin.html', 'cache-control': 'no-store' }));
+    return response.end();
   }
   try {
     const fileStat = await stat(filePath);
@@ -749,7 +784,7 @@ async function serveStatic(request, response, url) {
     const isHtml = extname(filePath) === '.html';
     response.writeHead(200, securityHeaders({
       'content-type': mimeTypes[extname(filePath)] || 'application/octet-stream',
-      'cache-control': isHtml ? 'no-cache' : 'public, max-age=31536000, immutable',
+      'cache-control': adminPage || loginPage ? 'private, no-store' : isHtml ? 'no-cache' : 'public, max-age=31536000, immutable',
     }));
     if (request.method === 'HEAD') return response.end();
     response.end(content);

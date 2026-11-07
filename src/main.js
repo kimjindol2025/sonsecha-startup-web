@@ -4,6 +4,34 @@ import { initializeBusinessPlan } from './business-plan.js';
 import { initializeConsultations } from './consultations.js';
 import { defaultSiteContent } from './content.js';
 import { productCategories, products } from './products.js';
+import { installProductImageFallbacks, localProductImage } from './product-images.js';
+
+const siteHeader = document.querySelector('.site-header');
+const siteNavigation = document.querySelector('#siteNavigation');
+const menuToggle = document.querySelector('#menuToggle');
+const compactNavigation = globalThis.matchMedia('(max-width: 1200px)');
+function closeNavigation() {
+  siteHeader.classList.remove('nav-open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+menuToggle.addEventListener('click', () => {
+  const open = siteHeader.classList.toggle('nav-open');
+  menuToggle.setAttribute('aria-expanded', String(open));
+});
+siteNavigation.addEventListener('click', (event) => {
+  if (event.target.closest('a, button') && compactNavigation.matches) closeNavigation();
+});
+document.addEventListener('click', (event) => {
+  if (!siteHeader.contains(event.target)) closeNavigation();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && siteHeader.classList.contains('nav-open')) {
+    closeNavigation();
+    menuToggle.focus();
+  }
+});
+compactNavigation.addEventListener('change', closeNavigation);
+installProductImageFallbacks();
 
 const checkboxes = [...document.querySelectorAll('input[data-step]')];
 const progressText = document.querySelector('#progressText');
@@ -793,7 +821,7 @@ function normalizeCatalog(source) {
     price: typeof product.price === 'number' && Number.isFinite(product.price) && product.price >= 0
       ? product.price
       : null,
-    image: typeof product.image === 'string' ? product.image : '',
+    image: localProductImage(product.image),
     shopUrl: typeof product.shopUrl === 'string' && /^https?:\/\//.test(product.shopUrl)
       ? product.shopUrl
       : '',
@@ -1066,11 +1094,20 @@ function renderCart() {
   updateCartBadges();
 }
 
+let cartReturnFocus = null;
+let cartBackdropTimer;
+
 function openCart() {
+  if (!shopElements.drawer.contains(document.activeElement)) {
+    cartReturnFocus = document.activeElement;
+  }
+  clearTimeout(cartBackdropTimer);
   shopElements.backdrop.hidden = false;
+  shopElements.drawer.inert = false;
   shopElements.drawer.setAttribute('aria-hidden', 'false');
   document.body.classList.add('cart-open');
   requestAnimationFrame(() => {
+    if (shopElements.drawer.inert) return;
     shopElements.backdrop.classList.add('visible');
     shopElements.drawer.classList.add('open');
     shopElements.drawer.querySelector('[data-cart-close]')?.focus();
@@ -1078,11 +1115,20 @@ function openCart() {
 }
 
 function closeCart() {
+  if (shopElements.drawer.contains(document.activeElement) || document.activeElement === shopElements.backdrop) {
+    const returnTarget = cartReturnFocus?.isConnected && cartReturnFocus.getClientRects().length
+      ? cartReturnFocus
+      : [...document.querySelectorAll('[data-cart-open]')].find((button) => button.getClientRects().length);
+    returnTarget?.focus({ preventScroll: true });
+    if (shopElements.drawer.contains(document.activeElement)) document.activeElement.blur();
+  }
+  shopElements.drawer.inert = true;
   shopElements.backdrop.classList.remove('visible');
   shopElements.drawer.classList.remove('open');
   shopElements.drawer.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('cart-open');
-  setTimeout(() => { shopElements.backdrop.hidden = true; }, 240);
+  clearTimeout(cartBackdropTimer);
+  cartBackdropTimer = setTimeout(() => { shopElements.backdrop.hidden = true; }, 240);
 }
 
 async function copyCartInquiry() {

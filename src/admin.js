@@ -1,3 +1,7 @@
+import { installProductImageFallbacks } from './product-images.js';
+
+installProductImageFallbacks();
+
 const categoryLabels = {
   chemical: '세차 케미컬',
   tool: '세차 도구',
@@ -637,7 +641,7 @@ elements.loginForm.addEventListener('submit', async (event) => {
 
 elements.logout.addEventListener('click', async () => {
   try { await api('/api/admin/logout', { method: 'POST' }); } catch { /* session may already be gone */ }
-  showLogin('로그아웃했습니다.');
+  location.replace('/admin/login');
 });
 
 elements.sectionTabs.forEach((button) => {
@@ -744,7 +748,7 @@ elements.passwordForm.addEventListener('submit', async (event) => {
       body: JSON.stringify({ password: elements.passwordForm.elements.password.value }),
     });
     elements.passwordForm.reset();
-    showLogin('비밀번호를 변경했습니다. 새 비밀번호로 접속하세요.');
+    location.replace('/admin/login');
   } catch (error) {
     globalThis.alert(error.message);
   }

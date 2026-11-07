@@ -6,6 +6,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: '40330',
+      TRUSTED_PROXY_IPS: '192.168.45.23',
     },
   }],
 };

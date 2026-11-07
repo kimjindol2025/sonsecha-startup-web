@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+  <title id="title">상품 사진 준비 중</title>
+  <desc id="desc">현재 원본 상품 사진을 불러올 수 없어 안내 화면을 표시합니다.</desc>
+  <rect width="640" height="480" fill="#edf2f8"/>
+  <g fill="none" stroke="#8c9db4" stroke-width="8" stroke-linejoin="round">
+    <rect x="245" y="130" width="150" height="112" rx="12"/>
+    <circle cx="284" cy="164" r="12"/>
+    <path d="m250 224 42-40 30 28 28-22 40 40"/>
+  </g>
+  <text x="320" y="302" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#405269">상품 사진 준비 중</text>
+  <text x="320" y="346" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#627087">상품명과 설명을 확인해 주세요</text>
+</svg>
