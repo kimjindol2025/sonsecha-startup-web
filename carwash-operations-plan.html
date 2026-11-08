@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="노터치·셀프 세차장 통합 운영관리 시스템(ERP) 기획서. 매출, 장비, 직원, 고객CS, 재고, 법정 폐수관리의 원스톱 통합 화면 설계" />
+  <title>세차장 통합 운영관리 시스템(ERP) 기획서 · 水 세차장 산업 서비스</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #f5f4ef;
+      --paper: #ffffff;
+      --ink: #172329;
+      --muted: #5e6d72;
+      --line: #dfe5de;
+      --green: #1f6759;
+      --green-light: #e8f3f0;
+      --orange: #e38142;
+      --orange-light: #fdf2ea;
+      --blue: #2a6f97;
+      --blue-light: #e9f2f8;
+      --red: #c94a44;
+      --red-light: #fbeeed;
+      --sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+      --serif: Georgia, "Times New Roman", serif;
+      --shadow: 0 16px 36px rgba(23, 35, 41, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.65;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.03em;
+    }
+    .brand span {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .topbar nav {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .topbar nav a:hover { color: var(--green); }
+    .topbar nav a.active {
+      color: var(--green);
+      background: var(--green-light);
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    /* Sub Nav */
+    .sub-nav {
+      background: #faf9f6;
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .sub-nav-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 10px 24px;
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .sub-nav a {
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .sub-nav a:hover {
+      background: #fff;
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 48px 24px 100px;
+    }
+
+    /* Hero */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 40px;
+      padding-bottom: 56px;
+      border-bottom: 1px solid var(--line);
+      align-items: end;
+    }
+    .eyebrow {
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      margin: 0 0 14px;
+    }
+    .hero h1 {
+      font-size: clamp(34px, 5.5vw, 56px);
+      line-height: 1.08;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+      margin: 0 0 20px;
+    }
+    .hero h1 em {
+      color: var(--green);
+      font-style: normal;
+    }
+    .hero-desc {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+      margin: 0;
+      max-width: 680px;
+    }
+    .hero-box {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--green);
+      border-radius: 14px;
+      padding: 26px;
+      box-shadow: var(--shadow);
+    }
+    .hero-box strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--green);
+    }
+    .hero-box p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Metrics Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 44px 0 64px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 22px 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .stat-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .stat-card b {
+      display: block;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .stat-card span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Section Styling */
+    .section-wrap {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-head {
+      margin-bottom: 32px;
+    }
+    .section-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--green-light);
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin: 0 0 10px;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0;
+      max-width: 800px;
+    }
+
+    /* 6 Pillars Grid */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .pillar-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 28px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.02);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      border-color: #abbcb3;
+    }
+    .pillar-num {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+    .pillar-card h3 {
+      font-size: 21px;
+      margin: 0 0 12px;
+      letter-spacing: -0.03em;
+    }
+    .pillar-badge {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .badge-essential { background: #feebe8; color: #b83329; }
+    .badge-profit { background: #e7f4f0; color: var(--green); }
+    .badge-smart { background: #eaf1f8; color: var(--blue); }
+
+    .pillar-card p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0 0 18px;
+    }
+    .pillar-items {
+      margin: 0 0 20px;
+      padding-left: 18px;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .pillar-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    /* UI Wireframe Showcase */
+    .mockup-wrap {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 36px;
+      box-shadow: var(--shadow);
+      margin-top: 24px;
+    }
+    .mockup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #edf1ee;
+      margin-bottom: 28px;
+    }
+    .mockup-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .mockup-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 99px;
+      background: var(--orange-light);
+      color: var(--orange);
+    }
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 28px;
+    }
+    .form-step {
+      background: #fafaf7;
+      border: 1px solid #e7ede5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .form-step-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+    .step-inputs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      font-size: 13px;
+    }
+    .input-mock {
+      background: #fff;
+      border: 1px solid #d5ded5;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--muted);
+    }
+    .side-widget {
+      background: #faf9f5;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .side-widget h4 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--green);
+    }
+    .alert-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #eae2d6;
+      margin-bottom: 8px;
+    }
+
+    /* Compliance Callout */
+    .callout {
+      background: #fdf5f4;
+      border: 1px solid #f4d0ce;
+      border-left: 5px solid var(--red);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 32px 0;
+    }
+    .callout h4 {
+      margin: 0 0 8px;
+      color: var(--red);
+      font-size: 17px;
+    }
+    .callout p {
+      margin: 0 0 12px;
+      color: #6a2522;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Comparison Table */
+    .table-box {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 24px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+    th {
+      background: #f8faf8;
+      padding: 14px 18px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+    }
+    td {
+      padding: 15px 18px;
+      border-bottom: 1px solid #edf1ee;
+      color: var(--ink);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    td strong { color: var(--green); }
+
+    /* Code Block */
+    pre {
+      background: #172329;
+      color: #e3edf2;
+      padding: 24px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+
+    /* Roadmap Timeline */
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 28px;
+    }
+    .timeline-step {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+      position: relative;
+    }
+    .timeline-step .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .step-1 { border-top: 4px solid var(--green); }
+    .step-2 { border-top: 4px solid var(--orange); }
+    .step-3 { border-top: 4px solid var(--blue); }
+    .timeline-step h3 {
+      font-size: 18px;
+      margin: 0 0 10px;
+    }
+    .timeline-step p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 14px;
+    }
+    .timeline-step ul {
+      padding-left: 18px;
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--ink);
+      line-height: 1.7;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 48px 0;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 80px;
+    }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; gap: 28px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .pillars-grid { grid-template-columns: 1fr; }
+      .mockup-grid { grid-template-columns: 1fr; }
+      .timeline { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 14px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span>水</span>
+        <span>세차장 산업 서비스</span>
+      </a>
+      <nav>
+        <a href="./">메인으로</a>
+        <a href="./carwash-app-catalog.html">앱 카탈로그</a>
+        <a href="./carwash-operations-plan.html" class="active">통합운영 기획서</a>
+        <a href="./operations-apps.html">기존 운영 앱</a>
+        <a href="./korea-touchless-report.html">리서치</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Sticky Sub Navigation -->
+  <nav class="sub-nav">
+    <div class="sub-nav-inner">
+      <a href="#overview">01 기획 개요</a>
+      <a href="#pillars">02 6대 핵심 관리축</a>
+      <a href="#wireframe">03 5분 일일마감 UI</a>
+      <a href="#compliance">04 법정 환경(폐수) 의무</a>
+      <a href="#schema">05 통합 데이터 스키마</a>
+      <a href="#roadmap">06 3단계 실행 로드맵</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero" id="overview">
+      <div>
+        <p class="eyebrow">PRODUCT SPECIFICATION · ERP SYSTEM · 2026</p>
+        <h1>세차장 <em>통합 운영관리</em><br>시스템(ERP) 기획서</h1>
+        <p class="hero-desc">
+          매출 정산, 노터치 장비 AS, 교대 근무, 도장 스크래치 민원, 약품 안전재고, 그리고 
+          <strong>물환경보전법상 폐수배출 운영기록부</strong>까지. 현장 점주의 일일 마감 소요 시간을 
+          <strong>1시간에서 5분으로 단축</strong>하고, 영업정지 및 장비 셧다운 리스크를 선제 방어하는 원스톱 통합 솔루션입니다.
+        </p>
+      </div>
+      <aside class="hero-box">
+        <strong>“점주의 시간을 돌려드립니다”</strong>
+        <p>
+          수기 장부와 단절된 5개 앱(매출, 장비, 재고, 폐수, 일지)을 하나의 화면으로 결합해 
+          <strong>퇴근 전 5분 원클릭 일일 마감</strong>과 <strong>지자체 단속 대비 원클릭 법정 서류 출력</strong>을 지원합니다.
+        </p>
+      </aside>
+    </section>
+
+    <!-- Metrics -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <small>마감 소요 시간</small>
+        <b>5분</b>
+        <span>기존 1시간 수기 장부 대비 90% 단축</span>
+      </div>
+      <div class="stat-card">
+        <small>통합 관리 영역</small>
+        <b>6대 축</b>
+        <span>매출·장비·직원·CS·재고·폐수</span>
+      </div>
+      <div class="stat-card">
+        <small>법정 보관 의무 방어</small>
+        <b>3년</b>
+        <span>환경부 표준 폐수운영일지 자동 생성</span>
+      </div>
+      <div class="stat-card">
+        <small>우선순위 등급</small>
+        <b>A급</b>
+        <span>세차장 오픈 현장 필수 도입 시스템</span>
+      </div>
+    </section>
+
+    <!-- 6 Pillars Section -->
+    <section class="section-wrap" id="pillars">
+      <div class="section-head">
+        <span class="section-tag">CORE DOMAINS</span>
+        <h2 class="section-title">세차장 6대 통합 관리 영역 상세 사양</h2>
+        <p class="section-sub">
+          단순한 가계부가 아니라, 현장에서 매일 겪는 실제 문제(고객 분쟁, 장비 고장, 행정 처분)를 체계적으로 방어하도록 설계했습니다.
+        </p>
+      </div>
+
+      <div class="pillars-grid">
+        <!-- Pillar 1 -->
+        <div class="pillar-card">
+          <div class="pillar-num">01 / REVENUE</div>
+          <span class="pillar-badge badge-profit">매출 누수 방지</span>
+          <h3>통합 매출 & 결제 관리</h3>
+          <p>키오스크, 신용카드, RF카드 충전, 간편결제 및 현금 시재를 종합 집계하고 피크타임과 객단가를 분석합니다.</p>
+          <ul class="pillar-items">
+            <li>코스별 판매량 (기본, 하부세차, 프리미엄)</li>
+            <li>결제 채널별 수수료 및 실 정산액 계산</li>
+            <li>총 방문 차량수 및 대당 평균 객단가(ATV) 자동 집계</li>
+            <li>이상 매출 감지 (주말 피크타임 특정 베이 매출 0원 시 경고)</li>
+          </ul>
+          <div class="pillar-footer">현장 결제기 및 키오스크 연동 최적화 →</div>
+        </div>
+
+        <!-- Pillar 2 -->
+        <div class="pillar-card">
+          <div class="pillar-num">02 / MAINTENANCE</div>
+          <span class="pillar-badge badge-essential">장비 가동률 방어</span>
+          <h3>장비·설비 & AS 관리</h3>
+          <p>노터치 본체, 고압 펌프, 블로어(건조기), 콤프레셔 등 고액 핵심 설비의 수명과 고장 정지(Downtime)를 추적합니다.</p>
+          <ul class="pillar-items">
+            <li>장비별 누적 가동시간 및 정지시간(Downtime) 기록</li>
+            <li>예방 정비(PM) 주기 D-Day 알림 (노즐 스케일링, 오일 교체)</li>
+            <li>고장 접수 → 엔지니어 배정 → 수리 완료 및 비용 이력</li>
+            <li>동절기 보일러/열선 작동 상태 및 동파 방지 체크</li>
+          </ul>
+          <div class="pillar-footer">셧다운으로 인한 일 수백만 원 매출 손실 방지 →</div>
+        </div>
+
+        <!-- Pillar 3 -->
+        <div class="pillar-card">
+          <div class="pillar-num">03 / STAFF & SHIFT</div>
+          <span class="pillar-badge badge-smart">운영 표준화</span>
+          <h3>직원 & 교대/정산 관리</h3>
+          <p>오픈, 주간, 마감, 무인 야간 전환 시점의 필수 점검 항목을 체크리스트로 관리하고 현금 시재를 대조합니다.</p>
+          <ul class="pillar-items">
+            <li>교대 근무자별 오픈/마감 점검표 이행 확인</li>
+            <li>키오스크 현금 회수 실사액 vs 시스템 기록 시재 대조</li>
+            <li>드라잉존 타월 세탁/수거, 쓰레기 분리배출 루틴 관리</li>
+            <li>근무자 간 특이사항 인수인계 메모 보드</li>
+          </ul>
+          <div class="pillar-footer">무인 운영 전환 시 관리 공백 제로화 →</div>
+        </div>
+
+        <!-- Pillar 4 -->
+        <div class="pillar-card">
+          <div class="pillar-num">04 / INCIDENT & CS</div>
+          <span class="pillar-badge badge-essential">분쟁 손실 차단</span>
+          <h3>고객 & 민원/CS 대장</h3>
+          <p>도장 스크래치 주장, 휠 손상, 세척 불만 등 현장 최빈 분쟁에 대비해 입차 전 증빙과 CCTV 확인 내역을 기록합니다.</p>
+          <ul class="pillar-items">
+            <li>차량번호 및 차종별 클레임 이력 데이터베이스화</li>
+            <li>입차 전 기존 스크래치 사진 및 사전 고지 확인 연계</li>
+            <li>환불, 재세차권 발급, 보험 접수 등 조치 상태 추적</li>
+            <li>악성 반복 클레임 차량 식별 및 안내 메모</li>
+          </ul>
+          <div class="pillar-footer">법적 분쟁 및 불필요한 보상금 지출 방어 →</div>
+        </div>
+
+        <!-- Pillar 5 -->
+        <div class="pillar-card">
+          <div class="pillar-num">05 / INVENTORY</div>
+          <span class="pillar-badge badge-profit">원가 절감</span>
+          <h3>약품 & 소모품 자동 재고</h3>
+          <p>스노우폼, 프리워시, 발수코팅제, 유리막 코팅제 등 핵심 케미컬의 세차 대수 대비 소진율을 추산하고 발주를 제안합니다.</p>
+          <ul class="pillar-items">
+            <li>세차 대수 비례 일일 약품 소진량 자동 계산</li>
+            <li>안전재고(최소 유지 수량) 미달 시 발주 알림 표출</li>
+            <li>드라잉 타월 세탁 주기 및 폐기/신규 보충 관리</li>
+            <li>약품 공급업체별 단가 및 발주 주기 관리</li>
+          </ul>
+          <div class="pillar-footer">약품 품절로 인한 세차 중단 사고 원천 차단 →</div>
+        </div>
+
+        <!-- Pillar 6 -->
+        <div class="pillar-card">
+          <div class="pillar-num">06 / COMPLIANCE</div>
+          <span class="pillar-badge badge-essential">과태료·영업정지 방지</span>
+          <h3>법정 환경(폐수) 운영기록부</h3>
+          <p>물환경보전법 제38조의2에 따라 3년간 의무 보관해야 하는 폐수배출시설 일지를 매일 계량기 수치만으로 자동 완성합니다.</p>
+          <ul class="pillar-items">
+            <li>용수(상수도/지하수) 계량기 지침 및 일 사용량 기록</li>
+            <li>폐수 유입량, 정화 처리량, 방지시설 전력량(kWh) 산출</li>
+            <li>약품 투입량 및 슬러지 위탁 수거량/계근표 관리</li>
+            <li>지자체 불시 점검 시 즉시 원클릭 A4 표준 양식 출력/인쇄</li>
+          </ul>
+          <div class="pillar-footer">물환경보전법 제38조의2 행정처분 완벽 방어 →</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UI Wireframe Showcase -->
+    <section class="section-wrap" id="wireframe">
+      <div class="section-head">
+        <span class="section-tag">UI / UX ARCHITECTURE</span>
+        <h2 class="section-title">퇴근 전 5분 원클릭: '통합 일일 마감 폼' 설계</h2>
+        <p class="section-sub">
+          복잡한 ERP를 현장에서 쓰지 못하는 이유는 입력이 번거롭기 때문입니다. 
+          매일 마감 시 5개 핵심 블록만 순서대로 채우면 6개 도메인이 동시에 업데이트됩니다.
+        </p>
+      </div>
+
+      <div class="mockup-wrap">
+        <div class="mockup-header">
+          <div>
+            <div class="mockup-title">일일 운영 마감 위저드 (Daily Closing Wizard)</div>
+            <small style="color:var(--muted)">2026-11-08 (일) · 노터치 1호점 마감</small>
+          </div>
+          <span class="mockup-badge">소요 시간: 약 3~5분</span>
+        </div>
+
+        <div class="mockup-grid">
+          <!-- Left: Input Steps -->
+          <div>
+            <div class="form-step">
+              <div class="form-step-title">
+                <span>STEP 1. 기본 정보 & 마감 매출</span>
+                <span style="color:var(--green)">✓ 코스별 대수 자동 연산</span>
+              </div>
+              <div class="step-inputs">
+                <div class="input-mock">날씨: [ 맑음 ▾ ] / 마감자: 홍길동 점주</div>
+                <div class="input-mock">총 방문 차량수: 142 대</div>
+                <div class="input-mock">키오스크 카드 매출: 1,840,000 원</div>
+                <div class="input-mock">현금/RF충전 매출: 350,000 원</div>
+              </div>
+            </div>
+
+            <div class="form-step">
+              <div class="form-step-title">
+                <span>STEP 2. 노터치 장비 & 설비 상태</span>
+                <span style="color:var(--orange)">주의 1건 발생 시 자동 AS 대장 등록</span>
+              </div>
+              <div class="step-inputs">
+                <div class="input-mock">노터치 1호기: [ 정상 작동 ▾ ]</div>
+                <div class="input-mock">노터치 2호기: [ 노즐압력 주의 ▾ ] (정지: 15분)</div>
+                <div class="input-mock">초고압 펌프 & 콤프레셔: [ 정상 ▾ ]</div>
+                <div class="input-mock">정비 메모: 2호기 하부세차 3번 노즐 점검 요청</div>
+              </div>
+            </div>
+
+            <div class="form-step">
+              <div class="form-step-title">
+                <span>STEP 3. 법정 폐수 배출시설 계량기 지침</span>
+                <span style="color:var(--red)">★ 환경부 필수 보관 항목</span>
+              </div>
+              <div class="step-inputs">
+                <div class="input-mock">상수도 지침: 1,420.5 ㎥ (사용 8.2㎥)</div>
+                <div class="input-mock">방지시설 전력량: 842.1 kWh</div>
+                <div class="input-mock">폐수 처리량: 7,500 L / 슬러지: 0 kg</div>
+                <div class="input-mock">유수분리조 기름 청소: [ 완료 (이상없음) ▾ ]</div>
+              </div>
+            </div>
+
+            <div class="form-step">
+              <div class="form-step-title">
+                <span>STEP 4. 약품 교체 & 고객 특이사항</span>
+                <span>남은 안전재고 2일 분량 시 경고</span>
+              </div>
+              <div class="step-inputs">
+                <div class="input-mock">교체 약품: 스노우폼 1통 (20L) 보충</div>
+                <div class="input-mock">잔여 재고: 프리워시 3통, 왁스 1통 (부족)</div>
+                <div class="input-mock" style="grid-column: span 2;">
+                  고객 민원/특이사항: 15:30경 카니발 차량 세척 후 물자국 문의 → 드라잉존 안내 및 무료 타월 증정 완료
+                </div>
+              </div>
+            </div>
+
+            <button style="width:100%; padding:14px; background:var(--green); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer;">
+              오늘의 운영 마감 저장 및 대시보드 반영 완료 (1-Click)
+            </button>
+          </div>
+
+          <!-- Right: Real-time Live Summary Widget -->
+          <div>
+            <div class="side-widget">
+              <h4>당일 실시간 집계 요약</h4>
+              <div style="font-size:24px; font-weight:800; color:var(--ink); margin-bottom:4px;">2,190,000 원</div>
+              <div style="font-size:12px; color:var(--muted); margin-bottom:16px;">평균 객단가: 15,422 원 / 대</div>
+
+              <div class="alert-pill">
+                <span style="color:var(--orange)">⚠️</span>
+                <span><strong>발주 권장:</strong> 발수왁스 잔여 1통</span>
+              </div>
+              <div class="alert-pill">
+                <span style="color:var(--blue)">🔧</span>
+                <span><strong>AS 요청:</strong> 2호기 노즐 점검</span>
+              </div>
+              <div class="alert-pill">
+                <span style="color:var(--green)">🌱</span>
+                <span><strong>환경일지:</strong> 법정 항목 입력 완료</span>
+              </div>
+            </div>
+
+            <div class="side-widget" style="background:#fff;">
+              <h4 style="color:var(--ink);">원클릭 서류 인쇄</h4>
+              <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">지자체 환경과 불시 실사 대응용</p>
+              <button style="width:100%; padding:10px; background:#fff; border:1px solid var(--green); color:var(--green); border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; margin-bottom:8px;">
+                📄 폐수배출시설 운영일지 인쇄 (PDF)
+              </button>
+              <button style="width:100%; padding:10px; background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+                📊 월간 매출 및 운영 결산표 다운로드
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compliance Callout Section -->
+    <section class="section-wrap" id="compliance">
+      <div class="section-head">
+        <span class="section-tag" style="background:var(--red-light); color:var(--red);">LEGAL & COMPLIANCE</span>
+        <h2 class="section-title">물환경보전법 제38조의2와 세차장 폐수 리스크</h2>
+        <p class="section-sub">
+          세차장은 단순 상가가 아닌 '폐수배출시설'입니다. 행정처분 및 과태료 위험을 사전에 방어해야 합니다.
+        </p>
+      </div>
+
+      <div class="callout">
+        <h4>🚨 법적 핵심 주의사항: '폐수배출시설 및 수질오염방지시설 운영기록부' 미보관 시 처벌</h4>
+        <p>
+          물환경보전법에 따라 세차장 사업자는 폐수처리시설의 일일 가동 상태, 약품 투입량, 슬러지 발생·위탁량을 매일 기록하고 
+          <strong>3년간 사업장에 보관</strong>해야 합니다. 위탁 관리업체에 청소를 맡기더라도 <strong>최종 법적 책임은 대표자(점주)</strong>에게 있으며, 
+          미작성·허위작성 적발 시 <strong>300만 원 이하의 과태료 및 조업정지 처분</strong>을 받게 됩니다.
+        </p>
+        <small style="color:#8a2f2b; font-weight:700;">
+          본 통합 운영관리 시스템은 일일 계량기 수치 입력만으로 환경부 고시 서식에 맞춘 3년 보관용 일지를 자동 영구 보존합니다.
+        </small>
+      </div>
+
+      <div class="table-box">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:20%">구분</th>
+              <th style="width:35%">기존 수기/파편화 운영</th>
+              <th style="width:45%">통합 운영관리 시스템 도입 후</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>폐수 운영일지</strong></td>
+              <td>노트에 볼펜으로 대충 적다 누락, 단속 시 당황</td>
+              <td><strong>매일 마감 시 1분 입력 → 환경부 표준 서식 자동 완성 & PDF 출력</strong></td>
+            </tr>
+            <tr>
+              <td><strong>용수/전력 누수</strong></td>
+              <td>수도요금 고지서 나온 뒤에야 누수·동파 파악</td>
+              <td><strong>세차 대수 대비 용수 지침 급증 시 '배관 누수 의심 알림' 즉시 작동</strong></td>
+            </tr>
+            <tr>
+              <td><strong>슬러지/유수분리조</strong></td>
+              <td>기름 찌꺼기가 역류하거나 배관 막혀서 악취 민원</td>
+              <td><strong>청소 주기 캘린더 및 슬러지 수거 계근표 파일 영구 아카이빙</strong></td>
+            </tr>
+            <tr>
+              <td><strong>장비 AS & 부품</strong></td>
+              <td>고장 날 때마다 기사 부르고 같은 고장 원인 망각</td>
+              <td><strong>정비 이력 누적으로 부품 수명 사전 예측 및 셧다운 예방</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Data Schema Section -->
+    <section class="section-wrap" id="schema">
+      <div class="section-head">
+        <span class="section-tag">DATA ARCHITECTURE</span>
+        <h2 class="section-title">통합 데이터 스키마 (TypeScript Interface)</h2>
+        <p class="section-sub">
+          기존의 5개 개별 LocalStorage 저장 구조를 일원화하여, 하루 1개의 완결된 레코드로 관리하는 정규화 스키마입니다.
+        </p>
+      </div>
+
+      <pre><code>// sonsecha-app-unified-ops-v1 스키마 정의
+export interface DailyOperationClosing {
+  id: string; // "YYYY-MM-DD"
+  date: string;
+  weather: 'sunny' | 'cloudy' | 'rain' | 'snow';
+  manager: string; // 마감 근무자
+
+  // 1. 매출 & 결제
+  sales: {
+    totalRevenue: number;     // 순매출
+    totalCars: number;        // 방문 차량수
+    averageTicket: number;    // 평균 객단가 (totalRevenue / totalCars)
+    courseCounts: {
+      basic: number;
+      underbody: number;
+      bubble: number;
+      premium: number;
+    };
+    channelBreakdown: {
+      kioskCard: number;
+      rfCardReload: number;
+      cash: number;
+      mobileApp: number;
+    };
+    refunds: number;
+  };
+
+  // 2. 장비 & AS
+  equipment: {
+    downtimeMinutes: number; // 전체 가동 정지 시간(분)
+    bayStatus: { [bayId: string]: 'normal' | 'caution' | 'offline' };
+    issues: Array<{
+      equipmentName: string;
+      symptom: string;
+      status: 'reported' | 'in_repair' | 'resolved';
+      cost?: number;
+    }>;
+  };
+
+  // 3. 환경 & 폐수 (물환경보전법 제38조의2 준수)
+  compliance: {
+    waterMeterStart: number;
+    waterMeterEnd: number;
+    waterUsageM3: number;        // 일일 용수 사용량 (㎥)
+    powerMeterKwh: number;       // 방지시설 전력 적산계
+    wastewaterTreatedL: number;  // 폐수 정화 처리량 (L)
+    sludgeHandledKg: number;     // 슬러지 인출량 (kg)
+    chemicalAddedKg: number;     // 약품 투입량
+    oilSeparatorCleaned: boolean;// 유수분리조 청소 여부
+    status: 'normal' | 'caution' | 'action_required';
+  };
+
+  // 4. 소모품 & 재고
+  inventory: {
+    chemicalUsageAlerts: string[]; // "스노우폼 부족", "발수제 발주 필요"
+    replenishedItems: Array<{ item: string; quantity: number }>;
+  };
+
+  // 5. 고객 & 민원
+  incidents: {
+    complaintCount: number;
+    records: Array<{
+      carNumber: string;
+      issueType: 'scratch' | 'wash_quality' | 'payment_error' | 'facility';
+      summary: string;
+      resolved: boolean;
+    }>;
+  };
+
+  createdAt: string;
+  updatedAt: string;
+}</code></pre>
+    </section>
+
+    <!-- 3-Step Execution Roadmap -->
+    <section class="section-wrap" id="roadmap">
+      <div class="section-head">
+        <span class="section-tag">EXECUTION PLAN</span>
+        <h2 class="section-title">3단계 구현 로드맵</h2>
+        <p class="section-sub">
+          한 번에 거대한 시스템을 만들기보다, 현장에서 점주가 바로 쓸 수 있는 일일 마감 폼부터 단계별로 살을 붙여나갑니다.
+        </p>
+      </div>
+
+      <div class="timeline">
+        <!-- Step 1 -->
+        <div class="timeline-step step-1">
+          <span class="badge" style="background:var(--green-light); color:var(--green);">1단계 · 기록 표준화 (즉시 착수)</span>
+          <h3>5분 일일 마감 폼 & 위젯</h3>
+          <p>점주가 퇴근 전 매출, 장비 상태, 폐수 계량기를 한 번에 저장하는 마감 앱 및 대시보드 화면 구축</p>
+          <ul>
+            <li>일일 5분 통합 마감 모달 화면 개발</li>
+            <li>실시간 매출/객단가/안전재고 위젯 연동</li>
+            <li>브라우저 LocalStorage 기반 무설치 즉시 사용</li>
+            <li>기존 5개 분산 앱 데이터 통합 마이그레이션</li>
+          </ul>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="timeline-step step-2">
+          <span class="badge" style="background:var(--orange-light); color:var(--orange);">2단계 · 법정 서류 자동화</span>
+          <h3>환경부 표준 일지 PDF 출력</h3>
+          <p>지자체 불시 점검 및 환경 실사 대응을 위한 A4 서식 출력 및 월간 운영 결산 리포트 기능</p>
+          <ul>
+            <li>물환경보전법 제38조의2 표준 서식 인쇄 뷰</li>
+            <li>월간 매출/원가/약품비 결산 리포트 생성</li>
+            <li>도장 스크래치 민원 관리 전용 대장 및 사진 첨부</li>
+            <li>부품 예방정비 D-Day 캘린더 알림</li>
+          </ul>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="timeline-step step-3">
+          <span class="badge" style="background:var(--blue-light); color:var(--blue);">3단계 · 자동화 & 지능형 관제</span>
+          <h3>이상 감지 & 스마트 관제</h3>
+          <p>키오스크 API, IoT 유량계/전력계 센서 연동으로 수기 입력을 완전히 없애고 무인 이상 감지 구현</p>
+          <ul>
+            <li>VAN사/키오스크 매출 데이터 실시간 자동 수집</li>
+            <li>IoT 수위/계량기 센서 연동 (폐수·약품 잔량 자동 측정)</li>
+            <li>세차 대수 대비 누수·과전력 이상 징후 자동 경보</li>
+            <li>다점포(본사-가맹점) 프랜차이즈 통합 관제 대시보드</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        <strong>水 세차장 산업 서비스</strong> · 노터치 자동세차 창업 & 통합 운영 솔루션
+        <br>
+        <small>문서 버전: v1.0.0 · 기준일자: 2026년 11월 · 리포지토리: kimjindol2025/sonsecha-startup-web</small>
+      </div>
+      <div>
+        <a href="./carwash-app-catalog.html" style="color:var(--green); font-weight:700;">← 앱 카탈로그로 돌아가기</a>
+      </div>
+    </footer>
+
+  </main>
+
+</body>
+</html>
