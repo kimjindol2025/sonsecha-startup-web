@@ -39,13 +39,14 @@
 - 첫 번째 대상인 장비 원격관제의 구현 명세를 `docs/specs/06-equipment-technology/01-remote-monitoring-implementation.md`에 추가했다.
 - 저장소의 Vite 멀티페이지 구조와 GitHub Pages 배포 제약에 맞춰, 첫 구현은 가상 데이터만 사용하는 읽기 전용 브라우저 데모로 고정했다. 로그인·서버 동기화·문자/메일 발송·PLC/Modbus/OPC UA/MQTT 연결과 원격 제어를 범위 밖으로 명시했다.
 - UI, 필터/상태 동작, 데이터 타입, 저장/내보내기, 알람 확인, AS 티켓 상태 전이, 한국어 시간 표기, 오류·접근성 처리 및 수용 기준을 적었다. 실제 장비 연동 사양은 파일럿 모델·제조사 자료를 받기 전에는 임의로 채우지 않는다.
-- 장비 원격관제, IoT 장비관리, 예방정비, 부품 찾기, AI 고장진단, 가맹점 통합관리 6/13을 상세 명세로 전환했다. 나머지 7개는 기존 조사 초안 상태이며, `docs/TASKS.md` 순서대로 이어간다.
+- 장비 원격관제, IoT 장비관리, 예방정비, 부품 찾기, AI 고장진단, 가맹점 통합관리, 본사 AS 배차 7/13을 상세 명세로 전환했다. 나머지 6개는 기존 조사 초안 상태이며, `docs/TASKS.md` 순서대로 이어간다.
 - 두 번째 대상 IoT 장비관리도 `docs/specs/06-equipment-technology/02-iot-equipment-management-implementation.md`에 구현 명세 v1.0을 추가했다. 센서 6대 데모 fixture, 임계치 편집/감사 이력, 경보 확인, 점검기록, 시각·품질 규칙, 오류처리와 인수 기준을 구체화했다.
 - 실센서 미연결과 데모 임계치의 안전기준 비해당을 명시하고, 카탈로그에서 상세 명세로 연결했다.
 - 세 번째 예방정비 `docs/specs/06-equipment-technology/03-preventive-maintenance-implementation.md`는 달력기반 데모 계획, OEM 출처 상태, 한국 날짜 기준 기한 분류, 작업 완료/연기 승인, 다음 기한 산술, 점검 이력, 인수 기준을 상세화했다. 예시 주기가 실제 OEM 권장으로 보이지 않게 fixture와 UI 문구를 제한하고 카탈로그를 연결했다.
 - 네 번째 부품 찾기 `docs/specs/06-equipment-technology/04-parts-finder-implementation.md`는 DEMO 카탈로그/정확검색/근거상태/문의 초안만 구현하도록 범위를 정했다. OCR, 실제 부품 정보, 호환 판정, 재고/가격/주문, 외부 업체 문의 전송은 제외하고 안전 민감 부품의 대체 추천을 금지했다.
 - 다섯 번째 AI 고장진단 `docs/specs/06-equipment-technology/05-ai-fault-diagnosis-implementation.md`는 실제 AI/실장비 진단이 아닌 시나리오 UX 데모로 범위를 고정했다. 위험 징후 차단, 판단 보류, synthetic fixture, 기록 저장/삭제와 실AI 후속 승인조건을 정의했다.
 - 여섯 번째 가맹점 통합관리 `docs/specs/07-franchise/01-franchise-management-implementation.md`는 합성 지점 데이터, 본사/점주 화면 미리보기, 공지 게시/읽음과 로컬 정정 초안을 정의했다. 역할 전환은 인증이 아니며 실제 지점/계약/POS/알림을 다루지 않는다.
+- 일곱 번째 본사 AS 배차 `docs/specs/07-franchise/02-hq-service-dispatch-implementation.md`는 티켓 접수/안전보류/수동 배정/기사 응답/작업 보고/본사 검토 상태 전이를 정의했다. 실제 기사·위치정보·연락/청구 연동은 제외했다.
 
 ## 후속 링크 점검
 
