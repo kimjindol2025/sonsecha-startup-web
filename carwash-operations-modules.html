@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="세차장 통합 운영관리 6대 항목별 세부 기획서(PRD). 매출, 장비, 직원, CS, 재고, 법정 폐수관리 상세 스펙" />
+  <title>세차장 통합 운영관리 6대 항목별 상세 기획서 · 水 세차장 산업 서비스</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #f5f4ef;
+      --paper: #ffffff;
+      --ink: #172329;
+      --muted: #5e6d72;
+      --line: #dfe5de;
+      --green: #1f6759;
+      --green-light: #e8f3f0;
+      --orange: #e38142;
+      --orange-light: #fdf2ea;
+      --blue: #2a6f97;
+      --blue-light: #e9f2f8;
+      --red: #c94a44;
+      --red-light: #fbeeed;
+      --sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+      --shadow: 0 16px 36px rgba(23, 35, 41, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.65;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.03em;
+    }
+    .brand span {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .topbar nav {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .topbar nav a:hover { color: var(--green); }
+    .topbar nav a.active {
+      color: var(--green);
+      background: var(--green-light);
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    /* Container & Layout */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    .page-head {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      margin: 0 0 8px;
+    }
+    .page-head h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: -0.04em;
+      margin: 0 0 12px;
+      font-weight: 800;
+    }
+    .page-head p {
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0;
+      max-width: 800px;
+    }
+
+    /* 2-Column App Layout */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* Module Navigation Sidebar */
+    .module-nav {
+      position: sticky;
+      top: 80px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+    }
+    .module-nav-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      padding: 6px 12px 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 10px;
+    }
+    .module-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .module-item:hover {
+      background: #f8faf8;
+    }
+    .module-item.active {
+      background: var(--green-light);
+      border-color: #b5d8cf;
+    }
+    .module-code {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .module-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .module-item.active .module-name {
+      color: var(--green);
+    }
+
+    /* Content Area */
+    .module-content {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 36px 40px;
+      box-shadow: var(--shadow);
+      min-height: 700px;
+    }
+
+    .module-pane {
+      display: none;
+    }
+    .module-pane.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pane-header {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 28px;
+    }
+    .pane-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 99px;
+      margin-bottom: 10px;
+    }
+    .pane-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin: 0 0 10px;
+    }
+    .pane-desc {
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* Sub Sections in Pane */
+    .sub-block {
+      margin-bottom: 36px;
+    }
+    .sub-block h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sub-block h3::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      background: var(--green);
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin-top: 10px;
+      background: #fafaf7;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .data-table th {
+      background: #eef2ed;
+      padding: 12px 14px;
+      font-weight: 700;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf1ee;
+      vertical-align: top;
+      color: var(--ink);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .req-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #feebe8;
+      color: var(--red);
+    }
+    .opt-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #e9edf0;
+      color: var(--muted);
+    }
+
+    /* Logic Box */
+    .logic-box {
+      background: #f7faf7;
+      border: 1px solid #dbe8db;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-top: 12px;
+    }
+    .logic-box strong {
+      display: block;
+      color: var(--green);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .logic-box ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    /* Alert Rules Box */
+    .alert-box {
+      background: #fffbf5;
+      border: 1px solid #fae6cb;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-top: 12px;
+    }
+    .alert-box strong {
+      color: var(--orange);
+      font-size: 14px;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .alert-box ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    /* Wireframe Cards */
+    .wire-card {
+      background: #fafaf7;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+    }
+    .wire-head {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .module-nav {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .module-content {
+        padding: 24px 20px;
+      }
+    }
+    @media (max-width: 560px) {
+      .module-nav {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span>水</span>
+        <span>세차장 산업 서비스</span>
+      </a>
+      <nav>
+        <a href="./">메인으로</a>
+        <a href="./carwash-app-catalog.html">앱 카탈로그</a>
+        <a href="./carwash-operations-plan.html">통합운영 기획서</a>
+        <a href="./carwash-operations-modules.html" class="active">6대 항목별 상세스펙</a>
+        <a href="./operations-apps.html">기존 운영 앱</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-head">
+      <p class="eyebrow">MODULE-BY-MODULE SPECIFICATION · PRD DETAILED</p>
+      <h1>세차장 통합 운영관리 6대 항목별 상세 기획서</h1>
+      <p>
+        현장에서 즉시 구현 가능한 입력 필드, 자동 계산 수식, 이상 징후 알림 규칙, 그리고 법적 의무 서식 출력 기준을 항목별로 정리했습니다.
+      </p>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar Navigation -->
+      <aside class="module-nav">
+        <div class="module-nav-title">6대 핵심 모듈 목록</div>
+        <div class="module-item active" data-target="mod-sales">
+          <span class="module-code">MOD-01</span>
+          <span class="module-name">매출·결제 통합 관리</span>
+        </div>
+        <div class="module-item" data-target="mod-equip">
+          <span class="module-code">MOD-02</span>
+          <span class="module-name">장비·설비 & AS 유지보수</span>
+        </div>
+        <div class="module-item" data-target="mod-staff">
+          <span class="module-code">MOD-03</span>
+          <span class="module-name">직원 & 교대/정산 체크</span>
+        </div>
+        <div class="module-item" data-target="mod-cs">
+          <span class="module-code">MOD-04</span>
+          <span class="module-name">고객 & 도장 민원/CS 대장</span>
+        </div>
+        <div class="module-item" data-target="mod-inventory">
+          <span class="module-code">MOD-05</span>
+          <span class="module-name">약품 & 소모품 자동 재고</span>
+        </div>
+        <div class="module-item" data-target="mod-compliance">
+          <span class="module-code">MOD-06</span>
+          <span class="module-name">법정 폐수배출시설 일지</span>
+        </div>
+      </aside>
+
+      <!-- Main Module Detail Content -->
+      <section class="module-content">
+
+        <!-- ================= MOD-01 ================= -->
+        <article class="module-pane active" id="mod-sales">
+          <div class="pane-header">
+            <span class="pane-tag" style="background:var(--green-light); color:var(--green);">A급 · 현장 필수</span>
+            <h2 class="pane-title">01. 매출·결제 통합 관리 모듈 (MOD-01-SALES)</h2>
+            <p class="pane-desc">
+              무인 키오스크, 신용카드, RF 충전카드, 모바일 간편결제, 현금 시재를 종합 정산하고, 
+              코스별·시간대별 대당 객단가(ATV)를 분석하여 매출 누수를 차단합니다.
+            </p>
+          </div>
+
+          <div class="sub-block">
+            <h3>1. 핵심 입력 데이터 구조</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:25%">필드명</th>
+                  <th style="width:15%">유형</th>
+                  <th style="width:15%">필수여부</th>
+                  <th style="width:45%">설명 및 현장 예시</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>date</code></td>
+                  <td>Date</td>
+                  <td><span class="req-badge">필수</span></td>
+                  <td>영업일자 (YYYY-MM-DD)</td>
+                </tr>
+                <tr>
+                  <td><code>basicCourseCount</code></td>
+                  <td>Number</td>
+                  <td><span class="req-badge">필수</span></td>
+                  <td>기본 세차 코스 판매 대수 (예: 10,000원)</td>
+                </tr>
+                <tr>
+                  <td><code>underbodyCourseCount</code></td>
+                  <td>Number</td>
+                  <td><span class="opt-badge">선택</span></td>
+                  <td>하부세차 포함 코스 판매 대수 (예: 12,000원)</td>
+                </tr>
+                <tr>
+                  <td><code>premiumCourseCount</code></td>
+                  <td>Number</td>
+                  <td><span class="req-badge">필수</span></td>
+                  <td>최고급 프리미엄 코팅 코스 판매 대수 (예: 15,000원)</td>
+                </tr>
+                <tr>
+                  <td><code>kioskCardAmount</code></td>
+                  <td>Number</td>
+                  <td><span class="req-badge">필수</span></td>
+                  <td>키오스크 신용/체크/간편결제 승인 합계액</td>
+                </tr>
+                <tr>
+                  <td><code>rfCardReloadAmount</code></td>
+                  <td>Number</td>
+                  <td><span class="req-badge">필수</span></td>
+                  <td>현장 RF카드 충전 매출액</td>
+                </tr>
+                <tr>
+                  <td><code>refundAmount</code></td>
+                  <td>Number</td>
+                  <td><span class="opt-badge">선택</span></td>
+                  <td>기계 오작동 등으로 인한 환불 및 승인 취소 금액</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sub-block">
+            <h3>2. 자동 연산 및 비즈니스 로직</h3>
+            <div class="logic-box">
+              <strong>핵심 산출 지표</strong>
+              <ul>
+                <li><strong>총 매출액 (Gross Revenue)</strong> = (기본대수 × 10,000) + (하부대수 × 12,000) + (프리미엄대수 × 15,000)</li>
+                <li><strong>순 매출액 (Net Revenue)</strong> = 총 매출액 - 환불액</li>
+                <li><strong>총 세차 대수</strong> = 기본 + 하부 + 버블 + 프리미엄 판매 대수 합산</li>
+                <li><strong>대당 평균 객단가 (ATV)</strong> = 순 매출액 ÷ 총 세차 대수 (목표: 13,000원 이상 유지)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sub-block">
+            <h3>3. 이상 징후 감지 및 알림 규칙</h3>
+            <div class="alert-box">
+              <strong>점주 알림 조건</strong>
+              <ul>
+                <li><strong>피크타임 결제 누락:</strong> 주말 맑은 날 11:00~16:00 사이 특정 베이 세차 대수가 0건일 때 → <em>키오스크 통신 불량 또는 진입 차단기 에러 경보</em></li>
+                <li><strong>환불율 5% 초과:</strong> 당일 세차 대비 환불 금액이 5% 이상 발생 시 → <em>노즐 압력 센서 또는 물기 건조기 고장 점검 요청</em></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= MOD-02 ================= -->
+        <article class="module-pane" id="mod-equip">
+          <div class="pane-header">
+            <span class="pane-tag" style="background:var(--red-light); color:var(--red);">A급 · 장비 가동률 방어</span>
+            <h2 class="pane-title">02. 장비·설비 & AS 유지보수 모듈 (MOD-02-EQUIP)</h2>
+            <p class="pane-desc">
+              노터치 본체, 초고압 플런저 펌프, 블로어(건조기), 에어 콤프레셔 등 핵심 설비의 
+              누적 가동시간과 정지시간(Downtime)을 추적하고 예방 정비(PM) D-Day를 관리합니다.
+            </p>
+          </div>
+
+          <div class="sub-block">
+            <h3>1. 주요 설비군 및 예방정비 주기</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:25%">장비명</th>
+                  <th style="width:30%">일일 점검 항목</th>
+                  <th style="width:25%">예방 정비(PM) 주기</th>
+                  <th style="width:20%">고장 시 위험도</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>노터치 갠트리 본체</strong></td>
+                  <td>레일 윤활, 노즐 막힘, 차량 감지 센서</td>
+                  <td>1개월 (노즐 스케일링 세척)</td>
+                  <td><span class="req-badge">베이 전면 폐쇄</span></td>
+                </tr>
+                <tr>
+                  <td><strong>초고압 펌프 시스템</strong></td>
+                  <td>토출 압력 (80~100 bar), 오일 누유</td>
+                  <td>500시간 / 3개월 (오일 교체)</td>
+                  <td><span class="req-badge">세척 불능</span></td>
+                </tr>
+                <tr>
+                  <td><strong>송풍 건조기 (블로어)</strong></td>
+                  <td>모터 과열, 송풍 덕트 정렬 상태</td>
+                  <td>6개월 (베어링 구리스 주입)</td>
+                  <td>물기 잔여 민원 급증</td>
+                </tr>
+                <tr>
+                  <td><strong>동파방지 보일러/열선</strong></td>
+                  <td>순환 온수 온도, 자동 배수 밸브</td>
+                  <td>동절기 매일 (영하권 야간)</td>
+                  <td><span class="req-badge">배관 파열 수천만원</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sub-block">
+            <h3>2. AS 접수 및 다운타임 연산</h3>
+            <div class="logic-box">
+              <strong>손실 비용 및 정비 통계 산출</strong>
+              <ul>
+                <li><strong>베이 가동 정지시간 (Downtime)</strong>: 고장 발생 시각부터 AS 수리 완료 시각까지 분 단위 계산</li>
+                <li><strong>정지로 인한 추정 매출 손실</strong> = (정지 시간(분) / 60) × (시간당 평균 세차 대수 × 평균 객단가)</li>
+                <li><strong>장비 수명 예측</strong>: 누적 10,000시간 가동 시 주요 씰(Seal) 및 패킹 교체 D-Day 자동 카운트</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= MOD-03 ================= -->
+        <article class="module-pane" id="mod-staff">
+          <div class="pane-header">
+            <span class="pane-tag" style="background:var(--blue-light); color:var(--blue);">A급 · 위생 & 시재 방어</span>
+            <h2 class="pane-title">03. 직원 & 교대/정산 체크 모듈 (MOD-03-STAFF)</h2>
+            <p class="pane-desc">
+              오픈, 주간, 마감, 무인 야간 전환 시점의 필수 점검 항목을 체크리스트로 관리하고, 
+              키오스크 현금 실사액과 전산 매출액의 시재 차액을 원천 방어합니다.
+            </p>
+          </div>
+
+          <div class="sub-block">
+            <h3>1. 교대별 필수 이행 루틴</h3>
+            <div class="wire-card">
+              <div class="wire-head">☀️ 오픈 체크 (08:00)</div>
+              <p style="margin:0; font-size:13px; color:var(--muted)">진입로 이물질 청소, 키오스크 영수증 롤 잔량 확인, 동파방지 밸브 확인, 조명 점등</p>
+            </div>
+            <div class="wire-card">
+              <div class="wire-head">🌤️ 주간 수시 점검 (14:00)</div>
+              <p style="margin:0; font-size:13px; color:var(--muted)">드라잉존 공용 타월 수거 및 대형 세탁기 가동, 매트세척기 오물통 비우기, 화장실 위생 점검</p>
+            </div>
+            <div class="wire-card">
+              <div class="wire-head">🌙 마감 및 무인 전환 (22:00)</div>
+              <p style="margin:0; font-size:13px; color:var(--muted)">키오스크 현금 회수 및 금고 보관, 동전교환기 잔액 보충, 야간 순환 보온 모드 전환, 인수인계 메모</p>
+            </div>
+          </div>
+
+          <div class="sub-block">
+            <h3>2. 현금 시재 불일치 검증</h3>
+            <div class="logic-box">
+              <strong>시재 과부족(Discrepancy) 자동 검증</strong>
+              <ul>
+                <li><strong>이론상 현금 시재</strong> = 기초 시재 + 당일 현금 매출 - 매장 현금 지출</li>
+                <li><strong>시재 차액</strong> = 실제 회수 실사액 - 이론상 현금 시재</li>
+                <li><strong>불일치 시 조치</strong>: 차액이 0원이 아닌 경우 시스템에서 사유 입력(예: 자판기 반환 오류 등)을 필수로 요구</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= MOD-04 ================= -->
+        <article class="module-pane" id="mod-cs">
+          <div class="pane-header">
+            <span class="pane-tag" style="background:var(--orange-light); color:var(--orange);">A급 · 고객 분쟁 방어</span>
+            <h2 class="pane-title">04. 고객 & 도장 민원/CS 대장 (MOD-04-CS)</h2>
+            <p class="pane-desc">
+              도장 스크래치 주장, 휠 손상, 세척 불만 등 현장 최빈 분쟁에 대해 입차 전 사진, 
+              CCTV 대조 확인, 처리 상태를 데이터베이스화하여 부당한 배상금 손실을 방어합니다.
+            </p>
+          </div>
+
+          <div class="sub-block">
+            <h3>1. 현장 주요 분쟁 유형 및 방어 매뉴얼</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:25%">분쟁 유형</th>
+                  <th style="width:40%">고객 주장 내용</th>
+                  <th style="width:35%">객관적 증빙 및 방어 전략</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>도장면 스크래치</strong></td>
+                  <td>"세차기 돌리고 나서 문짝에 기스가 났다"</td>
+                  <td>노터치 특성상 물리적 접촉 브러시 없음 안내 + 입차 전 LPR 고화질 사진 대조</td>
+                </tr>
+                <tr>
+                  <td><strong>휠/타이어 손상</strong></td>
+                  <td>"진입 가이드 레일에 휠이 긁혔다"</td>
+                  <td>진입 유도선 이탈 여부 CCTV 확인 및 광폭 타이어 사전 주의 표지판 연동</td>
+                </tr>
+                <tr>
+                  <td><strong>세척 불량/물자국</strong></td>
+                  <td>"하부에 때가 그대로 남아있다"</td>
+                  <td>선택 코스 확인(하부 옵션 누락 여부) + 드라잉존 안내 및 무료 1회 재세차 쿠폰 지급</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sub-block">
+            <h3>2. 클레임 대장 데이터 필드</h3>
+            <div class="logic-box">
+              <strong>민원 등록 필수 항목</strong>
+              <ul>
+                <li><code>carNumber</code>: 차량번호 및 차종 (예: 12가 3456, 카니발 화이트)</li>
+                <li><code>cctvChecked</code>: 매장 입차 전 전치 스크래치 유무 CCTV 확인 완료 여부 (True/False)</li>
+                <li><code>resolutionStatus</code>: [접수] → [CCTV 확인] → [소명자료 안내] → [무과실 종결 / 보험 접수]</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= MOD-05 ================= -->
+        <article class="module-pane" id="mod-inventory">
+          <div class="pane-header">
+            <span class="pane-tag" style="background:var(--green-light); color:var(--green);">A급 · 원가 및 품절 방어</span>
+            <h2 class="pane-title">05. 약품 & 소모품 자동 재고 모듈 (MOD-05-INVENTORY)</h2>
+            <p class="pane-desc">
+              알칼리 프리워시, 중성 스노우폼, 휠클리너, 발수코팅제의 세차 대수 대비 일일 소진량을 
+              자동 계산하고, 안전재고 미달 시 원클릭 발주 알림을 제공합니다.
+            </p>
+          </div>
+
+          <div class="sub-block">
+            <h3>1. 주요 케미컬 대당 소모량 기준표</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:25%">품목명</th>
+                  <th style="width:20%">포장 단위</th>
+                  <th style="width:25%">대당 원액 소모량</th>
+                  <th style="width:30%">적정 희석비</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>프리워시 (알칼리)</strong></td>
+                  <td>20L 말통</td>
+                  <td>약 20 ~ 30 ml</td>
+                  <td>1 : 80 ~ 1 : 100</td>
+                </tr>
+                <tr>
+                  <td><strong>스노우폼 (중성)</strong></td>
+                  <td>20L 말통</td>
+                  <td>약 15 ~ 25 ml</td>
+                  <td>1 : 100 ~ 1 : 150</td>
+                </tr>
+                <tr>
+                  <td><strong>발수코팅제 (실란)</strong></td>
+                  <td>18L 말통</td>
+                  <td>약 10 ~ 15 ml</td>
+                  <td>1 : 150 ~ 1 : 200</td>
+                </tr>
+                <tr>
+                  <td><strong>휠 & 타이어 세정제</strong></td>
+                  <td>20L 말통</td>
+                  <td>약 10 ~ 15 ml</td>
+                  <td>1 : 50 ~ 1 : 80</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sub-block">
+            <h3>2. 잔여 가동 가능 일수 및 발주 알림 로직</h3>
+            <div class="logic-box">
+              <strong>자동 계산 공식</strong>
+              <ul>
+                <li><strong>일일 예상 소모량</strong> = 당일 총 세차 대수 × 대당 소모량 (L)</li>
+                <li><strong>잔여 가동 가능 일수</strong> = 현재 보유량 ÷ 최근 7일간 일평균 소모량</li>
+                <li><strong>[주황색 주의 - 발주 권장]</strong>: 잔여 일수 ≤ 4일 (배송 고려 시 발주 시점)</li>
+                <li><strong>[빨간색 경고 - 긴급 발주]</strong>: 잔여 일수 ≤ 2일 또는 안전재고 1통 미만 시 품절 임박 팝업</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= MOD-06 ================= -->
+        <article class="module-pane" id="mod-compliance">
+          <div class="pane-header">
+            <span class="pane-tag" style="background:var(--red-light); color:var(--red);">법적 의무 · 3년 보관</span>
+            <h2 class="pane-title">06. 법정 폐수배출시설 운영일지 (MOD-06-COMPLIANCE)</h2>
+            <p class="pane-desc">
+              물환경보전법 제38조의2에 따른 법정 일지를 매일 계량기 수치만으로 자동 생성하고, 
+              지자체 불시 실사 시 즉시 A4 표준 공문서 규격으로 인쇄·출력합니다.
+            </p>
+          </div>
+
+          <div class="sub-block">
+            <h3>1. 물환경보전법 제38조의2 법적 기재 항목</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:25%">법정 기재 항목</th>
+                  <th style="width:20%">필드명</th>
+                  <th style="width:15%">단위</th>
+                  <th style="width:40%">입력 및 산출 방식</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>용수 사용량 (상수도)</strong></td>
+                  <td><code>waterMeterEnd</code></td>
+                  <td>㎥</td>
+                  <td>당일 지침 입력 시 전일 지침과의 차이로 일 사용량 자동 연산</td>
+                </tr>
+                <tr>
+                  <td><strong>방지시설 전력량</strong></td>
+                  <td><code>powerMeterEnd</code></td>
+                  <td>kWh</td>
+                  <td>폐수 정화시설 전용 전력계 지침 입력 및 일 전력량 산출</td>
+                </tr>
+                <tr>
+                  <td><strong>폐수 처리량</strong></td>
+                  <td><code>wastewaterTreated</code></td>
+                  <td>L (또는 ㎥)</td>
+                  <td>유수분리조 및 물리화학 처리설비 통과 유량</td>
+                </tr>
+                <tr>
+                  <td><strong>슬러지 보관/위탁량</strong></td>
+                  <td><code>sludgeDisposed</code></td>
+                  <td>kg</td>
+                  <td>침전 찌꺼기 위탁 반출량 및 인계 계근표 번호</td>
+                </tr>
+                <tr>
+                  <td><strong>유수분리조 청소 여부</strong></td>
+                  <td><code>oilSeparatorCleaned</code></td>
+                  <td>O / X</td>
+                  <td>부유 기름막 걷어내기 및 거름망 이물질 청소 체크</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sub-block">
+            <h3>2. 배관 누수 및 이상 감지 공식</h3>
+            <div class="logic-box">
+              <strong>배관 파열 / 누수 자동 경보</strong>
+              <ul>
+                <li><strong>대당 용수 소모량</strong> = (당일 수도 사용량 ㎥ × 1,000) ÷ 당일 세차 대수</li>
+                <li><strong>정상 범위</strong>: 대당 250 ~ 350 L</li>
+                <li><strong>누수 의심 알림</strong>: 대당 용수량이 500 L를 초과하거나 세차 대수가 0인데 계량기 수치가 증가할 경우 즉시 <em>[배관 누수/동파 점검 알림]</em> 작동</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sub-block">
+            <h3>3. 지자체 제출용 A4 공문서 출력</h3>
+            <div class="alert-box" style="background:#f4fbf7; border-color:#c8e8d5;">
+              <strong style="color:var(--green);">환경부 고시 표준 서식 원클릭 인쇄</strong>
+              <p style="margin:0 0 10px; font-size:13px; color:var(--muted)">
+                브라우저 인쇄(`Ctrl+P`) 시 웹 상단/메뉴 요소가 자동으로 가려지고, 
+                환경청 공무원이 요구하는 '배출시설 및 방지시설 운영기록부' 표준 서식 표 형태로 완벽하게 인쇄됩니다.
+              </p>
+              <button onclick="window.print()" style="padding:8px 16px; background:var(--green); color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer;">
+                🖨️ 법정 일지 양식 시험 인쇄 (미리보기)
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Interactive Tab Navigation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const items = document.querySelectorAll('.module-item');
+      const panes = document.querySelectorAll('.module-pane');
+
+      function switchTab(targetId) {
+        items.forEach(item => {
+          if (item.getAttribute('data-target') === targetId) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+
+        panes.forEach(pane => {
+          if (pane.id === targetId) {
+            pane.classList.add('active');
+          } else {
+            pane.classList.remove('active');
+          }
+        });
+        
+        window.location.hash = targetId;
+      }
+
+      items.forEach(item => {
+        item.addEventListener('click', () => {
+          const target = item.getAttribute('data-target');
+          switchTab(target);
+        });
+      });
+
+      // Handle URL Hash if present
+      const initialHash = window.location.hash.replace('#', '');
+      if (initialHash && document.getElementById(initialHash)) {
+        switchTab(initialHash);
+      }
+    });
+  </script>
+</body>
+</html>

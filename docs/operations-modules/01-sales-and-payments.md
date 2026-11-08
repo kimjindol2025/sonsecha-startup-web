@@ -1,0 +1,59 @@
+# 01. 매출·결제 통합 관리 모듈 기획서 (Sales & Revenue Specification)
+
+> **상위 기획서**: [세차장 통합 운영관리 시스템 PRD](../carwash-integrated-operations-prd.md)  
+> **모듈 코드**: `MOD-01-SALES`  
+> **우선순위**: A급 (현장 필수)
+
+---
+
+## 1. 개요 및 목적
+세차장의 결제 채널은 **무인 키오스크, 신용/체크카드 단말기, RF 충전카드, 모바일 간편결제(삼성/카카오/네이버페이), 정기구독권, 현금 시재**로 매우 다양합니다. 
+본 모듈은 이 모든 결제 수단과 세차 코스별 매출을 통합 집계하여 **점주의 매출 누수를 원천 차단**하고, **대당 평균 객단가(ATV)와 시간대별 피크타임 분석**을 제공하는 것을 목적으로 합니다.
+
+---
+
+## 2. 핵심 입력 필드 및 데이터 구조
+
+| 필드명 | 타입 | 필수여부 | 설명 및 예시 |
+| :--- | :--- | :---: | :--- |
+| `date` | Date | 필수 | 영업일자 (YYYY-MM-DD) |
+| `weather` | Enum | 필수 | `sunny`(맑음), `cloudy`(흐림), `rain`(비), `snow`(눈) |
+| `basicCourseCount` | Number | 필수 | 기본 세차 코스 판매 대수 (예: 10,000원) |
+| `underbodyCourseCount`| Number | 선택 | 하부세차 추가 코스 판매 대수 (예: 12,000원) |
+| `bubbleCourseCount` | Number | 선택 | 버블/폼 추가 코스 판매 대수 (예: 13,000원) |
+| `premiumCourseCount` | Number | 필수 | 프리미엄 코팅 코스 판매 대수 (예: 15,000원) |
+| `kioskCardAmount` | Number | 필수 | 키오스크 신용/체크카드 승인액 |
+| `rfCardReloadAmount` | Number | 필수 | 현장 RF카드 충전 매출액 |
+| `cashSalesAmount` | Number | 선택 | 현금 결제 및 자판기/코인 매출 |
+| `mobileSubscription`| Number | 선택 | 모바일 앱 정기 구독/패키지 매출 |
+| `refundAmount` | Number | 선택 | 결제 취소 및 환불 금액 |
+| `refundReason` | Text | 선택 | 환불 사유 (기계 정지, 고객 미숙, 세척 불만) |
+
+---
+
+## 3. 자동 연산 및 비즈니스 로직
+
+1. **총 매출액 (Gross Revenue)**:
+   $$\text{Gross} = \sum (\text{코스별 대수} \times \text{코스별 단가})$$
+2. **순 매출액 (Net Revenue)**:
+   $$\text{Net} = \text{Gross} - \text{refundAmount}$$
+3. **방문 차량수 (Total Cars)**:
+   $$\text{Total Cars} = \text{basic} + \text{underbody} + \text{bubble} + \text{premium}$$
+4. **대당 평균 객단가 (Average Ticket Value, ATV)**:
+   $$\text{ATV} = \frac{\text{Net}}{\text{Total Cars}}$$
+
+---
+
+## 4. 이상 징후 감지 및 알림 규칙 (Alert Rules)
+
+- **피크타임 매출 제로 경보**: 맑은 주말 11:00~16:00 사이 특정 베이의 결제 건수가 0건일 때 → *키오스크 통신 장애 또는 차단기 고장 알림*
+- **객단가 급감 경보**: 일일 평균 객단가가 기본 세차 가격(10,000원) 미만으로 떨어졌을 때 → *할인 쿠폰 남발 또는 비정상 승인 취소 점검 알림*
+- **환불 비율 초과 경보**: 당일 매출 대비 환불액 비율이 5%를 초과할 때 → *노터치 센서 오류 또는 고압 노즐 불량 점검 알림*
+
+---
+
+## 5. UI 화면 구성 및 출력물
+
+- **일일 마감 위저드 Step 1**: 코스별 대수 및 결제 수단별 금액 입력
+- **실시간 대시보드 위젯**: 오늘 순매출, 전주 동요일 대비 증감률(%), 대당 객단가 추이 차트
+- **내보내기**: 세무 신고용 월간 결산 엑셀(CSV) 다운로드
