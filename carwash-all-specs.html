@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="세차장 산업 서비스 24대 앱별 개별 기획서(PRD) 마스터 뷰어. 운영, 결제, 고객, 창업, 부동산 전 항목 상세 스펙" />
+  <title>세차장 산업 서비스 앱별 개별 기획서 마스터 · 水 세차장 산업 서비스</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #f5f4ef;
+      --paper: #ffffff;
+      --ink: #172329;
+      --muted: #5e6d72;
+      --line: #dfe5de;
+      --green: #1f6759;
+      --green-light: #e8f3f0;
+      --orange: #e38142;
+      --orange-light: #fdf2ea;
+      --blue: #2a6f97;
+      --blue-light: #e9f2f8;
+      --red: #c94a44;
+      --red-light: #fbeeed;
+      --sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+      --shadow: 0 16px 36px rgba(23, 35, 41, 0.06);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.65;
+      font-size: 14.5px;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.03em;
+    }
+    .brand span {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .topbar nav {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .topbar nav a:hover { color: var(--green); }
+    .topbar nav a.active {
+      color: var(--green);
+      background: var(--green-light);
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+    }
+
+    /* Page Head */
+    .page-head {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      margin: 0 0 6px;
+    }
+    .page-head h1 {
+      font-size: clamp(26px, 3.5vw, 36px);
+      letter-spacing: -0.04em;
+      margin: 0 0 8px;
+      font-weight: 800;
+    }
+    .page-head p {
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0;
+    }
+
+    /* Category Filter Pills */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .filter-btn.active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    /* App Master Layout */
+    .master-layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* App List Sidebar */
+    .app-sidebar {
+      position: sticky;
+      top: 76px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+      padding: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+    }
+    .app-card-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 11px 13px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .app-card-btn:hover {
+      background: #f8faf8;
+    }
+    .app-card-btn.active {
+      background: var(--green-light);
+      border-color: #b3d7cd;
+    }
+    .app-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .b-a { background: #feebe8; color: var(--red); }
+    .b-b { background: #eaf1f8; color: var(--blue); }
+    .b-c { background: #fef4e8; color: var(--orange); }
+
+    .app-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .app-card-btn.active .app-title {
+      color: var(--green);
+    }
+    .app-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* PRD Viewer Content Pane */
+    .prd-viewer {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 36px 40px;
+      box-shadow: var(--shadow);
+      min-height: 700px;
+    }
+    .prd-pane {
+      display: none;
+    }
+    .prd-pane.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .prd-head {
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    .prd-head h2 {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 8px 0 8px;
+      letter-spacing: -0.04em;
+    }
+    .prd-meta {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .prd-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Markdown Styling Inside Viewer */
+    .spec-block {
+      margin-bottom: 32px;
+    }
+    .spec-block h3 {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spec-block h3::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      background: var(--green);
+      border-radius: 2px;
+      display: inline-block;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+      background: #fafaf7;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .spec-table th {
+      background: #eef2ed;
+      padding: 10px 14px;
+      font-weight: 700;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+    }
+    .spec-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #edf1ee;
+      vertical-align: top;
+    }
+    .spec-table tr:last-child td { border-bottom: none; }
+
+    .code-box {
+      background: #172329;
+      color: #e3edf2;
+      padding: 18px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      font-family: Consolas, Monaco, monospace;
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+
+    .info-box {
+      background: #f7faf7;
+      border: 1px solid #dbe8db;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+    .alert-box {
+      background: #fffbf5;
+      border: 1px solid #fae6cb;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .master-layout {
+        grid-template-columns: 1fr;
+      }
+      .app-sidebar {
+        position: static;
+        max-height: 280px;
+      }
+      .prd-viewer {
+        padding: 24px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span>水</span>
+        <span>세차장 산업 서비스</span>
+      </a>
+      <nav>
+        <a href="./">메인으로</a>
+        <a href="./carwash-app-catalog.html">앱 카탈로그</a>
+        <a href="./carwash-operations-plan.html">통합운영 기획서</a>
+        <a href="./carwash-all-specs.html" class="active">24대 앱별 개별기획서</a>
+        <a href="./operations-apps.html">기존 운영 앱</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-head">
+      <p class="eyebrow">STANDALONE APP PRD REPOSITORY · 24 APPS</p>
+      <h1>세차장 산업 서비스 24대 앱별 개별 기획서(PRD)</h1>
+      <p>
+        각 앱은 서로 다른 이해관계자(점주, 고객, 현장직원, 창업자, 투자자)와 업무 목적을 가진 독립 소프트웨어입니다. 
+        항목별 기능 요구사항, 데이터 스키마, 연산 로직, 화면 구성을 확인하세요.
+      </p>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">전체 (24개)</button>
+      <button class="filter-btn" data-filter="cat-01">01 운영·관리 (4개)</button>
+      <button class="filter-btn" data-filter="cat-02">02 매출·결제 (4개)</button>
+      <button class="filter-btn" data-filter="cat-03">03 고객용 앱 (7개)</button>
+      <button class="filter-btn" data-filter="cat-04">04 창업 서비스 (6개)</button>
+      <button class="filter-btn" data-filter="cat-05">05 거래·부동산 (3개)</button>
+    </div>
+
+    <div class="master-layout">
+      <!-- App List Sidebar -->
+      <aside class="app-sidebar" id="appSidebar">
+
+        <!-- 01 운영관리 -->
+        <button class="app-card-btn active" data-cat="cat-01" data-target="spec-ops-equipment-as">
+          <span class="app-badge b-a">01 운영 · A급</span>
+          <div class="app-title">장비 AS 관리</div>
+          <div class="app-sub">고장 접수·수리이력·사진·출장·부품·수리비</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-01" data-target="spec-ops-daily-check">
+          <span class="app-badge b-a">01 운영 · A급</span>
+          <div class="app-title">세차장 점검일지</div>
+          <div class="app-sub">일일·주간·월간 점검·고압세척기·폐수·동파</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-01" data-target="spec-ops-wastewater">
+          <span class="app-badge b-a">01 운영 · A급</span>
+          <div class="app-title">폐수·환경 관리</div>
+          <div class="app-sub">폐수처리·약품·슬러지·점검·법정서류</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-01" data-target="spec-ops-inventory">
+          <span class="app-badge b-a">01 운영 · A급</span>
+          <div class="app-title">소모품·재고 관리</div>
+          <div class="app-sub">세제·왁스·타월·부품·부족 알림·발주</div>
+        </button>
+
+        <!-- 02 매출결제 -->
+        <button class="app-card-btn" data-cat="cat-02" data-target="spec-pay-sales">
+          <span class="app-badge b-a">02 매출 · A급</span>
+          <div class="app-title">세차장 매출관리</div>
+          <div class="app-sub">코인·RF카드·신용카드·간편결제·객단가</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-02" data-target="spec-pay-rf-membership">
+          <span class="app-badge b-a">02 매출 · A급</span>
+          <div class="app-title">RF카드 회원관리</div>
+          <div class="app-sub">카드 발급·충전·잔액·사용내역·분실정지</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-02" data-target="spec-pay-kiosk-hub">
+          <span class="app-badge b-a">02 매출 · A급</span>
+          <div class="app-title">무인결제 통합관리</div>
+          <div class="app-sub">키오스크·카드단말기·원격 충전·장애 리셋</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-02" data-target="spec-pay-anomaly">
+          <span class="app-badge b-a">02 매출 · A급</span>
+          <div class="app-title">매출 이상감지</div>
+          <div class="app-sub">매출 감소·장비 매출 0원·결제 오류 경보</div>
+        </button>
+
+        <!-- 03 고객용 -->
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-nearby">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">내 주변 세차장 찾기</div>
+          <div class="app-sub">지도·전고제한·온수·하부세차·실시간 후기</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-price">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">세차장 가격 비교</div>
+          <div class="app-sub">분당 단가 환산·노터치 코스별 가격 비교</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-congestion">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">세차장 혼잡도 확인</div>
+          <div class="app-sub">사용 중 베이·대기 차량·예상 대기시간</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-reservation">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">예약 세차 앱</div>
+          <div class="app-sub">손세차·디테일링·스팀·노쇼방지 예약금</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-mobile">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">출장세차 예약</div>
+          <div class="app-sub">아파트 지하주차장 방문·시공 전후 사진</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-subscription">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">세차 구독 서비스</div>
+          <div class="app-sub">월 4회 정기결제·LPR 자동인식 논스톱 진입</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-03" data-target="spec-cust-history">
+          <span class="app-badge b-b">03 고객 · B급</span>
+          <div class="app-title">차량 세차 관리</div>
+          <div class="app-sub">마지막 세차일 D-Day·코팅 수명·지출 차계부</div>
+        </button>
+
+        <!-- 04 창업 -->
+        <button class="app-card-btn" data-cat="cat-04" data-target="spec-startup-roadmap">
+          <span class="app-badge b-b">04 창업 · B급</span>
+          <div class="app-title">세차장 창업 로드맵</div>
+          <div class="app-sub">20단계 인허가·토목·건축·장비 절차 가이드</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-04" data-target="spec-startup-location">
+          <span class="app-badge b-b">04 창업 · B급</span>
+          <div class="app-title">세차장 입지분석</div>
+          <div class="app-sub">차량수·아파트·경쟁·좌회전 진입 타당성</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-04" data-target="spec-startup-revenue">
+          <span class="app-badge b-b">04 창업 · B급</span>
+          <div class="app-title">예상매출 계산기</div>
+          <div class="app-sub">베이수·회전율·객단가·비오는날 변수 시뮬레이터</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-04" data-target="spec-startup-cost">
+          <span class="app-badge b-b">04 창업 · B급</span>
+          <div class="app-title">창업비용 계산기</div>
+          <div class="app-sub">토목·패드·장비·폐수·전기증설 Capex 산출</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-04" data-target="spec-startup-quote">
+          <span class="app-badge b-b">04 창업 · B급</span>
+          <div class="app-title">창업 견적 비교</div>
+          <div class="app-sub">장비사 견적 1:1 대조·포함/유상 옵션 감별</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-04" data-target="spec-startup-permit">
+          <span class="app-badge b-b">04 창업 · B급</span>
+          <div class="app-title">인허가 도우미</div>
+          <div class="app-sub">건축·폐수·도로점용 관공서 서류 단계별 지원</div>
+        </button>
+
+        <!-- 05 부동산 -->
+        <button class="app-card-btn" data-cat="cat-05" data-target="spec-estate-brokerage">
+          <span class="app-badge b-c">05 부동산 · C급</span>
+          <div class="app-title">세차장 전문 부동산</div>
+          <div class="app-sub">매매·양도양수·홈택스 실매출 인증 매물</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-05" data-target="spec-estate-valuation">
+          <span class="app-badge b-c">05 부동산 · C급</span>
+          <div class="app-title">세차장 가치평가</div>
+          <div class="app-sub">EBITDA 배수법·장비 감가상각 적정 권리금 산정</div>
+        </button>
+        <button class="app-card-btn" data-cat="cat-05" data-target="spec-estate-audit">
+          <span class="app-badge b-c">05 부동산 · C급</span>
+          <div class="app-title">세차장 인수 실사 앱</div>
+          <div class="app-sub">장비 작동·환경위반·공과금 미납 40개 체크</div>
+        </button>
+
+      </aside>
+
+      <!-- PRD Content Viewer Pane -->
+      <section class="prd-viewer" id="prdViewer">
+
+        <!-- ================= SPEC 01-1 ================= -->
+        <article class="prd-pane active" id="spec-ops-equipment-as">
+          <div class="prd-head">
+            <span class="app-badge b-a">01 운영·관리 · A급 · 현장 필수</span>
+            <h2>장비 AS 관리 앱 (Equipment After-Service App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-ops-equipment-as</code></span>
+              <span>👤 대상: 세차장 점주, 현장 관리자, 장비사 엔지니어</span>
+              <span>🎯 목적: 고장 접수부터 수리 완료까지 전과정 추적</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 주요 기능 요구사항</h3>
+            <div class="info-box">
+              • <strong>고장 티켓 원클릭 접수</strong>: 노즐 수압 저하, 갠트리 레일 탈선, 센서 인식 오류 등 사진과 함께 긴급도 선택 접수<br>
+              • <strong>5단계 AS 워크플로우</strong>: [접수됨] → [엔지니어 배차] → [부품 수급] → [출장 방문] → [수리 완료]<br>
+              • <strong>정지시간(Downtime) 추적</strong>: 고장 시각부터 수리 완료 시각까지 분 단위 계산 및 예상 매출 손실액 산출<br>
+              • <strong>부품 교체 및 비용 관리</strong>: 교체 부품명, 파트 번호, 부품비, 공임비 및 무상 보증기간 관리
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>2. 데이터 입력 스키마 (TypeScript)</h3>
+            <pre class="code-box"><code>export interface EquipmentASTicket {
+  ticketId: string;             // "AS-202611-001"
+  bayId: string;                // "bay-1" | "bay-2" | "common"
+  equipmentCategory: 'touchless_gantry' | 'pump' | 'blower' | 'compressor';
+  symptomType: string;          // "노즐 압력 저하", "오일 누유" 등
+  urgency: 'critical' | 'high' | 'normal';
+  photoUrls: string[];
+  downtimeMinutes: number;
+  assignedEngineer: string;
+  totalCost: number;            // 부품비 + 공임비
+  status: 'reported' | 'dispatched' | 'in_repair' | 'completed';
+}</code></pre>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 01-2 ================= -->
+        <article class="prd-pane" id="spec-ops-daily-check">
+          <div class="prd-head">
+            <span class="app-badge b-a">01 운영·관리 · A급 · 현장 필수</span>
+            <h2>세차장 점검일지 앱 (Daily Inspection Log App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-ops-daily-check</code></span>
+              <span>👤 대상: 세차장 점주, 교대 근무 직원</span>
+              <span>🎯 목적: 일일·주간·월간 현장 설비 점검 및 조치 이력 관리</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 점검 주기별 주요 항목</h3>
+            <table class="spec-table">
+              <thead>
+                <tr>
+                  <th style="width:25%">주기</th>
+                  <th style="width:50%">핵심 점검 항목</th>
+                  <th style="width:25%">이상 시 조치</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>일일 점검 (매일)</strong></td>
+                  <td>고압 펌프 수압(80~100 bar), 콤프레셔 압력, 동절기 온수 보일러 램프</td>
+                  <td>즉시 압력 밸브 조절 및 동파 방지 드레인</td>
+                </tr>
+                <tr>
+                  <td><strong>주간 점검 (월요일)</strong></td>
+                  <td>갠트리 주행 레일 이물질 청소, 유수분리조 유막 걷어내기, 매트세척기 오물통 비우기</td>
+                  <td>흡착포 교체 및 구리스 윤활</td>
+                </tr>
+                <tr>
+                  <td><strong>월간 점검 (1일)</strong></td>
+                  <td>펌프 오일 레벨 및 색상, 모터 절연 저항, 키오스크 프린터 헤드 세척</td>
+                  <td>오일 교환 및 소화기 점검</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="spec-block">
+            <h3>2. 이상 징후 알림 로직</h3>
+            <div class="alert-box">
+              • <strong>동파 경보:</strong> 외기온도 영하 3℃ 이하일 때 야간 보온 항목 미체크 시 점주 스마트폰 푸시 경보<br>
+              • <strong>수압 저하:</strong> 펌프 압력이 75 bar 이하로 2일 연속 체크 시 패킹 마모 알림
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 01-3 ================= -->
+        <article class="prd-pane" id="spec-ops-wastewater">
+          <div class="prd-head">
+            <span class="app-badge b-a">01 운영·관리 · A급 · 법적 의무</span>
+            <h2>폐수·환경 관리 앱 (Wastewater Compliance App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-ops-wastewater</code></span>
+              <span>⚖️ 법령: 물환경보전법 제38조의2 (3년 보관 의무)</span>
+              <span>🎯 목적: 수도·전력 지침 입력으로 법정 일지 자동 생성 및 A4 출력</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 법정 필수 기재 항목</h3>
+            <div class="info-box">
+              • <strong>상수도/지하수 사용량</strong>: 전일 지침 vs 당일 지침 (㎥) 일일 사용량 자동 연산<br>
+              • <strong>방지시설 전력 적산계</strong>: 방지시설 전용 전력계 지침(kWh) 및 일 전력량<br>
+              • <strong>폐수 정화 처리량</strong>: 유수분리조 및 활성탄 여과설비 통과 유량<br>
+              • <strong>슬러지 보관 및 위탁 반출</strong>: 침전 찌꺼기 위탁 처리업체명, 차량번호, 전자인계서 번호<br>
+              • <strong>유수분리조 청소 여부</strong>: 상부 부유 기름막 걷어내기(O/X)
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>2. 누수 탐지 수식</h3>
+            <div class="alert-box">
+              $$\text{대당 용수 소모량} = \frac{\text{당일 상수도 사용량(㎥)} \times 1,000}{\text{당일 총 세차 대수}}$$
+              • <strong>정상 범위</strong>: 250 ~ 350 L/대<br>
+              • <strong>누수 경보</strong>: 500 L/대 초과 시 또는 세차 0건인데 계량기 수치 증가 시 즉시 [배관 누수/동파 점검] 알림
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 01-4 ================= -->
+        <article class="prd-pane" id="spec-ops-inventory">
+          <div class="prd-head">
+            <span class="app-badge b-a">01 운영·관리 · A급 · 현장 필수</span>
+            <h2>소모품·재고 관리 앱 (Supplies & Inventory App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-ops-inventory</code></span>
+              <span>👤 대상: 세차장 점주, 케미컬 공급 대리점</span>
+              <span>🎯 목적: 세제·왁스·타월 소진율 추산 및 안전재고 미달 시 원클릭 발주</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 주요 케미컬 표준 소모량 기준</h3>
+            <table class="spec-table">
+              <thead>
+                <tr><th>품목명</th><th>규격</th><th>대당 소진량</th><th>안전재고(최소유지)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>알칼리 프리워시</td><td>20L 말통</td><td>25 ml</td><td>2 통 (40L)</td></tr>
+                <tr><td>중성 스노우폼</td><td>20L 말통</td><td>20 ml</td><td>2 통 (40L)</td></tr>
+                <tr><td>초발수 코팅제</td><td>18L 말통</td><td>15 ml</td><td>1 통 (18L)</td></tr>
+                <tr><td>극세사 타월</td><td>100장 팩</td><td>일 50장 회전</td><td>300 장</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="spec-block">
+            <h3>2. 발주 경보 공식</h3>
+            <div class="info-box">
+              $$\text{잔여 가동 일수} = \frac{\text{현재고량}}{\text{최근 7일간 일평균 소진량}}$$
+              • <strong>발주 권장(주황색):</strong> 잔여 일수 ≤ 4일 (배송 2일 감안 시 발주 타이밍)<br>
+              • <strong>긴급 발주(빨간색):</strong> 잔여 일수 ≤ 2일 시 공급처 카톡/문자 템플릿 원클릭 발송
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 02-1 ================= -->
+        <article class="prd-pane" id="spec-pay-sales">
+          <div class="prd-head">
+            <span class="app-badge b-a">02 매출·결제 · A급 · 현장 필수</span>
+            <h2>세차장 매출관리 앱 (Sales Analytics App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-pay-sales</code></span>
+              <span>👤 대상: 점주, 회계 담당자</span>
+              <span>🎯 목적: 다채널 결제 종합 집계 및 대당 객단가(ATV) 정밀 분석</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 매출 채널 및 코스별 집계 구조</h3>
+            <div class="info-box">
+              • <strong>코스별 판매량</strong>: 기본(10,000원), 하부추가(12,000원), 버블폼(13,000원), 프리미엄(15,000원)<br>
+              • <strong>결제 수단 분리</strong>: 키오스크 카드, 삼성/카카오페이, RF 충전(현금/카드), 코인기 시재<br>
+              • <strong>순매출 산출</strong>: 총 승인액 - 카드 수수료(약 2.5%) - 결제 취소/환불액
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>2. 대당 평균 객단가 (ATV) 분석</h3>
+            <div class="info-box">
+              $$\text{ATV} = \frac{\text{당일 순매출액}}{\text{총 방문 세차 대수}}$$
+              • 목표치: 13,000원 이상 유지 시 고마진 구조 달성<br>
+              • 하부세차 선택률 = 하부 코스 판매 대수 ÷ 전체 세차 대수 × 100 (%)
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 02-2 ================= -->
+        <article class="prd-pane" id="spec-pay-rf-membership">
+          <div class="prd-head">
+            <span class="app-badge b-a">02 매출·결제 · A급 · 현장 필수</span>
+            <h2>RF카드 회원관리 앱 (RF Membership Card App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-pay-rf-membership</code></span>
+              <span>👤 대상: 단골 고객, 매장 점주</span>
+              <span>🎯 목적: 선불 충전 선수금 확보 및 단골 락인(Lock-in)</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 충전 보너스 및 등급 정책</h3>
+            <table class="spec-table">
+              <thead><tr><th>충전 금액</th><th>적립 금액</th><th>실할인율</th><th>부여 등급</th></tr></thead>
+              <tbody>
+                <tr><td>10,000 원</td><td>10,000 원</td><td>0%</td><td>브론즈</td></tr>
+                <tr><td>30,000 원</td><td>34,000 원</td><td>11.8%</td><td>실버</td></tr>
+                <tr><td>50,000 원</td><td>60,000 원</td><td>16.7%</td><td>골드</td></tr>
+                <tr><td>100,000 원</td><td>125,000 원</td><td>20.0%</td><td>VIP (생일쿠폰 지급)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="spec-block">
+            <h3>2. 분실 정지 및 잔액 이관</h3>
+            <div class="alert-box">
+              고객 휴대폰 번호 기반으로 카드 UID 분실 즉시 정지 처리 후, 신규 발급 카드에 충전 잔액 100% 실시간 이관
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 02-3 ================= -->
+        <article class="prd-pane" id="spec-pay-kiosk-hub">
+          <div class="prd-head">
+            <span class="app-badge b-a">02 매출·결제 · A급 · 현장 필수</span>
+            <h2>무인결제 통합관리 앱 (Unmanned Kiosk Hub App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-pay-kiosk-hub</code></span>
+              <span>👤 대상: 세차장 점주, 무인 관제팀</span>
+              <span>🎯 목적: 키오스크 하드웨어 원격 모니터링 및 원격 결제/세차 개방</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 원격 긴급 관제 기능</h3>
+            <div class="info-box">
+              • <strong>하드웨어 헬스체크</strong>: IC카드 리더기, 지폐기, 영수증 롤 잔량 실시간 감시<br>
+              • <strong>원격 강제 리셋</strong>: 키오스크 화면 프리징(멈춤) 시 소프트웨어/하드웨어 원격 재부팅<br>
+              • <strong>원격 세차 기동 신호 송출</strong>: 고객 카드 승인 후 기계 미작동 민원 시 점주 스마트폰에서 1-Click 베이 가동 신호 전송
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 02-4 ================= -->
+        <article class="prd-pane" id="spec-pay-anomaly">
+          <div class="prd-head">
+            <span class="app-badge b-a">02 매출·결제 · A급 · 현장 필수</span>
+            <h2>매출 이상감지 앱 (Sales Anomaly Detector App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-pay-anomaly-detector</code></span>
+              <span>👤 대상: 세차장 점주, 프랜차이즈 본사</span>
+              <span>🎯 목적: 결제기 장애나 운영 사고로 인한 매출 급감 조기 탐지</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 핵심 탐지 규칙</h3>
+            <div class="alert-box">
+              • <strong>베이 불균형 탐지:</strong> 주말 피크타임(11~16시) 1호기 매출 50만원인데 2호기 매출 0원일 때 → <em>즉시 긴급 차단기/결제기 에러 경보</em><br>
+              • <strong>환불 비율 급증:</strong> 결제 건수 대비 환불 비율이 5% 초과 시 노즐 오작동 의심 알림<br>
+              • <strong>날씨 대비 매출 급감:</strong> 맑은 주말인데 전월 평균 대비 실매출이 40% 이상 하회 시 시설 점검 권고
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-1 ================= -->
+        <article class="prd-pane" id="spec-cust-nearby">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>내 주변 세차장 찾기 앱 (Nearby Carwash Finder App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-nearby-finder</code></span>
+              <span>👤 대상: 일반 운전자 (튜닝카, 대형 SUV 오너)</span>
+              <span>🎯 목적: 진입 전고, 온수, 하부세차 설비 맞춤형 검색</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 특화 필터링 옵션</h3>
+            <div class="info-box">
+              • 진입 제한 전고 (2.0m, 2.15m, 2.3m 이상 루프박스 허용)<br>
+              • 동절기 온수 가동 여부 및 하부세차 전용 노즐 보유 여부<br>
+              • 드라잉존 규모(청소기 대수) 및 24시간 영업 여부 필터링<br>
+              • T맵, 카카오내비, 네이버지도 원클릭 길안내 연동
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-2 ================= -->
+        <article class="prd-pane" id="spec-cust-price">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>세차장 가격 비교 앱 (Carwash Price Comparison App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-price-compare</code></span>
+              <span>👤 대상: 가성비 추구 운전자, 예비 창업자</span>
+              <span>🎯 목적: 셀프세차 분당 환산가 및 노터치 코스별 가격 비교</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 정규화 비교 기준</h3>
+            <div class="info-box">
+              • <strong>셀프세차 분당 요금</strong>: 기본요금 ÷ 기본제공시간 (예: 3,000원/3분 = 1,000원/분)<br>
+              • <strong>노터치 풀코스 단가</strong>: 기본 + 하부 + 스노우폼 + 발수코팅 포함 총비용 대조<br>
+              • <strong>RF카드 실할인율</strong>: 충전 금액 대비 추가 적립금 비율 객관적 비교
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-3 ================= -->
+        <article class="prd-pane" id="spec-cust-congestion">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>세차장 혼잡도 확인 앱 (Congestion Checker App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-congestion-check</code></span>
+              <span>👤 대상: 대기 시간을 아끼고 싶은 직장인 운전자</span>
+              <span>🎯 목적: 실시간 가동 베이 및 예상 대기시간 확인</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 대기시간 계산 공식</h3>
+            <div class="info-box">
+              $$\text{예상 대기시간(분)} = \frac{\text{대기 차량수} \times \text{1대당 평균 세차시간(6분)}}{\text{총 베이 수}}$$
+              • 실시간 베이 상태: [원활 (빈자리 있음)] / [보통 (대기 1~2대)] / [혼잡 (대기 15분 이상)]
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-4 ================= -->
+        <article class="prd-pane" id="spec-cust-reservation">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>예약 세차 앱 (Reservation & Detailing Booking App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-reservation</code></span>
+              <span>👤 대상: 디테일링 샵 고객 및 작업자</span>
+              <span>🎯 목적: 손세차·스팀·유리막 시공 예약 및 노쇼 방지 예약금</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 핵심 예약 플로우</h3>
+            <div class="info-box">
+              차종 선택(경차/세단/대형SUV) → 시공 패키지 커스텀 → 30분 단위 슬롯 선택 → 노쇼 방지 예약금(20%) 결제 → 확정 알림톡 발송
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-5 ================= -->
+        <article class="prd-pane" id="spec-cust-mobile">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>출장세차 예약 앱 (Mobile On-Demand Wash App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-mobile-detailing</code></span>
+              <span>👤 대상: 바쁜 직장인, 아파트 거주민</span>
+              <span>🎯 목적: 비대면 지하주차장 출장세차 및 전후 사진 보고</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 주요 기능</h3>
+            <div class="info-box">
+              아파트 동호수 및 지하 기둥 번호 등록 → 워터리스/스팀 매니저 배정 → 시공 전 도장 스크래치 촬영(분쟁 예방) → 시공 완료 전후 사진 6장 앱 전송
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-6 ================= -->
+        <article class="prd-pane" id="spec-cust-subscription">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>세차 구독 서비스 앱 (Subscription Wash App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-subscription</code></span>
+              <span>👤 대상: 정기 세차 운전자, 영업용 차량</span>
+              <span>🎯 목적: 월정액 구독(ARR) 모델 및 LPR 번호판 자동 통과</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 구독 플랜 설계</h3>
+            <table class="spec-table">
+              <thead><tr><th>플랜명</th><th>월 요금</th><th>혜택</th><th>환산가</th></tr></thead>
+              <tbody>
+                <tr><td>스탠다드 월 2회</td><td>22,000 원</td><td>기본+하부 2회</td><td>11,000 원/회</td></tr>
+                <tr><td>프리미엄 월 4회</td><td>39,000 원</td><td>프리미엄 코팅 4회</td><td>9,750 원/회</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 03-7 ================= -->
+        <article class="prd-pane" id="spec-cust-history">
+          <div class="prd-head">
+            <span class="app-badge b-b">03 고객용 앱 · B급 · 수익화</span>
+            <h2>차량 세차 관리 앱 (Vehicle Wash History App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-cust-vehicle-history</code></span>
+              <span>👤 대상: 차량 관리를 아끼는 오너</span>
+              <span>🎯 목적: 세차 타임라인, 코팅 잔여 수명, 차계부 지출 통계</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 주요 기능</h3>
+            <div class="info-box">
+              마지막 세차일 D-Day 카운트, 유리발수/유리막코팅 보증기간 게이지 시각화, 비 온 뒤 염화칼슘 세척 권장 푸시 알림
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 04-1 ================= -->
+        <article class="prd-pane" id="spec-startup-roadmap">
+          <div class="prd-head">
+            <span class="app-badge b-b">04 창업 서비스 · B급 · 수익화</span>
+            <h2>세차장 창업 로드맵 앱 (Startup Roadmap App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-startup-roadmap</code></span>
+              <span>👤 대상: 예비 창업자, 토지주</span>
+              <span>🎯 목적: 후보지 검토부터 인허가, 토목, 오픈까지 20단계 가이드</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 단계별 체크 프로세스</h3>
+            <div class="info-box">
+              1. 후보지 도로명주소 확인 → 2. 토지이용계획 및 건축물대장 검토 → 3. 조건부 계약 → 4. 건축/개발행위/폐수 설치신고 → 5. 전기 100kW 인입 → 6. 패드 타설 및 장비 시운전 → 7. 준공 및 오픈
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 04-2 ================= -->
+        <article class="prd-pane" id="spec-startup-location">
+          <div class="prd-head">
+            <span class="app-badge b-b">04 창업 서비스 · B급 · 수익화</span>
+            <h2>세차장 입지분석 앱 (Location Feasibility App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-startup-location-analysis</code></span>
+              <span>👤 대상: 부지 물색 창업자, 프랜차이즈 개발팀</span>
+              <span>🎯 목적: 통행량, 아파트 세대수, 좌회전 진입성 종합 평가 (0~100점)</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 5대 입지 평가 지표</h3>
+            <table class="spec-table">
+              <thead><tr><th>평가 항목</th><th>배점</th><th>우수 기준</th></tr></thead>
+              <tbody>
+                <tr><td>도로 진입성 및 감속차선</td><td>25점</td><td>왕복 4차로 이상 + 좌회전 포켓 보유</td></tr>
+                <tr><td>배후 등록 차량 수요</td><td>25점</td><td>반경 3km 내 등록 차량 3만 대 이상</td></tr>
+                <tr><td>경쟁 밀도 (노터치 베이)</td><td>20점</td><td>반경 3km 내 동일 장비 1곳 이하</td></tr>
+                <tr><td>전력 및 오수관 인프라</td><td>20점</td><td>공공 하수관(오수) 직결 가능 부지</td></tr>
+                <tr><td>소음·조명 민원 안전성</td><td>10점</td><td>주거지와 50m 이상 이격</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 04-3 ================= -->
+        <article class="prd-pane" id="spec-startup-revenue">
+          <div class="prd-head">
+            <span class="app-badge b-b">04 창업 서비스 · B급 · 수익화</span>
+            <h2>세차장 예상매출 계산기 (Revenue Simulator)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-startup-revenue-calc</code></span>
+              <span>👤 대상: 창업 대출 신청자, 사업계획서 작성자</span>
+              <span>🎯 목적: 베이수, 회전율, 비오는날 변수 반영 월간 순익 산출</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 시뮬레이션 모델</h3>
+            <div class="info-box">
+              보수적 / 중립적 / 낙관적 3단 시나리오 제공: 평일 회전율(2~3대/h), 주말 피크(6~8대/h), 월평균 우천일수(7일)를 차감하여 현실적인 EBITDA 및 손익분기점(BEP) 산출
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 04-4 ================= -->
+        <article class="prd-pane" id="spec-startup-cost">
+          <div class="prd-head">
+            <span class="app-badge b-b">04 창업 서비스 · B급 · 수익화</span>
+            <h2>세차장 창업비용 계산기 (Capex Estimator)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-startup-cost-calc</code></span>
+              <span>👤 대상: 창업 자금 계획 수립자</span>
+              <span>🎯 목적: 토목, 패드, 노터치 장비, 폐수, 전기증설 총 Capex 산출</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 3베이 노터치 표준 투자비용 구성</h3>
+            <div class="info-box">
+              • 토목/철근콘크리트 패드: 약 5,000만원<br>
+              • 세차기 본체 3대: 약 2억 1,000만원 (대당 7,000만)<br>
+              • 수처리 폐수설비: 약 3,000만원<br>
+              • 전기 한전불입금(100kW) & 배관: 약 3,000만원<br>
+              • 키오스크 3대 & 부대설비: 약 2,500만원<br>
+              • <strong>총 시설 투자비 (보증금 제외)</strong>: 약 3억 4,500만 ~ 4억 2,000만 원
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 04-5 ================= -->
+        <article class="prd-pane" id="spec-startup-quote">
+          <div class="prd-head">
+            <span class="app-badge b-b">04 창업 서비스 · B급 · 수익화</span>
+            <h2>창업 견적 비교 앱 (Quote Comparison App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-startup-quote-compare</code></span>
+              <span>👤 대상: 견적서를 검토 중인 창업자</span>
+              <span>🎯 목적: 장비사 견적 1:1 대조 및 무상/유상 옵션 감별</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 핵심 비교 축</h3>
+            <div class="info-box">
+              갠트리 스테인리스(STS304) 여부, 고압 펌프 제조국(독일/이탈리아 플런저), 블로어 송풍 마력(20HP 이상), 하부세차 노즐 무상 포함 여부, 하자보수 보증기간(1년 vs 2년)
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 04-6 ================= -->
+        <article class="prd-pane" id="spec-startup-permit">
+          <div class="prd-head">
+            <span class="app-badge b-b">04 창업 서비스 · B급 · 수익화</span>
+            <h2>인허가 도우미 앱 (Permits Assistant App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-startup-permit-helper</code></span>
+              <span>👤 대상: 창업자, 인허가 건축사사무소</span>
+              <span>🎯 목적: 건축허가, 폐수설치신고, 도로점용 관공서 서류 단계별 지원</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 4대 관공서 인허가 가이드</h3>
+            <div class="info-box">
+              • 건축과: 자동차관련시설 용도변경 및 구조안전확인서<br>
+              • 환경과: 폐수배출시설 설치신고 및 방지시설 설계도서<br>
+              • 도로과: 차량 진출입로 도로점용 및 연결허가<br>
+              • 하수도과: 공공 하수관로 유입 승인
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 05-1 ================= -->
+        <article class="prd-pane" id="spec-estate-brokerage">
+          <div class="prd-head">
+            <span class="app-badge b-c">05 세차장 부동산 · C급 · 확장</span>
+            <h2>세차장 전문 부동산 앱 (Real Estate Brokerage App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-estate-brokerage</code></span>
+              <span>👤 대상: 매도 희망 점주, 인수 희망 투자자</span>
+              <span>🎯 목적: 홈택스 부가세/POS 실매출 검증 기반 양도양수 거래</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 허위 매물 방지 검증</h3>
+            <div class="info-box">
+              VAN사 카드 매출원장 및 국세청 부가가치세 과세표준증명원 제출 매물만 [공인 실매출 인증 배지] 부여
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 05-2 ================= -->
+        <article class="prd-pane" id="spec-estate-valuation">
+          <div class="prd-head">
+            <span class="app-badge b-c">05 세차장 부동산 · C급 · 확장</span>
+            <h2>세차장 가치평가 앱 (Business Valuation App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-estate-valuation</code></span>
+              <span>👤 대상: 인수 희망자, 권리금 협상자</span>
+              <span>🎯 목적: EBITDA 배수법 및 장비 감가상각 기반 적정 권리금 산출</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 가치평가 공식</h3>
+            <div class="info-box">
+              $$\text{적정 권리금} = (\text{연간 순영업이익} \times 1.8) + \text{장비 잔존가치} + \text{인허가 독점 프리미엄}$$
+            </div>
+          </div>
+        </article>
+
+        <!-- ================= SPEC 05-3 ================= -->
+        <article class="prd-pane" id="spec-estate-audit">
+          <div class="prd-head">
+            <span class="app-badge b-c">05 세차장 부동산 · C급 · 확장</span>
+            <h2>세차장 인수 실사 앱 (Due Diligence Audit App)</h2>
+            <div class="prd-meta">
+              <span>🆔 <code>app-estate-due-diligence</code></span>
+              <span>👤 대상: 최종 계약 전 인수자, 법률 자문</span>
+              <span>🎯 목적: 장비 작동, 환경 위반 이력, 공과금 미납 40개 항목 정밀 실사</span>
+            </div>
+          </div>
+          <div class="spec-block">
+            <h3>1. 필수 실사 영역</h3>
+            <div class="info-box">
+              1. 장비 시운전: 노즐 수압 100bar 유지 여부<br>
+              2. 환경 처분 이력: 시청 환경과 방류수 기준 초과 과태료 이력 확인<br>
+              3. 재무 실사: 한전 전기요금 및 상수도 체납 여부 완납증명서 검증
+            </div>
+          </div>
+        </article>
+
+      </section>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const appBtns = document.querySelectorAll('.app-card-btn');
+      const prdPanes = document.querySelectorAll('.prd-pane');
+
+      // Filter category
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const filter = btn.getAttribute('data-filter');
+          appBtns.forEach(card => {
+            if (filter === 'all' || card.getAttribute('data-cat') === filter) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // Switch PRD View
+      function selectApp(targetId) {
+        appBtns.forEach(b => {
+          if (b.getAttribute('data-target') === targetId) {
+            b.classList.add('active');
+            b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            b.classList.remove('active');
+          }
+        });
+
+        prdPanes.forEach(pane => {
+          if (pane.id === targetId) {
+            pane.classList.add('active');
+          } else {
+            pane.classList.remove('active');
+          }
+        });
+
+        window.location.hash = targetId;
+      }
+
+      appBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-target');
+          selectApp(target);
+        });
+      });
+
+      // Handle Initial Hash
+      const hash = window.location.hash.replace('#', '');
+      if (hash && document.getElementById(hash)) {
+        selectApp(hash);
+      }
+    });
+  </script>
+</body>
+</html>
