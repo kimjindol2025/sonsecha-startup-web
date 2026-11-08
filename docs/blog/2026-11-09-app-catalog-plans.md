@@ -33,3 +33,9 @@
 ## 다음 단계
 
 제품 구현을 시작할 때는 실제 장비/점포 인터뷰로 호환성·작업 흐름을 검증하고, 법률·플랫폼 정책 검토가 필요한 유상 포인트, 광고 발송, 위치정보, 리뷰 API 연동을 구현 범위 확정 전에 별도로 승인받는다.
+
+## 후속 링크 점검
+
+- 공개 카탈로그의 고유 href 50개를 점검하던 중 `carwash-operations-plan.html` 및 `carwash-all-specs.html` 링크와 통합 기획서 앵커 21개가 Pages에서 404인 것을 확인했다. 두 원본 HTML은 저장소에 있었지만 `vite.config.js`의 빌드 입력에서 누락되어 배포 산출물에 포함되지 않았다.
+- 두 페이지를 Vite 멀티페이지 입력에 추가했다. `npm ci` 후 `npm run build` 성공, 산출물 `dist/carwash-operations-plan.html`, `dist/carwash-all-specs.html` 생성 확인.
+- 실제 Pages 재배포 후 모든 href를 다시 확인하고 이 기록과 `docs/TASKS.md`를 마무리한다.
