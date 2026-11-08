@@ -39,7 +39,7 @@
 - 첫 번째 대상인 장비 원격관제의 구현 명세를 `docs/specs/06-equipment-technology/01-remote-monitoring-implementation.md`에 추가했다.
 - 저장소의 Vite 멀티페이지 구조와 GitHub Pages 배포 제약에 맞춰, 첫 구현은 가상 데이터만 사용하는 읽기 전용 브라우저 데모로 고정했다. 로그인·서버 동기화·문자/메일 발송·PLC/Modbus/OPC UA/MQTT 연결과 원격 제어를 범위 밖으로 명시했다.
 - UI, 필터/상태 동작, 데이터 타입, 저장/내보내기, 알람 확인, AS 티켓 상태 전이, 한국어 시간 표기, 오류·접근성 처리 및 수용 기준을 적었다. 실제 장비 연동 사양은 파일럿 모델·제조사 자료를 받기 전에는 임의로 채우지 않는다.
-- 장비 원격관제, IoT 장비관리, 예방정비, 부품 찾기, AI 고장진단, 가맹점 통합관리, 본사 AS 배차, 가맹점 교육, 장비 설치 프로젝트, 세차장 CRM, 쿠폰·포인트, 리뷰 관리 12/13을 상세 명세로 전환했다. 자동 마케팅 한 항목은 남았으며 `docs/TASKS.md` 순서로 이어간다.
+- 카탈로그의 기획 예정 13개 앱 모두 구현 명세 v1.0을 준비하고 카탈로그 링크를 갱신했다.
 - 두 번째 대상 IoT 장비관리도 `docs/specs/06-equipment-technology/02-iot-equipment-management-implementation.md`에 구현 명세 v1.0을 추가했다. 센서 6대 데모 fixture, 임계치 편집/감사 이력, 경보 확인, 점검기록, 시각·품질 규칙, 오류처리와 인수 기준을 구체화했다.
 - 실센서 미연결과 데모 임계치의 안전기준 비해당을 명시하고, 카탈로그에서 상세 명세로 연결했다.
 - 세 번째 예방정비 `docs/specs/06-equipment-technology/03-preventive-maintenance-implementation.md`는 달력기반 데모 계획, OEM 출처 상태, 한국 날짜 기준 기한 분류, 작업 완료/연기 승인, 다음 기한 산술, 점검 이력, 인수 기준을 상세화했다. 예시 주기가 실제 OEM 권장으로 보이지 않게 fixture와 UI 문구를 제한하고 카탈로그를 연결했다.
@@ -52,6 +52,8 @@
 - 열 번째 세차장 CRM `docs/specs/08-marketing-crm/01-carwash-crm-implementation.md`는 합성 프로필/동의 이벤트, 목적·채널별 광고 자격 계산, 방문 세그먼트, 발송 없는 캠페인 draft를 정의했다. 실 연락처와 광고 API를 받지 않는다.
 - 열한 번째 쿠폰·포인트 `docs/specs/08-marketing-crm/02-coupons-points-implementation.md`는 무료 데모 혜택만 대상으로 쿠폰 발급/사용 시뮬레이션과 append-only 포인트 원장을 정의했다. 실결제, 유상 잔액, 현금 환급/정산/양도를 포함하지 않는다. 금융위험 근거는 전자금융거래법 2026-10-02 시행본을 확인해 후속 검토조건에 반영했다.
 - 열두 번째 리뷰 관리 `docs/specs/08-marketing-crm/03-review-management-implementation.md`는 합성 리뷰 분류/내부 티켓/답글 승인 기록만 정의했다. 위험 리뷰는 공개 답글 플로우에서 차단하며 실제 플랫폼 연동/게시/신고와 스크래핑은 제외했다.
+- 열세 번째 자동 마케팅 `docs/specs/08-marketing-crm/04-automated-marketing-implementation.md`는 가상 날씨/방문/동의 계산, 제외 사유 집계, 문구 preview, 승인 로그만 정의했다. 실제 예보 API, 연락처/수신자 목록, 자동화/예약/메시지 전송은 포함하지 않는다. 2026-03-04 KISA 제7차 안내서와 2026년 현행 광고 규정 출처를 반영했다.
+- 13개 앱의 구현 범위는 모두 공개 사이트에서 상세명세 링크로 볼 수 있게 갱신했다. 공통으로 browser-only 합성 데모를 구현 대상으로 분리했으며 실제 데이터/운영 연결은 후속 입력과 승인조건으로 명시했다.
 
 ## 후속 링크 점검
 
