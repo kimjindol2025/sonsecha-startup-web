@@ -404,13 +404,16 @@ function validateFeedback(input) {
   };
 }
 
-function validateContact(input) {
+function validateContact(input, { required = false } = {}) {
   const contact = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
+  const name = cleanText(contact.name, 120);
+  const phone = cleanText(contact.phone, 80);
   const email = cleanText(contact.email, 240);
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('INVALID_CONTACT');
+  if (required && (!name || !phone || !email)) throw new Error('CONTACT_REQUIRED');
   return {
-    name: cleanText(contact.name, 120),
-    phone: cleanText(contact.phone, 80),
+    name,
+    phone,
     email,
   };
 }
@@ -464,6 +467,19 @@ function formatCandidateEmail(snapshot, question, contact, receipt) {
     } else lines.push('단계별 검토 메모: 공유 안 함');
   });
   return lines.join('\n');
+}
+
+function formatConsultationMessageEmail(receipt, message) {
+  return [
+    '손세차장 창업 가이드 후보지 검토 상담 추가 메시지',
+    '',
+    `접수번호: ${receipt}`,
+    `작성일: ${message.createdAt || new Date().toISOString()}`,
+    `상황: ${message.contextLabel || '전체 상담'}`,
+    '',
+    '사용자 메시지:',
+    message.body,
+  ].join('\n');
 }
 
 function emailFailure(response, error, extra = {}) {
@@ -704,7 +720,7 @@ async function handleApi(request, response, url) {
   if (request.method === 'POST' && url.pathname === '/api/feedback') {
     const body = await readJsonBody(request);
     const feedback = validateFeedback(body);
-    const contact = validateContact(body.contact);
+    const contact = validateContact(body.contact, { required: true });
     if (body.privacyConsent !== true) return sendError(response, 400, '개인정보 수집·이용 동의 후 의견을 보낼 수 있습니다.');
     if (feedback.website) return sendJson(response, 201, { received: true });
     const address = requestAddress(request);
@@ -730,7 +746,7 @@ async function handleApi(request, response, url) {
     const address = requestAddress(request);
     if (!consultationAllowed(address)) return sendError(response, 429, '상담 요청은 한 시간에 8건까지 만들 수 있습니다. 잠시 후 다시 시도해 주세요.');
     const body = await readJsonBody(request);
-    const contact = validateContact(body.contact);
+    const contact = validateContact(body.contact, { required: true });
     const result = await consultationStore.create(body);
     try {
       await sendCustomerEmail({
@@ -760,8 +776,18 @@ async function handleApi(request, response, url) {
       publicMessageMatch[1], request.headers['x-consultation-key'], 'user', await readJsonBody(request),
     );
     if (!consultation) return sendError(response, 404, '상담 건을 찾을 수 없거나 접근키가 맞지 않습니다.');
-    consultationStore.setEmailResult(publicMessageMatch[1], 'queued', '새 사용자 메시지 이메일 발송 대기');
-    return sendJson(response, 201, { consultation, emailDelivery: 'queued' });
+    const message = consultation.messages.at(-1) || { body: '' };
+    try {
+      await sendCustomerEmail({
+        subject: `[후보지 상담 추가 메시지] ${publicMessageMatch[1]}`,
+        text: formatConsultationMessageEmail(publicMessageMatch[1], message),
+      });
+      consultationStore.setEmailResult(publicMessageMatch[1], 'sent');
+      return sendJson(response, 201, { consultation, emailDelivery: 'sent' });
+    } catch (error) {
+      consultationStore.setEmailResult(publicMessageMatch[1], error?.code === 'SMTP_NOT_CONFIGURED' ? 'not_configured' : 'failed', error?.code || 'SMTP_SEND_FAILED');
+      return emailFailure(response, error, { consultation, received: true });
+    }
   }
 
   const publicSeenMatch = url.pathname.match(/^\/api\/consultations\/([A-Z0-9-]+)\/seen$/);
@@ -1004,6 +1030,7 @@ const server = createServer(async (request, response) => {
     if (error.message === 'CONSENT_REQUIRED') return sendError(response, 400, '공유 동의 후 전송할 수 있습니다.');
     if (error.message === 'PHOTO_LIMIT') return sendError(response, 400, '사진은 상담 건당 10장까지 보낼 수 있습니다.');
     if (error.message === 'PHOTO_SHARING_DISABLED') return sendError(response, 400, '사진 공유를 선택하지 않은 상담 건입니다.');
+    if (error.message === 'CONTACT_REQUIRED') return sendError(response, 400, '이름·전화번호·이메일을 모두 입력해 주세요.');
     if (['REQUIRED_FIELD', 'FIELD_TOO_LONG', 'INVALID_URL', 'INVALID_PRICE', 'INVALID_FEATURED', 'INVALID_CATEGORY', 'INVALID_CONTENT', 'INVALID_ANALYTICS', 'INVALID_FEEDBACK', 'INVALID_CONTACT', 'INVALID_CONSULTATION', 'INVALID_PHOTO', 'INVALID_IMAGE'].includes(error.message)) {
       return sendError(response, 400, '입력값을 확인해 주세요.');
     }

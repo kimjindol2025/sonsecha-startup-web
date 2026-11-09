@@ -7,6 +7,14 @@ export NODE_ENV="${NODE_ENV:-production}"
 export PORT="${PORT:-40330}"
 export TRUSTED_PROXY_IPS="${TRUSTED_PROXY_IPS:-192.168.45.23}"
 
+SMTP_ENV_FILE="${SMTP_ENV_FILE:-$SCRIPT_DIR/.env.smtp}"
+if [[ -f "$SMTP_ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$SMTP_ENV_FILE"
+  set +a
+fi
+
 AI_PRODUCT_SECRET_FILE="${AI_PRODUCT_SECRET_FILE:-$SCRIPT_DIR/.ai-product-api-key}"
 if [[ -z "${AI_PRODUCT_API_KEY:-}" ]]; then
   if [[ -s "$AI_PRODUCT_SECRET_FILE" ]]; then

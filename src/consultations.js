@@ -329,9 +329,9 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
           <div class="consultation-photo-grid" data-photo-grid>${selectedPhotoMarkup()}</div>
         </section>
         <fieldset class="consultation-contact"><legend>연락처</legend><div>
-          <label><span>이름</span><input name="contactName" type="text" maxlength="120" autocomplete="name" placeholder="이름 (선택)"></label>
-          <label><span>연락처</span><input name="contactPhone" type="tel" maxlength="80" autocomplete="tel" placeholder="전화번호 (선택)"></label>
-          <label><span>이메일</span><input name="contactEmail" type="email" maxlength="240" autocomplete="email" placeholder="답변받을 이메일 (선택)"></label>
+          <label><span>이름 *</span><input name="contactName" type="text" maxlength="120" autocomplete="name" placeholder="이름" required></label>
+          <label><span>연락처 *</span><input name="contactPhone" type="tel" maxlength="80" autocomplete="tel" placeholder="전화번호" required></label>
+          <label><span>이메일 *</span><input name="contactEmail" type="email" maxlength="240" autocomplete="email" placeholder="답변받을 이메일" required></label>
         </div></fieldset>
         <label class="consultation-question"><span>상담 질문 *</span><textarea name="question" maxlength="3000" rows="5" required placeholder="후보지에서 가장 먼저 검토받고 싶은 내용을 적어주세요.">${escapeHtml(draftQuestion)}</textarea></label>
         <div class="consultation-footer"><p data-consultation-feedback></p><button type="submit">전송 내용 미리보기</button></div>
