@@ -245,6 +245,27 @@ function calculations(plan) {
   return { budgetTotal, fundingTotal, gap: fundingTotal - budgetTotal, monthlySales, monthlyCosts, monthlyProfit, breakEvenCars, completed, total: coreValues.length };
 }
 
+function scenarioCalculations(calc) {
+  return [
+    {
+      key: 'conservative', label: '보수 시나리오', salesRate: 0.8, costRate: 1.05,
+      description: '고객 유입이 기준 가정보다 낮고 운영비가 늘어나는 경우',
+    },
+    {
+      key: 'base', label: '기준 시나리오', salesRate: 1, costRate: 1,
+      description: '현재 입력한 매출·운영비 가정을 그대로 적용한 경우',
+    },
+    {
+      key: 'target', label: '목표 시나리오', salesRate: 1.2, costRate: 1.05,
+      description: '고객 유입 확대를 목표로 한 설명용 가정',
+    },
+  ].map((scenario) => {
+    const sales = Math.round(calc.monthlySales * scenario.salesRate);
+    const costs = Math.round(calc.monthlyCosts * scenario.costRate);
+    return { ...scenario, sales, costs, profit: sales - costs };
+  });
+}
+
 function renderBudget(plan) {
   return budgetItems.map((item) => `<article class="plan-budget-item"><div><b>${escapeHtml(item.group)}</b><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.help)}</small></div>${moneyInput(`budget.${item.key}`, `${item.label} 금액`, plan.budget[item.key])}</article>`).join('');
 }
@@ -291,13 +312,16 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
   }).join('') : '';
   const candidateNotes = candidate?.detailNotes && typeof candidate.detailNotes === 'object'
     ? Object.values(candidate.detailNotes).map((value) => String(value).trim()).filter(Boolean) : [];
+  const scenarios = scenarioCalculations(calc);
   const executiveSummary = `${plan.basic.ownerName || '예비 창업자'}는 ${plan.basic.targetRegion || '희망 지역 확인 필요'}에서 ${plan.basic.floorArea || '규모 확인 필요'}평, ${plan.basic.bayCount || '수량 확인 필요'}베이 규모의 ${plan.basic.washType || '형태 확인 필요'} 창업을 검토한다. 목표 개업일은 ${plan.basic.openingDate || '확인 필요'}이며, 준비기간 ${plan.basic.preparationMonths || '확인 필요'}개월과 공사기간 ${plan.basic.constructionWeeks || '확인 필요'}주를 가정했다. 현재 입력 기준 예상 창업비는 ${formatMoney(calc.budgetTotal)}, 자금 확보계획은 ${formatMoney(calc.fundingTotal)}으로 ${calc.gap >= 0 ? `예상 여유자금은 ${formatMoney(calc.gap)}` : `추가 확보가 필요한 금액은 ${formatMoney(Math.abs(calc.gap))}`}이다.`;
 
   return `<article class="plan-document" data-plan-document>
     <header><div><p>HAND CAR WASH BUSINESS PLAN</p><h2>${escapeHtml(plan.title)}</h2><span>${escapeHtml(plan.basic.targetRegion || '희망 지역 미입력')} · 작성일 ${new Intl.DateTimeFormat('ko-KR').format(new Date())}</span></div><b>${calc.completed}/${calc.total} 핵심항목</b></header>
-    <section class="plan-document-overview"><div><span>사업 형태</span><strong>${escapeHtml(plan.basic.washType || '확인 필요')} · ${escapeHtml(plan.basic.bayCount || '-')}베이</strong></div><div><span>사업장 규모</span><strong>${escapeHtml(plan.basic.floorArea || '-')}평</strong></div><div><span>개업 목표</span><strong>${escapeHtml(plan.basic.openingDate || '확인 필요')}</strong></div><div><span>연결 후보지</span><strong>${candidate ? escapeHtml(candidateLabel) : '독립 계획서'}</strong></div></section>
+    <section class="plan-document-overview" data-document-section="overview"><div><span>사업 형태</span><strong>${escapeHtml(plan.basic.washType || '확인 필요')} · ${escapeHtml(plan.basic.bayCount || '-')}베이</strong></div><div><span>사업장 규모</span><strong>${escapeHtml(plan.basic.floorArea || '-')}평</strong></div><div><span>개업 목표</span><strong>${escapeHtml(plan.basic.openingDate || '확인 필요')}</strong></div><div><span>연결 후보지</span><strong>${candidate ? escapeHtml(candidateLabel) : '독립 계획서'}</strong></div></section>
 
     <section data-document-section="executive"><h3>01. 사업계획 요약</h3><p>${escapeHtml(executiveSummary)}</p><div class="plan-document-numbers"><p><span>예상 창업비</span><strong>${formatMoney(calc.budgetTotal)}</strong></p><p><span>자금 확보계획</span><strong>${formatMoney(calc.fundingTotal)}</strong></p><p><span>월 매출 가정</span><strong>${formatMoney(calc.monthlySales)}</strong></p><p><span>단순 월 잔액</span><strong>${formatMoney(calc.monthlyProfit)}</strong></p></div></section>
+
+    <section class="plan-presentation" data-document-section="presentation"><h3>설명용 요약 · 은행·가족에게 보여줄 때</h3><p>실제 입력값을 숨기지 않고, 보수·기준·목표 시나리오를 나란히 보여줍니다. 목표 시나리오는 확정 실적이나 약속이 아닌 설명용 가정입니다.</p><div class="plan-scenario-grid">${scenarios.map((scenario) => `<article class="plan-scenario-card ${scenario.key === 'target' ? 'target' : ''}"><span>${escapeHtml(scenario.label)}</span><strong>${formatMoney(scenario.profit)}</strong><small>월 잔액 예상</small><dl><div><dt>월 매출</dt><dd>${formatMoney(scenario.sales)}</dd></div><div><dt>월 운영비</dt><dd>${formatMoney(scenario.costs)}</dd></div></dl><p>${escapeHtml(scenario.description)}</p></article>`).join('')}</div><div class="plan-presentation-message"><strong>설명 포인트</strong><p>${calc.monthlyProfit < 0 ? `현재 기준 시나리오는 ${formatMoney(Math.abs(calc.monthlyProfit))} 적자로 계산됩니다. 초기 고정비와 고객 유입 기간을 반영한 결과이며, ${formatMoney(scenarios[2].profit)} 월 잔액을 목표로 고객 유입·객단가·운영비를 검증합니다.` : `현재 기준 시나리오는 ${formatMoney(calc.monthlyProfit)}의 월 잔액으로 계산됩니다. 이후 고객 유입과 운영 안정화를 통해 목표 시나리오를 검증합니다.`}</p></div><small>시나리오 계수: 보수 매출 80%·운영비 105%, 기준 매출 100%·운영비 100%, 목표 매출 120%·운영비 105%. 실제 계약·견적·매출을 대신하지 않습니다.</small></section>
 
     <section data-document-section="business"><h3>02. 사업 개요와 서비스 구상</h3><div class="plan-document-detail-grid">${documentRow('작성자·예비 대표', plan.basic.ownerName || '확인 필요')}${documentRow('희망 지역', plan.basic.targetRegion || '확인 필요')}${documentRow('후보지 주소', plan.basic.siteAddress || '확인 필요')}${documentRow('예상 규모', `${plan.basic.floorArea || '확인 필요'}평 · ${plan.basic.bayCount || '확인 필요'}베이`)}${documentRow('세차장 형태', plan.basic.washType || '확인 필요')}</div><h4>제공하려는 서비스와 차별점</h4><p>${escapeHtml(plan.basic.businessDescription || '아직 작성하지 않았습니다. 제공 서비스, 가격대, 예약 방식과 차별점을 확인해야 합니다.')}</p></section>
 
@@ -351,6 +375,10 @@ function fullPlanText(plan, calc, candidate, candidateLabel = '') {
     `평균 객단가 ${formatMoney(numberValue(plan.sales.averageTicket))} × 하루 ${numberValue(plan.sales.dailyCars)}대 × 월 ${numberValue(plan.sales.operatingDays)}일 = ${formatMoney(calc.monthlySales)}`,
     ...monthlyCostItems.map((item) => `${item.label}: ${formatMoney(numberValue(plan.monthlyCosts[item.key]))}`),
     `월 운영비 합계: ${formatMoney(calc.monthlyCosts)} · 단순 월 잔액: ${formatMoney(calc.monthlyProfit)} · 손익분기: 하루 ${calc.breakEvenCars}대`,
+    '',
+    '4-1. 설명용 시나리오',
+    ...scenarioCalculations(calc).map((scenario) => `${scenario.label}: 월 매출 ${formatMoney(scenario.sales)} · 월 운영비 ${formatMoney(scenario.costs)} · 월 잔액 ${formatMoney(scenario.profit)}`),
+    '※ 목표 시나리오는 설명용 가정이며 실제 실적·대출 심사·수익을 보장하지 않습니다.',
     '',
     '5. 시장·상권 조사',
     `예상 고객과 수요: ${plan.research.targetCustomers || '확인 필요'}`,
@@ -440,7 +468,8 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
         <button type="button" data-plan-action="new">+ 새 계획서</button>
         <button type="button" data-plan-action="view-document">전체 계획서 보기</button>
         <button type="button" data-plan-action="copy">내용 복사</button>
-        <button type="button" class="plan-primary-action" data-plan-action="print">인쇄 · PDF</button>
+        <button type="button" class="plan-primary-action" data-plan-action="print">상세 인쇄 · PDF</button>
+        <button type="button" data-plan-action="print-summary">은행·가족용 요약</button>
         <button type="button" class="plan-danger-action" data-plan-action="delete" ${state.plans.length === 1 ? 'disabled' : ''}>삭제</button>
         <small data-plan-save-status>이 기기에 자동 저장됨</small>
       </section>
@@ -619,9 +648,14 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
       document.body.classList.add('printing-business-plan');
       setTimeout(() => globalThis.print(), 0);
     }
+    if (action === 'print-summary') {
+      render();
+      document.body.classList.add('printing-business-plan-summary');
+      setTimeout(() => globalThis.print(), 0);
+    }
   });
 
-  globalThis.addEventListener('afterprint', () => document.body.classList.remove('printing-business-plan'));
+  globalThis.addEventListener('afterprint', () => document.body.classList.remove('printing-business-plan', 'printing-business-plan-summary'));
   render();
   return {
     activate() {
