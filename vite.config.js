@@ -13,6 +13,7 @@ export default defineConfig({
         operationsApps: resolve(import.meta.dirname, 'operations-apps.html'),
         carwashAppCatalog: resolve(import.meta.dirname, 'carwash-app-catalog.html'),
         carwashOperationsPlan: resolve(import.meta.dirname, 'carwash-operations-plan.html'),
+        carwashOperationsModules: resolve(import.meta.dirname, 'carwash-operations-modules.html'),
         carwashAllSpecs: resolve(import.meta.dirname, 'carwash-all-specs.html'),
         inventoryApp: resolve(import.meta.dirname, 'inventory-app.html'),
         salesApp: resolve(import.meta.dirname, 'sales-app.html'),
