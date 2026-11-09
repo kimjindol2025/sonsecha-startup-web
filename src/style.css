@@ -760,6 +760,7 @@ body.consultation-open { overflow: hidden; }
 .consultation-options strong, .consultation-options small { display: block; }
 .consultation-options strong { font-size: 11px; }
 .consultation-options small { margin-top: 5px; color: var(--muted); font-size: 8px; line-height: 1.5; }
+.consultation-request-scope { margin-top: 14px; }
 .consultation-stage-review { min-width: 0; border: 1px solid #aebed1; }
 .consultation-stage-review > header { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; color: white; background: #183455; }
 .consultation-stage-review > header strong, .consultation-stage-review > header span { display: block; }

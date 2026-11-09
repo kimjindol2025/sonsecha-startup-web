@@ -413,6 +413,7 @@ function renderConsultationDetail() {
       <p><span>사진</span><strong>${consultation.attachments.length}</strong></p>
       <p><span>사용자 확인</span><strong>${consultation.userConfirmed ? '확인' : '미확인'}</strong></p>
     </div>
+    <section class="consultation-detail-block"><h4>요청 범위</h4><p>${snapshot.requestScope === 'full' ? '사업계획부터 창업까지 전체 컨설팅' : '현재까지 진행한 부분 검토 후 나머지 안내'}</p><p>${(snapshot.serviceNeeds || []).map((item) => escapeHtml({ equipment: '장비 상담·구매', design: '세차장 설계', permit: '용도변경·인허가', construction: '폐수·배수·공사', consulting: '창업 컨설팅', operations: '개업 후 운영관리' }[item] || item)).join(' · ') || '특정 분야 미선택 · 관리자 검토 후 안내'}</p></section>
     <section class="consultation-detail-block"><h4>상담 질문</h4><p class="consultation-question-copy">${escapeHtml(consultation.question)}</p></section>
     <section class="consultation-admin-candidates">${candidateBlocks}</section>
     <section class="consultation-detail-block consultation-email-state"><h4>이메일 전달 상태</h4><p><strong>${consultation.emailStatus === 'sent' ? '발송 완료' : consultation.emailStatus === 'failed' ? '발송 실패' : '발송 대기'}</strong><span>${escapeHtml(consultation.emailError || '접수번호와 관리자 링크만 이메일로 알립니다.')}</span></p></section>

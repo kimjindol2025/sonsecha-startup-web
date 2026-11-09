@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 const allowedStatuses = new Set(['received', 'reviewing', 'more_info', 'answered', 'connected', 'closed']);
+const allowedRequestScopes = new Set(['remaining', 'full']);
+const allowedServiceNeeds = new Set(['equipment', 'design', 'permit', 'construction', 'consulting', 'operations']);
 const allowedMimes = new Map([
   ['image/jpeg', '.jpg'],
   ['image/png', '.png'],
@@ -121,9 +123,20 @@ function validateSnapshot(input) {
         notes: candidates.some((candidate) => candidate.sharing.notes),
         photos: candidates.some((candidate) => candidate.sharing.photos),
       },
+      requestScope: allowedRequestScopes.has(input.requestScope) ? input.requestScope : 'remaining',
+      serviceNeeds: Array.isArray(input.serviceNeeds)
+        ? input.serviceNeeds.filter((item) => allowedServiceNeeds.has(item)).slice(0, 6)
+        : [],
     };
   }
-  return { version: 1, ...validateCandidateSnapshot(input) };
+  return {
+    version: 1,
+    ...validateCandidateSnapshot(input),
+    requestScope: allowedRequestScopes.has(input.requestScope) ? input.requestScope : 'remaining',
+    serviceNeeds: Array.isArray(input.serviceNeeds)
+      ? input.serviceNeeds.filter((item) => allowedServiceNeeds.has(item)).slice(0, 6)
+      : [],
+  };
 }
 
 function serializeConsultation(row, messages = [], attachments = []) {

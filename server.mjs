@@ -421,6 +421,10 @@ function validateContact(input, { required = false } = {}) {
 const feedbackKindLabels = {
   helpful: '도움됐어요', problem: '불편해요', idea: '기능 제안', other: '기타 의견',
 };
+const serviceNeedEmailLabels = {
+  equipment: '장비 상담·구매', design: '세차장 설계', permit: '용도변경·인허가',
+  construction: '폐수·배수·공사', consulting: '창업 컨설팅', operations: '개업 후 운영관리',
+};
 
 function contactLines(contact) {
   return [
@@ -451,6 +455,8 @@ function formatCandidateEmail(snapshot, question, contact, receipt) {
     '손세차장 창업 가이드 후보지 검토 요청',
     '',
     `접수번호: ${receipt}`,
+    `요청 범위: ${snapshot?.requestScope === 'full' ? '사업계획부터 창업까지 전체 컨설팅' : '현재까지 진행한 부분 검토 후 나머지 안내'}`,
+    `필요 지원: ${(snapshot?.serviceNeeds || []).map((item) => serviceNeedEmailLabels[item] || item).join(', ') || '관리자 검토 후 안내'}`,
     ...contactLines(contact),
     '',
     '검토 요청 내용:',

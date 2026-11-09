@@ -6,6 +6,8 @@ const statusLabels = {
 const candidateStatusLabels = {
   unreviewed: '미확인', possible: '가능', conditional: '조건부 가능', blocked: '불가',
 };
+const requestScopeLabels = { remaining: '현재까지 진행한 부분 검토 후 나머지 안내', full: '사업계획부터 창업까지 전체 컨설팅' };
+const serviceNeedLabels = { equipment: '장비 상담·구매', design: '세차장 설계', permit: '용도변경·인허가', construction: '폐수·배수·공사', consulting: '창업 컨설팅', operations: '개업 후 운영관리' };
 
 function stepStatusText(completed, status) {
   return `${completed ? '진행 완료' : '진행 미완료'} · 판정 ${candidateStatusLabels[status] || '미확인'}`;
@@ -267,6 +269,8 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         notes: form.elements.shareNotes.checked,
         photos: form.elements.sharePhotos.checked && photoItems.some((item) => item.selected),
       },
+      requestScope: form.elements.requestScope?.value || 'remaining',
+      serviceNeeds: [...form.querySelectorAll('input[name="serviceNeeds"]:checked')].map((input) => input.value),
     };
   }
 
@@ -316,6 +320,16 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
           <label><input type="checkbox" name="sharePlan"><span><strong>세차장 형태·베이 수</strong><small>선택 후보지별 입력 내용을 공유합니다.</small></span></label>
           <label class="consultation-notes-option"><input type="checkbox" name="shareNotes"><span><strong>1~12단계 메모·담당기관 문의 기록</strong><small data-share-notes-count>작성된 단계별 메모 ${notesCount}개 · 선택하면 단계별로 묶어 요청서에 전달됩니다.</small></span></label>
           <label><input type="checkbox" name="sharePhotos"><span><strong>선택 사진</strong><small>아래에서 사진별로 다시 선택합니다.</small></span></label>
+        </fieldset>
+        <fieldset class="consultation-options consultation-request-scope"><legend>어떤 도움을 원하시나요? *</legend>
+          <label><input type="radio" name="requestScope" value="remaining" checked required><span><strong>나머지만 안내</strong><small>지금까지 진행한 자료를 검토하고 부족한 부분과 다음 단계를 안내받습니다.</small></span></label>
+          <label><input type="radio" name="requestScope" value="full" required><span><strong>전체 컨설팅</strong><small>사업계획·허가·설계·장비·공사·개업까지 전체 상담을 요청합니다.</small></span></label>
+          <label><input type="checkbox" name="serviceNeeds" value="equipment"><span><strong>장비 상담·구매</strong></span></label>
+          <label><input type="checkbox" name="serviceNeeds" value="design"><span><strong>세차장 설계</strong></span></label>
+          <label><input type="checkbox" name="serviceNeeds" value="permit"><span><strong>용도변경·인허가</strong></span></label>
+          <label><input type="checkbox" name="serviceNeeds" value="construction"><span><strong>폐수·배수·공사</strong></span></label>
+          <label><input type="checkbox" name="serviceNeeds" value="consulting"><span><strong>창업 컨설팅</strong></span></label>
+          <label><input type="checkbox" name="serviceNeeds" value="operations"><span><strong>개업 후 운영관리</strong></span></label>
         </fieldset>
         <section class="consultation-stage-review">
           <header><div><strong>1~12단계 기록 확인</strong><span>관리자가 다시 묻지 않도록 단계별 판정과 작성 메모를 전송 전에 확인하세요.</span></div><b data-stage-share-state>메모 공유 선택 필요</b></header>
@@ -489,6 +503,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         }).join('')}
         <section class="preview-block"><h3>선택 사진 · ${selectedPhotos.length}장</h3><div class="consultation-photo-grid">${previewPhotos.map((photo) => `<article class="consultation-photo${photo.selected ? ' selected' : ''}" data-preview-photo-id="${escapeHtml(photo.id)}"><img src="${escapeHtml(photo.url)}" alt=""><label><input type="checkbox" data-preview-photo ${photo.selected ? 'checked' : ''}><span>${photo.selected ? '전송 포함' : '전송 제외'}</span></label><b>${escapeHtml(photo.candidateName)}</b><small>${escapeHtml(photo.name)}</small></article>`).join('') || '<p class="consultation-empty">사진 공유 안 함</p>'}</div></section>
         <section class="preview-block"><h3>연락처</h3><p>이름: ${escapeHtml(contact.name || '미입력')} · 연락처: ${escapeHtml(contact.phone || '미입력')} · 이메일: ${escapeHtml(contact.email || '미입력')}</p></section>
+        <section class="preview-block"><h3>상담 범위</h3><p>${escapeHtml(requestScopeLabels[snapshot.requestScope] || requestScopeLabels.remaining)}</p><p>${(snapshot.serviceNeeds || []).map((item) => escapeHtml(serviceNeedLabels[item] || item)).join(' · ') || '특정 분야 미선택 · 관리자 검토 후 안내'}</p></section>
         <section class="preview-block"><h3>상담 질문</h3><p>${escapeHtml(question)}</p></section>
         <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 정보, 진행상태, 메모와 사진을 대한이엔지에 전달하고, 문의 응대를 위해 연락처를 수집·이용하는 데 동의합니다. <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 안내</a></span></label>
         <p class="consultation-send-status" data-send-status></p>
