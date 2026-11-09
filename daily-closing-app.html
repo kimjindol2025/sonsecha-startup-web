@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>일일 수입·지출 마감 · BIGWASH</title>
+  <link rel="stylesheet" href="./operations-apps.css">
+  <link rel="stylesheet" href="./src/daily-closing.css">
+</head>
+<body class="closing-page">
+  <header class="closing-top"><strong>BIGWASH</strong><span>1호점</span><a href="./operations-apps.html">운영 앱</a></header>
+  <main class="closing-main">
+    <p class="closing-kicker">매장 운영 장부</p>
+    <h1>일일 수입·지출 마감</h1>
+    <p>거래를 남기고 실제 금액과 대조한 뒤 하루 장부를 확정합니다.</p>
+    <div class="closing-toolbar"><label>영업일 <input id="date" type="date"></label><strong id="status"></strong></div>
+    <p id="message" role="status" aria-live="polite" hidden></p>
+    <div id="closing"></div>
+    <footer>기록은 이 브라우저에 저장됩니다. <button type="button" id="backup">JSON 백업</button></footer>
+  </main>
+  <script type="module" src="./src/daily-closing.js"></script>
+</body>
+</html>

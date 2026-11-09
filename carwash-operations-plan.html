@@ -726,7 +726,7 @@
     <section class="section-wrap" id="wireframe">
       <div class="section-head"><h2 class="section-title">일일 수입·지출 마감 화면</h2></div>
       <ol><li><strong>거래 입력</strong> 품목·수량·단가·결제수단을 기록하고 거래별 금액을 확인한다.</li><li><strong>금액 대조</strong> 수입·지출·환불 합계에서 근거 거래를 열고 현금·카드·계좌 금액을 확인한다.</li><li><strong>마감 확정</strong> 수입·지출 차액과 대조 차이 사유를 검토한 뒤 하루 장부를 잠근다.</li></ol>
-      <p><a href="#implementation">v1.2 구현 명세 보기 →</a></p>
+      <p><a href="./daily-closing-app.html">일일 수입·지출 마감 앱 열기 →</a> · <a href="#implementation">v1.2 구현 명세 보기 →</a></p>
     </section>
 
     <!-- Compliance Callout Section -->
@@ -827,12 +827,12 @@ export interface DailyOperationClosing {
   equipment: {
     downtimeMinutes: number; // 전체 가동 정지 시간(분)
     bayStatus: { [bayId: string]: 'normal' | 'caution' | 'offline' };
-    issues: Array<{
+    issues: Array&lt;{
       equipmentName: string;
       symptom: string;
       status: 'reported' | 'in_repair' | 'resolved';
       cost?: number;
-    }>;
+    }&gt;;
   };
 
   // 3. 환경 & 폐수 (물환경보전법 제38조의2 준수)
@@ -851,18 +851,18 @@ export interface DailyOperationClosing {
   // 4. 소모품 & 재고
   inventory: {
     chemicalUsageAlerts: string[]; // "스노우폼 부족", "발수제 발주 필요"
-    replenishedItems: Array<{ item: string; quantity: number }>;
+    replenishedItems: Array&lt;{ item: string; quantity: number }&gt;;
   };
 
   // 5. 고객 & 민원
   incidents: {
     complaintCount: number;
-    records: Array<{
+    records: Array&lt;{
       carNumber: string;
       issueType: 'scratch' | 'wash_quality' | 'payment_error' | 'facility';
       summary: string;
       resolved: boolean;
-    }>;
+    }&gt;;
   };
 
   createdAt: string;

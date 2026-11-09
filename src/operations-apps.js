@@ -403,6 +403,7 @@ function renderOperationsHub() {
   const root = document.querySelector('#opsAppHub');
   if (!root) return;
   const pages = [
+    { href: './daily-closing-app.html', title: '일일 수입·지출 마감', description: '거래 기록·금액 대조·마감 확정', step: '1호점 장부' },
     { href: '/inventory-app.html', title: '재고관리 앱', description: '약품·소모품·최소재고 관리', step: '17단계 연결' },
     { href: '/sales-app.html', title: '매출관리 앱', description: '일매출·객단가·코스별 매출 기록', step: '19단계 연결' },
     { href: '/wastewater-app.html', title: '폐수관리 앱', description: '유입량·처리량·슬러지·점검 기록', step: '5~7단계 연결' },
@@ -425,7 +426,7 @@ function renderOperationsHub() {
       </header>
       <section class="ops-summary">
         <article><span>분리 운영 원칙</span><strong>단계에는 링크만</strong></article>
-        <article><span>구성 앱 수</span><strong>5개</strong></article>
+        <article><span>구성 앱 수</span><strong>${pages.length}개</strong></article>
         <article><span>기록 저장 방식</span><strong>브라우저 로컬 저장</strong></article>
       </section>
       <section class="ops-hub-grid">
