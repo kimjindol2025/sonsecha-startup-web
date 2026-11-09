@@ -333,10 +333,13 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
   margin: 4px 0 20px; padding: 22px; background: white; color: var(--ink); border: 1px solid #cbd8e9;
   border-radius: 7px; box-shadow: 0 10px 28px rgba(17,37,63,.06);
 }
-.candidate-heading { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; }
+.candidate-heading { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; }
 .candidate-heading > span { grid-row: 1 / 3; padding: 5px 8px; color: var(--blue); background: #edf4ff; border: 1px solid #b9d0ff; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
 .candidate-heading strong { font-size: 19px; }
 .candidate-heading small { color: var(--muted); font-size: 11px; }
+.candidate-help-button { grid-column: 3; grid-row: 1 / 3; align-self: center; min-height: 38px; padding: 0 13px; color: var(--blue); background: #edf4ff; border: 1px solid #9dbbff; border-radius: 5px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.candidate-help-button:hover { color: #fff; background: var(--blue); border-color: var(--blue); }
+.candidate-help-button:focus-visible { outline: 3px solid rgba(20,87,255,.22); outline-offset: 2px; }
 .candidate-quick-guide {
   grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px; margin: 4px 0 2px; padding: 0; list-style: none; overflow: hidden;
@@ -1266,9 +1269,11 @@ body.consultation-open { overflow: hidden; }
   .check-group-items > li.has-usage-help { grid-template-columns: 1fr; gap: 3px; }
   .detail-usage-button { justify-self: start; min-height: 40px; margin: 0 0 5px 30px; padding: 0 14px; font-size: 11px; }
   .candidate-fields { gap: 14px; margin-bottom: 18px; padding: 18px 14px; }
-  .candidate-heading { grid-template-columns: 1fr; gap: 6px; }
+  .candidate-heading { grid-template-columns: 1fr auto; gap: 6px; }
   .candidate-heading > span { grid-row: auto; justify-self: start; }
   .candidate-heading strong { font-size: 18px; }
+  .candidate-heading strong, .candidate-heading small { grid-column: 1 / -1; }
+  .candidate-help-button { grid-column: 2; grid-row: 1; justify-self: end; }
   .candidate-quick-guide { grid-template-columns: 1fr; gap: 0; }
   .candidate-quick-guide li { min-height: 40px; padding: 8px 10px; border-bottom: 1px solid #d8e4f4; }
   .candidate-quick-guide li:last-child { border-bottom: 0; }

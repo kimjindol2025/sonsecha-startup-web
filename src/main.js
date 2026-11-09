@@ -42,6 +42,7 @@ const progressBar = document.querySelector('#progressBar');
 const storageKey = 'sonsecha-roadmap-progress';
 const detailStorageKey = 'sonsecha-detail-checks-v1';
 const detailNotesStorageKey = 'sonsecha-detail-notes-v1';
+const detailNoteMaxLength = 1000;
 const legacyCandidateStorageKey = 'sonsecha-candidate-v1';
 const candidateStorageKey = 'sonsecha-candidates-v2';
 const candidateStatusLabels = {
@@ -89,6 +90,27 @@ const stepOneCheckGroups = [
   },
 ];
 const onlineUsageGuides = {
+  'candidate-overview': {
+    kicker: 'CANDIDATE CHECKLIST',
+    title: '후보지 체크리스트 사용법',
+    description: '후보지를 나눠 등록하고 온라인·현장·관할 부서 확인 내용을 후보지별로 기록하는 화면입니다.',
+    links: [],
+    steps: [
+      '후보지 이름과 도로명주소·지번을 입력하고 현재 확인할 후보지 카드를 선택합니다.',
+      '온라인에서 먼저 확인, 현장에서 확인, 관할 부서에 확인 순서로 체크 항목을 진행합니다.',
+      '각 항목의 이용방법을 열어 확인 절차를 참고하고, 확인한 내용은 항목 메모에 기록합니다.',
+      '종합 검토상태와 단계별 판정을 실제 확인 내용에 맞춰 선택합니다.',
+      '후보지 2를 선택하면 후보지 1과 분리된 체크·메모·판정이 표시됩니다.',
+    ],
+    checks: [
+      '상단 후보지 카드의 현재 선택 표시',
+      '각 확인 묶음의 완료 개수와 미확인 항목 수',
+      '후보지별 주소·종합 상태·조건부·부적합 항목 수',
+      '필요한 경우 단계별 메모와 담당 부서 답변 기록',
+    ],
+    record: '확인일, 담당 부서·담당자, 답변 내용, 문서명과 파일 위치처럼 나중에 다시 확인할 수 있는 근거를 메모하세요.',
+    caution: '체크 완료는 자료를 기록했다는 뜻이며, 세차장 운영 가능이나 인허가 확정을 의미하지 않습니다. 최종 판단은 관할 부서와 전문가에게 확인하세요.',
+  },
   '1-0': {
     kicker: '토지이음',
     title: '토지이용계획상 용도지역 확인',
@@ -492,6 +514,7 @@ function injectCandidateFields(group) {
       <span>MY CANDIDATE</span>
       <strong>주소별 독립 체크리스트</strong>
       <small>후보지마다 12단계, 세부 체크, 판정과 메모가 따로 저장됩니다.</small>
+      <button type="button" class="candidate-help-button" data-candidate-usage-guide>사용법</button>
     </div>
     <ol class="candidate-quick-guide" aria-label="후보지 사전 확인 사용 순서">
       <li><span>1</span>후보지 이름과 주소 입력</li>
@@ -532,6 +555,9 @@ function injectCandidateFields(group) {
     <button type="button" class="candidate-remove" data-candidate-remove>현재 후보지 삭제</button>
     <p class="local-save-state" aria-live="polite">이 기기에 저장됨</p>
   `;
+  fields.querySelector('[data-candidate-usage-guide]').addEventListener('click', (event) => {
+    openUsageGuide('candidate-overview', event.currentTarget);
+  });
   const guide = group.querySelector('.guide-content');
   if (guide) guide.before(fields);
 
@@ -696,10 +722,10 @@ function hydrateDetailChecks() {
           <span class="detail-checkmark" aria-hidden="true"></span>
           <span class="detail-check-copy">${original}</span>
         </label>
-        ${usageGuide ? `<button type="button" class="detail-usage-button" data-usage-help="${id}">이용방법</button>` : ''}
+        ${usageGuide ? `<button type="button" class="detail-usage-button" data-usage-help="${id}" aria-expanded="false" aria-controls="note-${id}">이용방법</button>` : ''}
         <div class="detail-note-wrap">
           <label for="note-${id}">이 항목 메모</label>
-          <textarea id="note-${id}" class="detail-note" data-detail-note="${id}" placeholder="확인한 내용, 담당부서·담당자, 답변일과 근거를 적어두세요."></textarea>
+          <textarea id="note-${id}" class="detail-note" data-detail-note="${id}" maxlength="${detailNoteMaxLength}" placeholder="확인한 내용, 담당부서·담당자, 답변일과 근거를 적어두세요."></textarea>
           <span class="note-save-state" aria-live="polite">자동 저장</span>
         </div>
       `;
@@ -707,10 +733,15 @@ function hydrateDetailChecks() {
       const note = item.querySelector('[data-detail-note]');
       const usageButton = item.querySelector('[data-usage-help]');
       resizeNote(note);
-      usageButton?.addEventListener('click', () => openUsageGuide(id, usageButton));
+      usageButton?.addEventListener('click', () => {
+        item.classList.add('note-open');
+        usageButton.setAttribute('aria-expanded', 'true');
+        openUsageGuide(id, usageButton);
+      });
       box.addEventListener('change', () => {
         item.classList.toggle('checked', box.checked);
         item.classList.toggle('note-open', box.checked || Boolean(note.value));
+        usageButton?.setAttribute('aria-expanded', String(box.checked || Boolean(note.value)));
         if (box.checked) setTimeout(() => note.focus(), 80);
         const activeChecks = [...document.querySelectorAll('input[data-detail-check]:checked')]
           .map((checked) => checked.dataset.detailCheck);
@@ -721,8 +752,10 @@ function hydrateDetailChecks() {
         if (fields) renderCandidatePanel(fields);
       });
       note.addEventListener('input', () => {
+        const limitedValue = note.value.slice(0, detailNoteMaxLength);
+        if (note.value !== limitedValue) note.value = limitedValue;
         const notes = getActiveCandidate().detailNotes;
-        if (note.value.trim()) notes[id] = note.value;
+        if (limitedValue.trim()) notes[id] = limitedValue;
         else delete notes[id];
         saveCandidateState();
         item.classList.toggle('note-open', box.checked || Boolean(note.value));
@@ -752,11 +785,14 @@ function loadCandidateData() {
     const item = box.closest('li');
     const note = item?.querySelector('[data-detail-note]');
     if (note) {
-      note.value = active.detailNotes[box.dataset.detailCheck] || '';
+      const savedNote = active.detailNotes[box.dataset.detailCheck];
+      note.value = typeof savedNote === 'string' ? savedNote.slice(0, detailNoteMaxLength) : '';
       resizeNote(note);
     }
     item?.classList.toggle('checked', box.checked);
-    item?.classList.toggle('note-open', box.checked || Boolean(note?.value));
+    const noteOpen = box.checked || Boolean(note?.value);
+    item?.classList.toggle('note-open', noteOpen);
+    item?.querySelector('[data-usage-help]')?.setAttribute('aria-expanded', String(noteOpen));
   });
   document.querySelectorAll('[data-step-status]').forEach((select) => {
     const value = active.stepStatuses[select.dataset.stepStatus] || 'unreviewed';
@@ -1562,6 +1598,7 @@ document.querySelector('#resetButton').addEventListener('click', () => {
   document.querySelectorAll('[data-detail-note]').forEach((note) => {
     note.value = '';
     note.closest('li')?.classList.remove('note-open');
+    note.closest('li')?.querySelector('[data-usage-help]')?.setAttribute('aria-expanded', 'false');
   });
   document.querySelectorAll('[data-step-status]').forEach((select) => {
     select.value = 'unreviewed';
