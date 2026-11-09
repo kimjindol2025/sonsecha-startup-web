@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="손세차장 후보지 허가 확인 준비 페이지">
+    <title>허가 확인 준비 | 빅워시 손세차장</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  </head>
+  <body class="permit-page">
+    <header class="permit-header">
+      <a class="permit-brand" href="/" aria-label="빅워시 창업가이드로 이동"><span>BIGWASH</span><strong>손세차장 창업가이드</strong></a>
+      <a class="permit-back-link" href="/">기존 창업가이드</a>
+    </header>
+    <main class="permit-main">
+      <section class="permit-hero">
+        <p class="permit-eyebrow">PERMIT CHECK</p>
+        <h1>이 공간, 세차장으로<br><em>사용할 수 있을까요?</em></h1>
+        <p>후보지의 건물 용도·용도지역·폐수·하수 조건을 직접 확인하고, 관할 기관에 물어볼 내용을 정리합니다.</p>
+        <div class="permit-notice"><strong>중요 안내</strong><span>이 결과는 허가·신고 완료나 법률 자문이 아닌 자료 정리용 일차 안내입니다. 최종 확인은 관할 기관에 요청하세요.</span></div>
+        <div class="permit-policy-note"><strong>운영자 결정 필요</strong><span>상담 자료 전달 범위, 공사 준비 연결, 전문가·시공 안내는 운영자 확인 후 확정됩니다.</span></div>
+      </section>
+
+      <section class="permit-shell" aria-labelledby="permitFormTitle">
+        <div class="permit-progress-row">
+          <div><span class="permit-kicker">STEP <b data-current-step>1</b> / 3</span><strong id="permitFormTitle" data-step-title>후보지 선택과 기본 정보</strong></div>
+          <span class="permit-save-state" data-save-state aria-live="polite">이 기기에만 저장</span>
+        </div>
+        <div class="permit-stepper" aria-label="허가 확인 진행 단계">
+          <span class="active" data-step-indicator="1">1. 기본 정보</span><span data-step-indicator="2">2. 허가 질문</span><span data-step-indicator="3">3. 결과 확인</span>
+        </div>
+
+        <form id="permitForm" novalidate>
+          <section class="permit-panel" data-panel="1">
+            <div class="permit-panel-heading"><p class="permit-kicker">CANDIDATE</p><h2>확인할 후보지를 선택하세요.</h2><p>기존 후보지는 현재 브라우저의 후보지 목록과 연결됩니다. 주소는 URL에 넣지 않습니다.</p></div>
+            <div class="permit-candidate-list" data-candidate-list></div>
+            <button class="permit-secondary-button" type="button" data-new-candidate>+ 새 후보지 만들기</button>
+            <div class="permit-form-grid">
+              <label class="permit-field"><span>후보지 별칭</span><input name="candidateName" maxlength="120" placeholder="예: 양주 후보지 A"></label>
+              <label class="permit-field permit-field-wide"><span>주소·지번</span><input name="candidateAddress" maxlength="300" autocomplete="street-address" placeholder="확인할 후보지 주소를 입력하세요"></label>
+              <label class="permit-field"><span>희망 세차장 형태</span><select name="washType"><option value="unknown">모름</option><option value="self">셀프세차</option><option value="hand">손세차</option><option value="automatic">자동세차</option></select></label>
+              <label class="permit-field"><span>현재 공간 종류</span><select name="spaceType"><option value="unknown">모름</option><option value="warehouse">창고</option><option value="factory">공장</option><option value="parking">주차장</option><option value="retail">상가 1층</option><option value="existing-wash">기존 세차장</option><option value="other">기타 기존 건물</option><option value="vacant">나대지</option></select></label>
+            </div>
+            <p class="permit-helper">나대지 신축은 이 MVP의 일반 개조 흐름에 포함하지 않고 별도 상담으로 안내합니다.</p>
+            <button class="permit-primary-button" type="button" data-next="2">허가 질문 시작하기 →</button>
+          </section>
+
+          <section class="permit-panel" data-panel="2" hidden>
+            <div class="permit-panel-heading"><p class="permit-kicker">QUESTIONS</p><h2>확인한 내용을 차례로 기록하세요.</h2><p>각 질문은 모름을 허용합니다. 상태·확인일·출처·근거 메모가 후보지별로 저장됩니다.</p></div>
+            <div class="permit-question-list" data-question-list></div>
+            <div class="permit-question-actions"><button class="permit-secondary-button" type="button" data-prev="1">← 기본 정보</button><button class="permit-primary-button" type="button" data-next="3">결과 확인하기 →</button></div>
+          </section>
+
+          <section class="permit-panel" data-panel="3" hidden>
+            <div class="permit-panel-heading"><p class="permit-kicker">RESULT</p><h2>후보지 허가 확인 준비 결과</h2><p>입력한 자료를 기준으로 미확인 항목과 다음 기관 질문을 정리했습니다.</p></div>
+            <div class="permit-result-card" data-result-card></div>
+            <div class="permit-result-actions"><button class="permit-secondary-button" type="button" data-prev="2">← 질문 수정</button><button class="permit-secondary-button" type="button" data-download>요약 내려받기</button><button class="permit-secondary-button" type="button" data-print>인쇄</button><button class="permit-primary-button" type="button" data-consultation>후보지 검토 상담 연결</button></div>
+            <div class="permit-prep-notice"><strong>공사 준비 기능 준비 중</strong><span>/construction-prep는 아직 공개되지 않았습니다. 허가 확인 결과를 기준으로 먼저 관할 기관에 확인하고, 요약을 보관하거나 상담을 요청하세요.</span></div>
+          </section>
+        </form>
+      </section>
+
+      <section class="permit-source-section"><p class="permit-kicker">OFFICIAL LINKS</p><h2>공식 자료는 직접 확인하세요.</h2><p>입력값을 외부 사이트로 자동 전송하지 않습니다. 새 창에서 직접 확인한 뒤 출처와 확인일을 기록하세요.</p><div class="permit-source-links"><a href="https://www.eum.go.kr/web/ar/lu/luLandDet.jsp" target="_blank" rel="noopener noreferrer"><strong>토지이음</strong><span>토지이용계획 확인 ↗</span></a><a href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098&tp_seq=03" target="_blank" rel="noopener noreferrer"><strong>정부24</strong><span>건축물대장 열람 ↗</span></a><a href="https://www.eais.go.kr/" target="_blank" rel="noopener noreferrer"><strong>세움터</strong><span>건축행정 자료 확인 ↗</span></a><a href="https://www.iros.go.kr/" target="_blank" rel="noopener noreferrer"><strong>인터넷등기소</strong><span>등기사항증명서 확인 ↗</span></a></div></section>
+      <p class="permit-source-date permit-source-date-after"><strong>법령·자료 확인 기준일</strong> 2026-11-08 (출시 전 현행 법령·조례와 주소별 적용은 재확인 필요)</p>
+    </main>
+    <footer class="permit-footer"><span>BIGWASH 손세차장 창업가이드</span><span>최종 확인은 관할 기관</span></footer>
+    <script type="module" src="/src/permit.js"></script>
+  </body>
+</html>

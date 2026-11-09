@@ -496,6 +496,7 @@ function makeCandidate(seed = {}) {
     detailChecks: Array.isArray(seed.detailChecks) ? seed.detailChecks : [],
     detailNotes: seed.detailNotes && typeof seed.detailNotes === 'object' ? seed.detailNotes : {},
     detailStatuses: seed.detailStatuses && typeof seed.detailStatuses === 'object' ? seed.detailStatuses : {},
+    permit: seed.permit && typeof seed.permit === 'object' ? seed.permit : undefined,
     washType: typeof seed.washType === 'string' ? seed.washType : '',
     bayCount: typeof seed.bayCount === 'string' ? seed.bayCount : '',
     consultationNotes: Array.isArray(seed.consultationNotes) ? seed.consultationNotes : [],
@@ -1753,6 +1754,10 @@ initializeConsultations({
     candidateState.candidates.findIndex((item) => item.id === candidate.id),
   ),
 });
+if (sessionStorage.getItem('sonsecha-open-consultation') === '1') {
+  sessionStorage.removeItem('sonsecha-open-consultation');
+  requestAnimationFrame(() => document.querySelector('[data-consultation-request]')?.click());
+}
 businessPlanApp = initializeBusinessPlan({
   getCandidateState: () => candidateState,
   candidateDisplayName,

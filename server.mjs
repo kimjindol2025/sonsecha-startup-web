@@ -936,6 +936,7 @@ async function handleApi(request, response, url) {
 async function serveStatic(request, response, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
+  if (pathname === '/permit' || pathname === '/permit/') pathname = '/permit.html';
   if (pathname === '/admin') pathname = '/admin.html';
   if (pathname === '/admin/login') pathname = '/admin-login.html';
   const uploadedImage = pathname.match(/^\/product-images\/([A-Za-z0-9._-]+)$/);
