@@ -561,6 +561,7 @@
       <a href="#compliance">04 법정 환경(폐수) 의무</a>
       <a href="#schema">05 통합 데이터 스키마</a>
       <a href="#roadmap">06 3단계 실행 로드맵</a>
+      <a href="#implementation">07 일일 마감 구현 명세</a>
     </div>
   </nav>
 
@@ -899,7 +900,7 @@
     <section class="section-wrap" id="schema">
       <div class="section-head">
         <span class="section-tag">DATA ARCHITECTURE</span>
-        <h2 class="section-title">통합 데이터 스키마 (TypeScript Interface)</h2>
+        <h2 class="section-title">통합 데이터 스키마 구상 (TypeScript 예시)</h2>
         <p class="section-sub">
           기존의 5개 개별 LocalStorage 저장 구조를 일원화하여, 하루 1개의 완결된 레코드로 관리하는 정규화 스키마입니다.
         </p>
@@ -999,7 +1000,7 @@ export interface DailyOperationClosing {
             <li>일일 5분 통합 마감 모달 화면 개발</li>
             <li>실시간 매출/객단가/안전재고 위젯 연동</li>
             <li>브라우저 LocalStorage 기반 무설치 즉시 사용</li>
-            <li>기존 5개 분산 앱 데이터 통합 마이그레이션</li>
+            <li>기존 5개 앱 데이터 읽기 전용 불러오기</li>
           </ul>
         </div>
 
@@ -1031,12 +1032,68 @@ export interface DailyOperationClosing {
       </div>
     </section>
 
+    <section class="section-wrap" id="implementation">
+      <div class="section-head">
+        <span class="section-tag">MVP IMPLEMENTATION SPEC · v1.1</span>
+        <h2 class="section-title">코덱스 작업 지시 · 1호점 일일 마감</h2>
+        <p class="section-sub">1단계 구현은 이 절의 계약을 따른다. 위 화면과 TypeScript 예시는 제품 구상이다. 첫 사용자는 대한이엔지 테스트 매장의 마감 담당자다. 합성 데이터로 먼저 검증한다.</p>
+      </div>
+      <h3>목표</h3>
+      <p>한 매장의 담당자가 영업일별 마감을 저장하고, 새로고침 뒤 재조회·정정할 수 있게 한다. 기존 운영 앱에서 같은 날짜의 자료를 불러오고, 매출·장비·폐수·재고·민원 요약을 마감 스냅샷으로 남긴다. 최초 마감 목표 시간은 5분이며, 실제 담당자 1회 측정값을 기록한다.</p>
+
+      <h3>작업 범위와 변경 파일</h3>
+      <ol>
+        <li><code>daily-closing-app.html</code>을 추가한다. <code>vite.config.js</code>의 다중 페이지 입력에 등록하고 <code>operations-apps.html</code>의 실제 메뉴 렌더링 위치와 이 기획서에서 상대 링크로 연결한다. <code>operations-apps.html</code>의 메뉴는 <code>src/operations-apps.js</code>에서 렌더링되는지 먼저 확인한다.</li>
+        <li><code>src/daily-closing.js</code>에 화면과 저장 흐름을, <code>src/daily-closing-domain.js</code>에 검증·가져오기·집계를 구현한다. 기존 Vite 빌드와 CSS를 재사용한다. 새 런타임 의존성, TypeScript, 서버, DB 도입은 후속 범위다.</li>
+        <li>기존 5개 앱의 원본 키와 화면 동작을 보존한다. 자동 AS 발행, 재고 차감·발주, 실결제, 외부 전송, 사진·차량번호 저장, 직원 계정, 다점포, 법정 출력은 후속 단계로 둔다. 환경 입력은 내부 참고 기록으로 표시하며 법정 적합성과 장기 보관은 관할·서식 확인을 별도 게이트로 둔다.</li>
+      </ol>
+
+      <h3>화면과 사용자 흐름</h3>
+      <ol>
+        <li>상단에서 영업일을 고른다. 최초 기본값은 <code>Asia/Seoul</code>의 오늘이다. 이미 저장된 날짜는 읽기 모드에서 열고 <strong>정정</strong>으로 편집한다. 미저장 편집 상태에서 날짜를 바꾸면 폐기 확인을 받는다.</li>
+        <li><strong>기존 기록 불러오기</strong>로 선택일 자료를 미리 본다. 적용 전 출처별 건수와 누락·충돌을 보여준다. 불러오기는 편집 중인 메모나 입력을 덮을 때 확인을 받으며, 마감 저장 전까지 브라우저 저장소에 기록하지 않는다.</li>
+        <li>5개 입력 묶음은 기본·매출, 장비, 폐수, 재고, 민원·인수인계다. 저장 전 화면에 순매출·객단가, 장비 조치, 재고 부족, 환경 기록 여부를 보여준다. 저장 실패 시 편집 내용을 보존하고 오류 위치를 표시한다.</li>
+        <li>저장 성공 후 읽기 모드로 전환하고 마감 시각과 개정번호를 표시한다. 정정에는 변경 사유를 요구하고 직전 버전을 이력에서 조회할 수 있게 한다.</li>
+      </ol>
+
+      <h3>데이터 계약</h3>
+      <p><code>sonsecha-app-unified-ops-v1</code>에 JSON 객체 하나를 저장한다. 최상위 필드는 <code>schemaVersion: 1</code>, <code>records</code>다. <code>records[date]</code>에는 개정판 배열을 저장하며 마지막 항목이 현재본이다. 개정판 공통 필드는 <code>revision</code>(1부터 증가), <code>savedAt</code>(UTC ISO 시각), <code>reason</code>(첫 저장은 null, 정정은 1~300자), 아래 입력 객체다. 영업일은 실제 달력의 <code>YYYY-MM-DD</code>이며 미래일은 막는다. 필수 문자열은 공백 제거 후 검사하고 메모는 500자 이하로 제한한다. 숫자 빈칸은 0과 구별한다.</p>
+      <ul>
+        <li><strong>기본</strong> <code>manager</code> 1~60자 필수, <code>weather</code>는 맑음·흐림·비·눈·기타 또는 null.</li>
+        <li><strong>매출</strong> <code>grossKrw</code>, <code>refundKrw</code>, <code>cars</code>는 0 이상 안전 정수 필수. <code>rfReloadKrw</code>는 별도 참고 금액이며 미입력은 null. 순매출 = 매출 − 환불. 당일 이전 판매 건의 환불을 기록할 수 있도록 음수 순매출을 허용한다. 객단가는 차량 0대면 null, 나머지는 순매출 ÷ 차량 수를 원 단위로 반올림한다. RF 충전액은 순매출과 객단가에서 제외한다.</li>
+        <li><strong>장비</strong> <code>equipment[]</code>는 <code>name</code>, <code>status</code>(정상·예방정비·수리필요·AS요청), <code>downtimeMinutes</code>(0 이상 정수 또는 null), <code>note</code>로 구성한다. 수리필요·AS요청 행에 메모 필수. 위젯은 장비 조치 행 수를 표시한다.</li>
+        <li><strong>폐수</strong> <code>wastewater</code>는 null 또는 <code>waterStartM3</code>, <code>waterEndM3</code>, <code>treatedL</code>, <code>sludgeKg</code>, <code>note</code>를 포함한다. 계량기 두 값은 함께 입력하고 종료 ≥ 시작을 검사한다. ㎥는 소수 셋째 자리까지 받고 1,000배한 정수로 차감한 뒤 ㎥로 표시한다. 처리량은 정수 L, 슬러지는 소수 첫째 자리 kg까지 허용한다. 각 수치는 0 이상이며 부분 입력은 화면에 ‘부분 기록’으로 표시한다.</li>
+        <li><strong>재고</strong> <code>inventory[]</code>는 <code>item</code>, <code>currentStock</code>, <code>minimumStock</code>을 저장한다. 수량은 0 이상, 소수 첫째 자리까지 허용한다. 현재 ≤ 최소이면 부족으로 표시한다. 입력에서 품목 이름의 앞뒤 공백을 제거하고 중복 품목은 저장 전에 해결하도록 표시한다.</li>
+        <li><strong>민원·인수인계</strong> <code>complaintCount</code>는 0 이상 정수 또는 null, <code>handoverNote</code>는 선택이다. 불러올 기록이 없는 장비와 재고는 빈 배열로 두고 화면에 ‘기록 없음’을 표시한다.</li>
+      </ul>
+
+      <h3>기존 자료 읽기 계약</h3>
+      <p><code>src/operations-apps.js</code>가 쓰는 <code>sonsecha-app-{sales,equipment,wastewater,inventory,diary}-v1</code> 배열에서 선택한 <code>date</code>와 정확히 일치하는 행만 읽는다. 원본 키에는 쓰기·삭제를 수행하지 않는다. 과거 버전의 숫자 문자열은 공백 제거 후 해당 필드 규칙을 충족할 때만 변환한다. 빈 문자열은 미입력, 손상 JSON·비배열·유효하지 않은 행은 출처와 건수를 표시하고 해당 출처의 자동 적용을 막는다.</p>
+      <ul>
+        <li><strong>매출</strong> 기존 채널값만으로 RF 충전 포함 여부를 확정할 수 없다. <code>sales</code>, <code>refunds</code>, <code>cars</code> 원본 집계는 미리보기 참고용으로만 표시한다. 담당자가 충전액을 분리한 값을 마감에 직접 입력한다. 일지의 매출·차량수는 합산하지 않는다.</li>
+        <li><strong>장비·재고</strong> 장비는 <code>equipment → name</code>, <code>downtime → downtimeMinutes</code>, <code>status/note</code>를 반영한다. 재고는 <code>item/currentStock/minimumStock</code>을 반영한다. 같은 품목이 여러 건이면 후보를 모두 표시하고 담당자가 하나를 선택한다.</li>
+        <li><strong>폐수·일지</strong> 폐수 <code>treated/sludge</code>는 설비 간 중복 가능성이 있으므로 원본을 미리 보여주고 담당자가 확인한 총량을 입력한다. 계량기 값은 직접 입력한다. 일지 <code>complaints/weather/note</code>는 미리보기 후보로 제공하고 여러 건이면 담당자가 선택한다.</li>
+      </ul>
+
+      <h3>저장·동시성·실패 처리</h3>
+      <p>같은 브라우저 프로필·같은 오리진의 단일 매장용이다. 마감 키 이름의 Web Lock 안에서 원본을 다시 읽고 현재 개정번호를 편집 시작 시 번호와 비교한다. 다르면 충돌을 표시하고 재조회하도록 한다. 신규 저장은 번호 0을 기준으로 비교한다. 저장 버튼을 처리 중 비활성화하고 저장은 새 JSON 한 번 쓰기로 완료한다. 저장 용량 초과, 차단, 잠금 미지원, 손상 JSON, 알 수 없는 버전에는 쓰기를 중단하고 기존 원문과 화면 입력을 보존한다. 사용자 입력은 텍스트로 출력한다. 마감 기록 조회 화면에서 JSON 백업을 내려받을 수 있게 하며 파일에는 <code>schemaVersion</code>과 개정 이력을 포함한다. 자동 복원과 오리진 간 이전은 별도 범위로 표시한다.</p>
+
+      <h3>검증과 완료 조건</h3>
+      <ol>
+        <li>정상 계산 기준값. 매출 100,000원·환불 10,000원·차량 9대·RF 충전 20,000원 → 순매출 90,000원·객단가 10,000원. 차량 0대 → 객단가 ‘—’. 계량 1420.500 → 1428.700 → 8.200㎥. 현재·최소 수량 2 → 부족.</li>
+        <li>실제 브라우저에서 메뉴 → 일일 마감 → 기존 자료 미리보기 → 저장 → 새로고침 → 같은 날짜 재조회 → 정정 순으로 검증한다. 신규 한 건·정정 한 건·기존 개정 보존·요약 일치와 JSON 백업을 확인한다. KST 자정 경계도 확인한다.</li>
+        <li>두 탭에서 같은 날짜를 열고 선행 저장 후 후행 저장을 시도해 충돌을 확인한다. 중복 클릭, 저장 실패, 손상 JSON, 미래일, 계량기 역전, 재고 중복, 스크립트 문자열 입력을 시험한다. 기존 5개 키 원문이 동일한지 비교하고 기존 앱의 조회·저장을 별도 합성 데이터에서 확인한다.</li>
+        <li><code>npm run build</code> 및 <code>GITHUB_ACTIONS=true npm run build</code>를 수행한다. 두 번째 빌드는 프로젝트 하위 경로로 제공해 마감 URL·메뉴 링크·CSS·모듈 로드와 모바일 390px 화면을 확인한다.</li>
+        <li>구현 변경 파일, 테스트 환경, 입력·기대값·실제값, 브라우저 캡처, 담당자 소요 시간, 독립 검증 결과를 제출한다. 모든 필수 검증이 통과해야 PASS다. 환경이나 기능이 막히면 최초 실패 지점과 재현 절차를 적고 BLOCKED로 판정한다.</li>
+      </ol>
+    </section>
+
     <!-- Footer -->
     <footer>
       <div>
         <strong>水 세차장 산업 서비스</strong> · 노터치 자동세차 창업 & 통합 운영 솔루션
         <br>
-        <small>문서 버전: v1.0.0 · 기준일자: 2026년 11월 · 리포지토리: kimjindol2025/sonsecha-startup-web</small>
+        <small>문서 버전: v1.1.0 · 기준일자: 2026년 11월 9일 · 리포지토리: kimjindol2025/sonsecha-startup-web</small>
       </div>
       <div>
         <a href="./carwash-app-catalog.html" style="color:var(--green); font-weight:700;">← 앱 카탈로그로 돌아가기</a>
