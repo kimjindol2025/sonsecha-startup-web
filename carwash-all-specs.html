@@ -366,7 +366,17 @@
   <main class="container">
     <div class="page-head">
       <p class="eyebrow">STANDALONE APP PRD REPOSITORY · 24 APPS</p>
-      <h1>세차장 산업 서비스 24대 앱별 개별 기획서(PRD)</h1>
+      <h1>세차장 산업 서비스 24개 앱 구현 명세 v1.1</h1>
+      <details class="spec-block" open>
+        <summary>코덱스 공통 작업 계약</summary>
+        <ul>
+          <li>첫 작업은 선택한 앱 한 편이다. 신규 앱은 기존 HTML·JavaScript·CSS와 Vite 다중 페이지 구성을 따른다. 기존 앱은 현재 진입점·기록 형식·저장 키를 보존한다. 패키지, 서버, DB, TypeScript 추가는 별도 단계다.</li>
+          <li>신규 데모는 합성 데이터와 브라우저 로컬 저장을 사용한다. 목록 → 입력/선택 → 검증 → 저장 → 조회 흐름과 빈 목록·오류 화면을 만든다. 계산기는 입력을 바꾸면 결과를 다시 계산하고 저장은 필수 범위에서 제외한다. 조회형 데모는 고정 데이터를 사용하고 사용자 조치만 저장한다.</li>
+          <li>필수 값, 날짜, 상태, 단위, 안전 정수와 범위를 저장 직전에 검증한다. 날짜 기본값과 영업일 비교는 Asia/Seoul 기준으로 처리한다. ID는 고유하게 유지한다. 빈 수치와 0을 구별한다. 본문 입력은 텍스트로 렌더링한다.</li>
+          <li>신규 상태는 schemaVersion: 1을 포함한 단일 JSON으로 관리한다. 저장 실패 시 화면 입력과 기존 원문을 보존한다. 중복 예약·원장 등 경쟁 쓰기는 같은 오리진의 Web Lock 안에서 최신 상태를 읽어 검증하고 한 번만 저장한다. 잠금을 쓸 수 없으면 해당 쓰기를 중단한다.</li>
+          <li>완료 전에 앱별 정상값·거절값, 새로고침 후 저장값, 기존 데이터 호환, 모바일 390px, 기본 빌드와 GitHub Pages 하위 경로 빌드를 확인한다. 변경 파일과 실제 입력·결과를 기록하고 독립 검증 통과 후 PASS로 판정한다.</li>
+        </ul>
+      </details>
       <p>
         각 앱은 서로 다른 이해관계자(점주, 고객, 현장직원, 창업자, 투자자)와 업무 목적을 가진 독립 소프트웨어입니다. 
         항목별 기능 요구사항, 데이터 스키마, 연산 로직, 화면 구성을 확인하세요.
@@ -533,6 +543,17 @@
               <span>🎯 목적: 고장 접수부터 수리 완료까지 전과정 추적</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-ops-equipment-as">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>ops-equipment-as-app.html · src/ops-equipment-as.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-ops-equipment-as-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 장비·증상 입력 → 접수 목록 → 담당자 배정 → 수리 결과 → 완료</li>
+              <li><strong>입력·저장 필드</strong> <code>ticketId, equipmentId, symptom, urgency(normal/high/critical), reportedAt, assignedTo, completedAt, partsKrw, laborKrw</code></li>
+              <li><strong>처리 규칙</strong> 접수→배정→수리중→완료. 배정에는 담당자, 완료에는 처리 메모와 시각 필수. 정지분은 두 시각 차의 내림, 비용은 부품비+공임. 로컬 접수만 처리.</li>
+              <li><strong>검증 기준</strong> 10:00 접수·11:05 완료는 65분. 미배정 완료 및 시각 역전은 거절.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 주요 기능 요구사항</h3>
             <div class="info-box">
@@ -569,6 +590,17 @@
               <span>👤 대상: 세차장 점주, 교대 근무 직원</span>
               <span>🎯 목적: 일일·주간·월간 현장 설비 점검 및 조치 이력 관리</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-ops-daily-check">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>ops-daily-check-app.html · src/ops-daily-check.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-ops-daily-check-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 주기 선택 → 항목별 상태 체크 → 이상 조치 입력 → 저장 → 날짜별 조회</li>
+              <li><strong>입력·저장 필드</strong> <code>date, cycle(daily/weekly/monthly), templateVersion, checks[{itemId,status(ok/issue/na),note}], checkedBy</code></li>
+              <li><strong>처리 규칙</strong> 영업일+주기별 한 건. 전 항목 응답이 필요하며 issue와 na에는 사유 필수. 템플릿 개정 후에도 저장된 항목명·버전 표시.</li>
+              <li><strong>검증 기준</strong> 이상 메모가 비면 제출 차단. 템플릿을 바꿔도 이전 기록의 항목명이 보존된다.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 점검 주기별 주요 항목</h3>
@@ -619,6 +651,17 @@
               <span>🎯 목적: 수도·전력 지침 입력으로 법정 일지 자동 생성 및 A4 출력</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-ops-wastewater">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>wastewater-app.html · src/operations-apps.js</code> · <a href="./wastewater-app.html">기존 앱 열기 →</a></li>
+              <li><strong>화면과 작업</strong> 기존 폐수 앱에서 날짜·설비별 입력 → 조회 → 필터 → 내부 기록 내보내기</li>
+              <li><strong>입력·저장 필드</strong> <code>기존 date,line,inflow,treated,sludge,contractor,status,note 유지. L 정수, kg 소수 첫째 자리, 빈 값은 미측정</code></li>
+              <li><strong>처리 규칙</strong> 누계는 필터된 측정값만 합산하고 미측정 건수를 별도 표시. 설비별 행의 합계를 매장 실배출량으로 표시하지 않는다. 법정 출력은 별도 검증.</li>
+              <li><strong>검증 기준</strong> 유입량 0과 빈 값이 구별되고 필터가 내보내기에 반영된다. 기존 키·레코드 호환 확인.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 법정 필수 기재 항목</h3>
             <div class="info-box">
@@ -649,6 +692,17 @@
               <span>👤 대상: 세차장 점주, 케미컬 공급 대리점</span>
               <span>🎯 목적: 세제·왁스·타월 소진율 추산 및 안전재고 미달 시 원클릭 발주</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-ops-inventory">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>inventory-app.html · src/operations-apps.js</code> · <a href="./inventory-app.html">기존 앱 열기 →</a></li>
+              <li><strong>화면과 작업</strong> 기존 앱에서 품목별 실사 수량 등록 → 최신 재고와 부족 목록 확인</li>
+              <li><strong>입력·저장 필드</strong> <code>기존 date,item,category,currentStock,minimumStock,supplier,note 유지. 품목 식별은 category+trim(item)</code></li>
+              <li><strong>처리 규칙</strong> 최신 영업일 우선. 같은 날 복수 행은 후보를 보여주고 기록 순서를 확인할 수 있게 한다. 현재≤최소이면 부족. 입고·발주 자동 실행은 별도 범위.</li>
+              <li><strong>검증 기준</strong> 같은 품목의 이전·최신 행이 각각 1·6, 최소 2이면 최신 부족 건수 0. 원본 행은 둘 다 조회 가능.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 주요 케미컬 표준 소모량 기준</h3>
@@ -685,6 +739,17 @@
               <span>🎯 목적: 다채널 결제 종합 집계 및 대당 객단가(ATV) 정밀 분석</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-pay-sales">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>sales-app.html · src/operations-apps.js</code> · <a href="./sales-app.html">기존 앱 열기 →</a></li>
+              <li><strong>화면과 작업</strong> 기존 앱에서 기간·채널 선택 → 매출·환불·차량 수 요약 → 행 조회</li>
+              <li><strong>입력·저장 필드</strong> <code>기존 date,course,channel,sales,cars,refunds,note 유지. 원 단위 정수와 차량 0 이상 정수</code></li>
+              <li><strong>처리 규칙</strong> 순매출=매출−환불, 객단가=순매출÷차량 수 반올림. 차량 0은 미표시. 기존 채널은 그대로 표시하고 충전 여부를 추정하지 않는다.</li>
+              <li><strong>검증 기준</strong> 100,000원·환불 10,000원·9대 → 90,000원·10,000원. 날짜 범위 밖 행 제외.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 매출 채널 및 코스별 집계 구조</h3>
             <div class="info-box">
@@ -713,6 +778,17 @@
               <span>👤 대상: 단골 고객, 매장 점주</span>
               <span>🎯 목적: 선불 충전 선수금 확보 및 단골 락인(Lock-in)</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-pay-rf-membership">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>pay-rf-membership-app.html · src/pay-rf-membership.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-pay-rf-membership-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 카드 발급 → 모의 충전·차감 → 분실 정지 → 거래 이력</li>
+              <li><strong>입력·저장 필드</strong> <code>cardId,status(active/lost), ledger[{txId,cardId,type,amountKrw,occurredAt}]</code></li>
+              <li><strong>처리 규칙</strong> 잔액은 원장 합계. 정지 카드 및 잔액 초과 차감 거절. txId 중복은 재반영 금지. 실충전·카드 연동 없음.</li>
+              <li><strong>검증 기준</strong> 10,000원 충전 뒤 3,000원 차감 → 7,000원. 같은 txId 재처리 후에도 7,000원.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 충전 보너스 및 등급 정책</h3>
@@ -745,6 +821,17 @@
               <span>🎯 목적: 키오스크 하드웨어 원격 모니터링 및 원격 결제/세차 개방</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-pay-kiosk-hub">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>pay-kiosk-hub-app.html · src/pay-kiosk-hub.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-pay-kiosk-hub-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 단말기 현황 → 오류 거래 상세 → 조치 메모</li>
+              <li><strong>입력·저장 필드</strong> <code>terminalId,lastSeenAt, eventId,eventAt,result(ok/failed), amountKrw,ackNote</code></li>
+              <li><strong>처리 규칙</strong> 기준 시각과 마지막 수신 차가 5분 초과면 통신 끊김. 실패 이벤트만 조치 확인 가능. 제어·결제 명령 제외.</li>
+              <li><strong>검증 기준</strong> 마지막 수신 5분은 연결, 5분 1초는 끊김. 실패 확인 후 원본 거래 보존.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 원격 긴급 관제 기능</h3>
             <div class="info-box">
@@ -766,6 +853,17 @@
               <span>🎯 목적: 결제기 장애나 운영 사고로 인한 매출 급감 조기 탐지</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-pay-anomaly">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>pay-anomaly-app.html · src/pay-anomaly.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-pay-anomaly-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 매출 불러오기 → 경보 목록 → 계산 근거 확인 → 확인 처리</li>
+              <li><strong>입력·저장 필드</strong> <code>date,bayId,grossKrw,expectedOpen,reportComplete, alertId,ackAt</code></li>
+              <li><strong>처리 규칙</strong> 영업 예정·집계 완료·매출 0인 베이만 경보. 미수집은 별도 상태. 경보 ID는 규칙+일자+베이.</li>
+              <li><strong>검증 기준</strong> 영업 예정 0원은 경보, 영업 종료·미수집 0원은 경보 제외. 재계산 시 확인 이력 유지.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 핵심 탐지 규칙</h3>
             <div class="alert-box">
@@ -786,6 +884,17 @@
               <span>👤 대상: 일반 운전자 (튜닝카, 대형 SUV 오너)</span>
               <span>🎯 목적: 진입 전고, 온수, 하부세차 설비 맞춤형 검색</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-cust-nearby">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-nearby-app.html · src/cust-nearby.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-nearby-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 지역·시설 필터 → 합성 매장 목록 → 시설·운영시간 상세</li>
+              <li><strong>입력·저장 필드</strong> <code>siteId,name,region,facilities[],hoursText,updatedAt</code></li>
+              <li><strong>처리 규칙</strong> 지역 일치와 시설 모두 포함을 적용. 지역이 없으면 전체. 데모는 지역 검색으로 제한하며 거리·실시간 영업을 추정하지 않는다.</li>
+              <li><strong>검증 기준</strong> 시설 2개를 선택하면 둘 다 있는 매장만 표시. 결과 0건에서 조건 초기화 가능.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 특화 필터링 옵션</h3>
@@ -809,6 +918,17 @@
               <span>🎯 목적: 셀프세차 분당 환산가 및 노터치 코스별 가격 비교</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-cust-price">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-price-app.html · src/cust-price.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-price-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 지역·서비스 선택 → 비교표 → 기준·확인일 조회</li>
+              <li><strong>입력·저장 필드</strong> <code>siteId,serviceType,priceKrw,includedSeconds,checkedOn</code></li>
+              <li><strong>처리 규칙</strong> 시간제는 priceKrw×60÷includedSeconds를 원 단위 반올림. 고정가는 회당 요금 목록으로 분리. 시간이 없는 시간제 행은 비교 제외.</li>
+              <li><strong>검증 기준</strong> 3,000원/180초 → 분당 1,000원. 회당 가격은 분당 정렬에서 제외.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 정규화 비교 기준</h3>
             <div class="info-box">
@@ -830,6 +950,17 @@
               <span>🎯 목적: 실시간 가동 베이 및 예상 대기시간 확인</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-cust-congestion">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-congestion-app.html · src/cust-congestion.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-congestion-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 매장 선택 → 합성 베이 상태·대기 대수 조회 → 갱신 시각 확인</li>
+              <li><strong>입력·저장 필드</strong> <code>siteId,openBays,busyBays,queuedCars,observedAt</code></li>
+              <li><strong>처리 규칙</strong> busyBays≤openBays. 관측 5분 초과면 현재 상태 대신 오래된 정보 표시. 베이 0 또는 오래된 정보는 대기시간 계산 제외.</li>
+              <li><strong>검증 기준</strong> 운영 4·사용 3 → 빈 베이 1. 6분 지난 데이터는 현재 혼잡도로 표시하지 않는다.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 대기시간 계산 공식</h3>
             <div class="info-box">
@@ -850,6 +981,17 @@
               <span>🎯 목적: 손세차·스팀·유리막 시공 예약 및 노쇼 방지 예약금</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-cust-reservation">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-reservation-app.html · src/cust-reservation.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-reservation-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 서비스 선택 → 빈 슬롯 선택 → 모의 예약 → 취소</li>
+              <li><strong>입력·저장 필드</strong> <code>slotId,resourceId,startAt,endAt, bookingId,status(booked/cancelled)</code></li>
+              <li><strong>처리 규칙</strong> 정원 1. 시작 시각이 지난 슬롯 금지. 저장 직전 같은 자원의 겹치는 확정 구간 재검사. 취소 슬롯 재사용 가능.</li>
+              <li><strong>검증 기준</strong> 같은 베이에서 10:00~11:00 이후 10:30~11:30 거절, 11:00 시작 허용.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 핵심 예약 플로우</h3>
             <div class="info-box">
@@ -869,6 +1011,17 @@
               <span>🎯 목적: 비대면 지하주차장 출장세차 및 전후 사진 보고</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-cust-mobile">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-mobile-app.html · src/cust-mobile.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-mobile-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 서비스 권역 선택 → 방문 시간 신청 → 점주 화면에서 배정·완료</li>
+              <li><strong>입력·저장 필드</strong> <code>jobId,zoneId,slotId,workerId,status(requested/assigned/done/cancelled),completionNote</code></li>
+              <li><strong>처리 규칙</strong> 권역 밖 신청 차단. 같은 기사·슬롯 중복 배정 금지. 완료 메모 필수. 실제 주소·연락처·사진 제외.</li>
+              <li><strong>검증 기준</strong> 권역 외 신청 거절. 한 기사에게 같은 슬롯 두 번째 배정 거절.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 주요 기능</h3>
             <div class="info-box">
@@ -887,6 +1040,17 @@
               <span>👤 대상: 정기 세차 운전자, 영업용 차량</span>
               <span>🎯 목적: 월정액 구독(ARR) 모델 및 LPR 번호판 자동 통과</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-cust-subscription">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-subscription-app.html · src/cust-subscription.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-subscription-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 모의 이용권 생성 → 사용 차감 → 취소 복원 → 잔여 조회</li>
+              <li><strong>입력·저장 필드</strong> <code>passId,validFrom,validThrough,quota; useId,passId,status(used/reversed)</code></li>
+              <li><strong>처리 규칙</strong> 잔여=quota−유효 차감 건수. KST 기준 시작·만료일 포함. 동일 useId는 중복 차감·복원 금지. 정기결제 제외.</li>
+              <li><strong>검증 기준</strong> 4회권 1회 차감 후 3회, 복원 후 4회. 만료 다음 날 차감 거절.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 구독 플랜 설계</h3>
@@ -911,6 +1075,17 @@
               <span>🎯 목적: 세차 타임라인, 코팅 잔여 수명, 차계부 지출 통계</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-cust-history">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>cust-history-app.html · src/cust-history.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-cust-history-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 별칭으로 차량 추가 → 세차 이력 저장 → 최신 세차일·다음 예정일 조회</li>
+              <li><strong>입력·저장 필드</strong> <code>vehicleId,nickname,intervalDays, washId,date,service,note</code></li>
+              <li><strong>처리 규칙</strong> 최신 세차일은 가장 큰 영업일. 다음 예정일은 달력일 기준 최신일+주기. 미래 세차일 차단. 차량번호 불필요.</li>
+              <li><strong>검증 기준</strong> 11월 1일 세차에 7일 주기 → 11월 8일. 과거 이력 추가로 최신일이 바뀌지 않는다.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 주요 기능</h3>
             <div class="info-box">
@@ -930,6 +1105,17 @@
               <span>🎯 목적: 후보지 검토부터 인허가, 토목, 오픈까지 20단계 가이드</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-startup-roadmap">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>startup-roadmap-app.html · src/startup-roadmap.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-startup-roadmap-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 창업 프로젝트 생성 → 단계별 증빙 체크 → 진행률과 다음 작업 조회</li>
+              <li><strong>입력·저장 필드</strong> <code>projectId,templateVersion, steps[{stepId,status(todo/doing/done),evidenceNote,completedAt}]</code></li>
+              <li><strong>처리 규칙</strong> 기존 README의 20단계 순서를 템플릿으로 고정. 완료에 증빙 메모 필수. 완료 비율은 완료 단계÷전체 단계. 준비 기록으로 표시.</li>
+              <li><strong>검증 기준</strong> 20개 중 5개 완료는 25%. 증빙이 없으면 완료 불가.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 단계별 체크 프로세스</h3>
             <div class="info-box">
@@ -948,6 +1134,17 @@
               <span>👤 대상: 부지 물색 창업자, 프랜차이즈 개발팀</span>
               <span>🎯 목적: 통행량, 아파트 세대수, 좌회전 진입성 종합 평가 (0~100점)</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-startup-location">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>startup-location-app.html · src/startup-location.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-startup-location-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 후보지 추가 → 수동 확인 근거 입력 → 후보지 비교</li>
+              <li><strong>입력·저장 필드</strong> <code>candidateId,label, checks[{criterion,status(unknown/confirmed/issue),source,checkedOn}]</code></li>
+              <li><strong>처리 규칙</strong> 입지·진입·전력·급배수 등 체크 항목의 확인 건수와 미확인 목록 표시. 확인·이슈에는 근거와 날짜 필수. 영업 가능 판정 제외.</li>
+              <li><strong>검증 기준</strong> 미확인 1건이 있는 후보는 전 항목 확인 상태로 표시되지 않는다.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 5대 입지 평가 지표</h3>
@@ -975,6 +1172,17 @@
               <span>🎯 목적: 베이수, 회전율, 비오는날 변수 반영 월간 순익 산출</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-startup-revenue">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>startup-revenue-app.html · src/startup-revenue.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-startup-revenue-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 베이·운영시간·회전·가동률·객단가 입력 → 일·월 예상매출 확인</li>
+              <li><strong>입력·저장 필드</strong> <code>bays,hoursPerDay,turnsPerBayHour,utilizationPct,averageKrw,daysPerMonth</code></li>
+              <li><strong>처리 규칙</strong> 일 예상대수=bays×hours×turns×가동률÷100. 월 예상매출=일 예상대수×객단가×영업일. 최종 원 단위만 반올림. 시간 0~24, 가동률 0~100, 영업일 1~31.</li>
+              <li><strong>검증 기준</strong> 2베이×8시간×3회×50%×10,000원×25일 → 월 12,000,000원.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 시뮬레이션 모델</h3>
             <div class="info-box">
@@ -993,6 +1201,17 @@
               <span>👤 대상: 창업 자금 계획 수립자</span>
               <span>🎯 목적: 토목, 패드, 노터치 장비, 폐수, 전기증설 총 Capex 산출</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-startup-cost">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>startup-cost-app.html · src/startup-cost.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-startup-cost-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 공사·장비 등 항목 추가 → 금액·예비비 입력 → 견적 합계</li>
+              <li><strong>입력·저장 필드</strong> <code>lineId,category,label,quantity,unitKrw, contingencyPct</code></li>
+              <li><strong>처리 규칙</strong> 수량 양의 정수, 단가 0 이상 원 정수. 입력 기준은 부가세 포함. 소계=수량×단가, 총액=소계 합+예비비(원 반올림).</li>
+              <li><strong>검증 기준</strong> 2개×100,000원, 예비비 10% → 220,000원. 음수 단가 거절.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 3베이 노터치 표준 투자비용 구성</h3>
@@ -1018,6 +1237,17 @@
               <span>🎯 목적: 장비사 견적 1:1 대조 및 무상/유상 옵션 감별</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-startup-quote">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>startup-quote-app.html · src/startup-quote.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-startup-quote-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 업체 2곳 이상 등록 → 공통 항목에 가격 입력 → 차액·누락 비교</li>
+              <li><strong>입력·저장 필드</strong> <code>vendorId,itemId,label,priceKrw 또는 null, note</code></li>
+              <li><strong>처리 규칙</strong> 같은 항목끼리 비교하며 null은 누락, 0은 포함된 무상 항목. 누락이 있는 전체 견적에는 합계 비교 주의 표시.</li>
+              <li><strong>검증 기준</strong> A가 0원, B가 미기재일 때 두 셀을 서로 다른 상태로 표시.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 핵심 비교 축</h3>
             <div class="info-box">
@@ -1036,6 +1266,17 @@
               <span>👤 대상: 창업자, 인허가 건축사사무소</span>
               <span>🎯 목적: 건축허가, 폐수설치신고, 도로점용 관공서 서류 단계별 지원</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-startup-permit">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>startup-permit-app.html · src/startup-permit.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-startup-permit-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 지역 선택 → 확인 체크리스트 → 근거·담당부서·날짜 기록</li>
+              <li><strong>입력·저장 필드</strong> <code>region,taskId,status(unchecked/contacted/evidence_saved),office,sourceUrl,checkedOn,note</code></li>
+              <li><strong>처리 규칙</strong> 근거 저장에는 출처 URL 또는 담당부서 답변 메모와 확인일 필수. 확인 완료는 증빙 확보를 뜻한다. 법적 적합 판정·서류 제출 제외.</li>
+              <li><strong>검증 기준</strong> 근거 없이 증빙 저장 불가. 지역 변경 시 기존 답변이 새 지역에 자동 적용되지 않는다.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 4대 관공서 인허가 가이드</h3>
@@ -1059,6 +1300,17 @@
               <span>🎯 목적: 홈택스 부가세/POS 실매출 검증 기반 양도양수 거래</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-estate-brokerage">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>estate-brokerage-app.html · src/estate-brokerage.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-estate-brokerage-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 합성 매물 검색 → 유형·가격 필터 → 상세 확인</li>
+              <li><strong>입력·저장 필드</strong> <code>listingId,region,type(sale/lease/transfer),askingKrw,depositKrw,rentKrw,verifiedOn</code></li>
+              <li><strong>처리 규칙</strong> 매매가와 월 임대료는 유형별 별도 표시·정렬. 합성 매물 표기. 계약·중개·문의 발송 제외.</li>
+              <li><strong>검증 기준</strong> 임대 필터에서 매매가가 월세로 표시되지 않는다.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 허위 매물 방지 검증</h3>
             <div class="info-box">
@@ -1078,6 +1330,17 @@
               <span>🎯 목적: EBITDA 배수법 및 장비 감가상각 기반 적정 권리금 산출</span>
             </div>
           </div>
+          <div class="spec-block" id="implementation-estate-valuation">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>estate-valuation-app.html · src/estate-valuation.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-estate-valuation-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 가정한 연간 이익·배수·보정값 입력 → 저·기준·고 시나리오</li>
+              <li><strong>입력·저장 필드</strong> <code>annualProfitKrw, multipliers(low/base/high), adjustmentKrw</code></li>
+              <li><strong>처리 규칙</strong> 각 추정값=이익×배수+보정값, 최종 원 단위 반올림. 0 이상 이익만 지원, 배수 순서 확인. 사용자가 입력한 가정에 따른 시나리오로 표시.</li>
+              <li><strong>검증 기준</strong> 이익 30,000,000원, 배수 2/3/4, 보정 0 → 60/90/120백만원.</li>
+            </ul>
+          </div>
           <div class="spec-block">
             <h3>1. 가치평가 공식</h3>
             <div class="info-box">
@@ -1096,6 +1359,17 @@
               <span>👤 대상: 최종 계약 전 인수자, 법률 자문</span>
               <span>🎯 목적: 장비 작동, 환경 위반 이력, 공과금 미납 40개 항목 정밀 실사</span>
             </div>
+          </div>
+          <div class="spec-block" id="implementation-estate-audit">
+            <h3>v1.1 코덱스 구현 계약</h3>
+            <p>이 절은 첫 구현과 검증에 적용한다. 아래 작업 범위를 기준으로 기존 제품 구상의 후속 기능을 분리한다.</p>
+            <ul>
+              <li><strong>파일</strong> <code>estate-audit-app.html · src/estate-audit.js · vite.config.js</code> · 저장 키 <code>sonsecha-app-estate-audit-mvp-v1</code></li>
+              <li><strong>화면과 작업</strong> 인수 후보 등록 → 분야별 확인 → 미확인·이슈 목록 내보내기</li>
+              <li><strong>입력·저장 필드</strong> <code>auditId, checks[{itemId,status(unchecked/ok/issue/na),evidenceNote,checkedOn}]</code></li>
+              <li><strong>처리 규칙</strong> 장비·매출·임대·환경·미납금 항목을 포함. unchecked/issue가 있으면 검토 필요. issue/na는 사유 필수. 계약 진행은 별도.</li>
+              <li><strong>검증 기준</strong> 이슈 1건·미확인 1건이 있으면 두 건이 요약과 파일에 포함된다.</li>
+            </ul>
           </div>
           <div class="spec-block">
             <h3>1. 필수 실사 영역</h3>
