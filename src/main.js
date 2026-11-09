@@ -51,6 +51,11 @@ const candidateStatusLabels = {
   conditional: '조건부 가능',
   blocked: '불가',
 };
+const detailFeasibilityLabels = {
+  unreviewed: '미판정',
+  possible: '가능',
+  hold: '보류',
+};
 let businessPlanApp = null;
 const stepOneCheckGroups = [
   {
@@ -204,6 +209,94 @@ const onlineUsageGuides = {
     checks: ['토지이용계획확인서', '건축물대장', '토지·건물 등기사항증명서', '문서 주소와 후보지의 일치 여부'],
     record: '후보지명_서류명_발급일 형식으로 저장하고, 메모에는 문서 확인일과 빠진 서류를 남기세요.',
     caution: '오래된 출력물이나 중개인이 전달한 사본만 믿지 말고 계약 직전에 최신 문서를 다시 확인하세요.',
+  },
+  '1-4': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '공공하수도 연결 가능 여부 확인',
+    description: '후보지의 배출계획과 공공하수도 연결 가능 여부를 관할 부서에 확인합니다.',
+    links: [],
+    steps: ['후보지의 오수 발생 위치와 예상 배출 계획을 정리합니다.', '관할 하수도 담당 부서에 공공하수도 연결 가능 여부와 필요한 절차를 문의합니다.', '연결 지점·승인·공사 조건 등 답변의 근거를 메모합니다.'],
+    checks: ['연결 가능 여부', '담당 부서 답변', '필요한 신고·허가·공사 조건'],
+    record: '확인일, 담당 부서·담당자, 연결 가능 여부와 추가 조건을 기록하세요.',
+    caution: '현장 배관 상태나 운영 가능 여부를 확인하지 않은 채 연결 가능하다고 단정하지 마세요.',
+  },
+  '1-5': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '차량 진입로 확보 여부 확인',
+    description: '차량이 안전하게 진입·회차할 수 있는 동선과 진입로 조건을 확인합니다.',
+    links: [],
+    steps: ['차량 종류와 진입·회차 동선을 현장에서 확인합니다.', '진입로 폭·경사·장애물과 도로 접속 상태를 살핍니다.', '필요한 보완 공사나 관계기관 협의 사항을 메모합니다.'],
+    checks: ['진입·회차 동선', '도로 접속과 장애물', '보완 공사·협의 필요 여부'],
+    record: '확인일, 현장 위치, 진입이 어려운 구간과 보완 방법을 기록하세요.',
+    caution: '차량 진입 가능 여부는 차량 크기와 현장 운영 방식에 따라 달라질 수 있습니다.',
+  },
+  '1-6': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '수도와 전기 공급 상태 확인',
+    description: '세차장 운영에 필요한 수도·전기 공급 현황과 확인이 필요한 조건을 기록합니다.',
+    links: [],
+    steps: ['현재 수도 계량·공급 상태와 전기 인입 위치를 확인합니다.', '관련 계약·공급 주체에 사용 가능 범위와 확인 절차를 문의합니다.', '부족하거나 불명확한 부분은 증설·보완 검토 대상으로 남깁니다.'],
+    checks: ['수도 공급 상태', '전기 인입·계약 상태', '보완·증설 확인 사항'],
+    record: '계량기·인입 위치, 확인일, 공급 주체의 답변과 추가 확인 항목을 기록하세요.',
+    caution: '공급 설비가 보인다는 사실만으로 필요한 사용량을 충족한다고 판단하지 마세요.',
+  },
+  '1-8': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '건물 동·층·호와 실제 사용할 면적 확인',
+    description: '서류와 현장 공간이 일치하는지 확인하고 실제 사용할 범위를 기록합니다.',
+    links: [],
+    steps: ['정확한 건물 동·층·호와 현장 위치를 대조합니다.', '실제로 사용할 공간의 범위와 면적을 확인합니다.', '서류와 현장이 다르면 차이와 추가 확인 대상을 메모합니다.'],
+    checks: ['동·층·호 일치 여부', '실사용 공간 범위', '면적 확인 근거'],
+    record: '확인한 동·층·호, 실사용 면적, 확인일과 근거 자료를 기록하세요.',
+    caution: '현장 체감 면적만으로 계약·공사 범위를 확정하지 말고 서류와 함께 대조하세요.',
+  },
+  '1-9': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '주변 주거지와 소음·교통 민원 가능성 확인',
+    description: '주변 주거지와 차량 동선, 소음·교통 관련 민원 가능성을 현장 여건에 맞춰 살핍니다.',
+    links: [],
+    steps: ['주변 주거지·상가·학교 등 민감할 수 있는 시설과 거리를 확인합니다.', '차량 대기·출입·세척 소음이 발생할 위치와 시간을 살핍니다.', '민원 예방을 위해 필요한 운영·동선·방음 검토 사항을 기록합니다.'],
+    checks: ['주변 주거·민감 시설', '소음·교통 영향 요인', '민원 예방 검토 사항'],
+    record: '현장 확인 시간, 주변 시설, 예상 민원 요인과 협의가 필요한 내용을 기록하세요.',
+    caution: '민원 발생 여부를 예측만으로 확정하지 말고 운영계획과 관할 기준을 함께 확인하세요.',
+  },
+  '1-16': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '오수관·우수관 위치와 공공하수 연결 확인',
+    description: '오수·우수 배관 위치를 구분하고 공공하수 연결 가능 여부를 확인합니다.',
+    links: [],
+    steps: ['현장 배수구·맨홀·배관 위치를 확인하고 오수와 우수를 구분합니다.', '공공하수 연결 지점과 연결 방법을 관할 부서에 문의합니다.', '배수계획과 다른 부분이나 추가 공사 필요성을 메모합니다.'],
+    checks: ['오수관·우수관 위치', '공공하수 연결 지점', '배수계획·추가 공사 조건'],
+    record: '배관 위치, 확인한 도면·사진, 담당 부서 답변과 확인일을 기록하세요.',
+    caution: '배관 위치를 추정해 시공하지 말고 현장 확인과 관계기관 답변을 근거로 삼으세요.',
+  },
+  '1-17': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '수도 공급량·전기 계약전력과 증설 가능 여부 확인',
+    description: '현재 공급·계약 조건과 필요한 경우 증설 가능 여부를 확인합니다.',
+    links: [],
+    steps: ['수도 공급량과 전기 계약전력 등 확인 가능한 현재 조건을 정리합니다.', '공급자·관리 주체에 증설 가능 여부와 절차를 문의합니다.', '증설 비용·공사 범위 등 확정되지 않은 내용은 검토사항으로 기록합니다.'],
+    checks: ['현재 공급·계약 조건', '증설 가능 여부', '추가 절차·공사 확인 사항'],
+    record: '계약·공급 확인일, 확인 주체, 답변 내용과 증설 검토사항을 기록하세요.',
+    caution: '필요한 공급량과 증설 가능 여부는 설계·운영계획에 따라 달라질 수 있습니다.',
+  },
+  '1-18': {
+    feasibility: true,
+    kicker: '현장 확인',
+    title: '차량 진입로·보도 턱·도로점용 필요 여부 확인',
+    description: '차량 진입을 위해 보도 턱이나 도로를 변경·점용해야 하는지 확인합니다.',
+    links: [],
+    steps: ['현재 진입로와 보도 턱, 도로 경계·접속 상태를 현장에서 확인합니다.', '변경·점용이 필요한 경우 관할 부서에 절차와 가능 여부를 문의합니다.', '필요한 공사·허가·원상복구 조건을 메모합니다.'],
+    checks: ['보도 턱 변경 필요 여부', '도로점용 필요 여부', '허가·공사·원상복구 조건'],
+    record: '확인 위치, 담당 부서 답변, 필요한 허가·공사와 확인일을 기록하세요.',
+    caution: '진입로 변경이나 도로점용은 관계기관 협의 없이 진행하지 마세요.',
   },
 };
 let candidateState;
@@ -402,6 +495,7 @@ function makeCandidate(seed = {}) {
     stepStatuses: seed.stepStatuses && typeof seed.stepStatuses === 'object' ? seed.stepStatuses : {},
     detailChecks: Array.isArray(seed.detailChecks) ? seed.detailChecks : [],
     detailNotes: seed.detailNotes && typeof seed.detailNotes === 'object' ? seed.detailNotes : {},
+    detailStatuses: seed.detailStatuses && typeof seed.detailStatuses === 'object' ? seed.detailStatuses : {},
     washType: typeof seed.washType === 'string' ? seed.washType : '',
     bayCount: typeof seed.bayCount === 'string' ? seed.bayCount : '',
     consultationNotes: Array.isArray(seed.consultationNotes) ? seed.consultationNotes : [],
@@ -441,6 +535,18 @@ function getActiveCandidate() {
 function resizeNote(note) {
   note.style.height = 'auto';
   note.style.height = `${Math.max(note.scrollHeight, 72)}px`;
+}
+
+function detailFeasibilityStatus(value) {
+  return Object.prototype.hasOwnProperty.call(detailFeasibilityLabels, value) ? value : 'unreviewed';
+}
+
+function updateDetailFeasibilityBadge(item, id, status) {
+  const badge = item.querySelector(`[data-feasibility-badge="${id}"]`);
+  if (!badge) return;
+  const normalized = detailFeasibilityStatus(status);
+  badge.textContent = detailFeasibilityLabels[normalized];
+  badge.dataset.status = normalized;
 }
 
 function candidateDisplayName(candidate, index) {
@@ -722,9 +828,10 @@ function hydrateDetailChecks() {
           <span class="detail-checkmark" aria-hidden="true"></span>
           <span class="detail-check-copy">${original}</span>
         </label>
-        ${usageGuide ? `<button type="button" class="detail-usage-button" data-usage-help="${id}" aria-expanded="false" aria-controls="note-${id}">이용방법</button>` : ''}
+        ${usageGuide ? `<div class="detail-usage-actions"><button type="button" class="detail-usage-button" data-usage-help="${id}" aria-expanded="false" aria-controls="note-${id}">이용방법</button>${usageGuide.feasibility ? `<span class="detail-feasibility-badge" data-feasibility-badge="${id}" data-status="unreviewed">미판정</span>` : ''}</div>` : ''}
         <div class="detail-note-wrap">
           <label for="note-${id}">이 항목 메모</label>
+          ${usageGuide?.feasibility ? `<label class="detail-feasibility-field" for="status-${id}">판정<select id="status-${id}" data-detail-status="${id}"><option value="unreviewed">미판정</option><option value="possible">가능</option><option value="hold">보류</option></select></label>` : ''}
           <textarea id="note-${id}" class="detail-note" data-detail-note="${id}" maxlength="${detailNoteMaxLength}" placeholder="확인한 내용, 담당부서·담당자, 답변일과 근거를 적어두세요."></textarea>
           <span class="note-save-state" aria-live="polite">자동 저장</span>
         </div>
@@ -732,11 +839,18 @@ function hydrateDetailChecks() {
       const box = item.querySelector('input');
       const note = item.querySelector('[data-detail-note]');
       const usageButton = item.querySelector('[data-usage-help]');
+      const statusSelect = item.querySelector('[data-detail-status]');
       resizeNote(note);
       usageButton?.addEventListener('click', () => {
         item.classList.add('note-open');
         usageButton.setAttribute('aria-expanded', 'true');
         openUsageGuide(id, usageButton);
+      });
+      statusSelect?.addEventListener('change', () => {
+        const active = getActiveCandidate();
+        active.detailStatuses[id] = detailFeasibilityStatus(statusSelect.value);
+        updateDetailFeasibilityBadge(item, id, active.detailStatuses[id]);
+        saveCandidateState();
       });
       box.addEventListener('change', () => {
         item.classList.toggle('checked', box.checked);
@@ -793,6 +907,10 @@ function loadCandidateData() {
     const noteOpen = box.checked || Boolean(note?.value);
     item?.classList.toggle('note-open', noteOpen);
     item?.querySelector('[data-usage-help]')?.setAttribute('aria-expanded', String(noteOpen));
+    const statusSelect = item?.querySelector('[data-detail-status]');
+    const status = detailFeasibilityStatus(active.detailStatuses[box.dataset.detailCheck]);
+    if (statusSelect) statusSelect.value = status;
+    if (item) updateDetailFeasibilityBadge(item, box.dataset.detailCheck, status);
   });
   document.querySelectorAll('[data-step-status]').forEach((select) => {
     const value = active.stepStatuses[select.dataset.stepStatus] || 'unreviewed';
@@ -1586,6 +1704,7 @@ document.querySelector('#resetButton').addEventListener('click', () => {
   active.stepStatuses = {};
   active.detailChecks = [];
   active.detailNotes = {};
+  active.detailStatuses = {};
   saveCandidateState();
   checkboxes.forEach((box) => {
     box.checked = false;
@@ -1599,6 +1718,11 @@ document.querySelector('#resetButton').addEventListener('click', () => {
     note.value = '';
     note.closest('li')?.classList.remove('note-open');
     note.closest('li')?.querySelector('[data-usage-help]')?.setAttribute('aria-expanded', 'false');
+  });
+  document.querySelectorAll('[data-detail-status]').forEach((select) => {
+    select.value = 'unreviewed';
+    const item = select.closest('li');
+    if (item) updateDetailFeasibilityBadge(item, select.dataset.detailStatus, 'unreviewed');
   });
   document.querySelectorAll('[data-step-status]').forEach((select) => {
     select.value = 'unreviewed';

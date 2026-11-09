@@ -321,6 +321,9 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 }
 .guide-content li.note-open .detail-note-wrap { display: block; }
 .detail-note-wrap > label { display: block; margin-bottom: 7px; color: var(--ink); font-size: 11px; font-weight: 800; }
+.detail-feasibility-field { display: flex !important; align-items: center; gap: 8px; margin-bottom: 8px !important; }
+.detail-feasibility-field select { min-height: 34px; padding: 0 30px 0 9px; color: var(--ink); background: white; border: 1px solid #bbc8d9; border-radius: 4px; font: 700 12px Pretendard, "Noto Sans KR", sans-serif; }
+.detail-feasibility-field select:focus { outline: 3px solid rgba(20,87,255,.14); border-color: var(--blue); }
 .detail-note {
   display: block; width: 100%; min-height: 72px; resize: none; padding: 11px 12px 24px;
   color: var(--ink); background: white; border: 1px solid #bbc8d9; border-radius: 4px;
@@ -430,12 +433,16 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .check-group-items > li { padding: 4px 0; }
 .check-group-items > li.has-usage-help { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: start; }
 .has-usage-help .detail-note-wrap { grid-column: 1 / -1; }
+.detail-usage-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
 .detail-usage-button {
   min-height: 34px; margin-top: 3px; padding: 0 11px; color: var(--blue); background: white;
   border: 1px solid #9dbbff; border-radius: 999px; font-size: 10px; font-weight: 900; white-space: nowrap; cursor: pointer;
 }
 .detail-usage-button:hover { color: white; background: var(--blue); border-color: var(--blue); }
 .detail-usage-button:focus-visible { outline: 3px solid rgba(20,87,255,.25); outline-offset: 2px; }
+.detail-feasibility-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 46px; min-height: 27px; padding: 0 8px; color: #64748b; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 10px; font-weight: 900; white-space: nowrap; }
+.detail-feasibility-badge[data-status="possible"] { color: #166534; background: #ecfdf3; border-color: #86efac; }
+.detail-feasibility-badge[data-status="hold"] { color: #9a3412; background: #fff7ed; border-color: #fdba74; }
 .step-one-explanation { margin-top: 8px; background: white; border: 1px solid #d8e2ef; border-radius: 7px; }
 .step-one-explanation > summary {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
@@ -1267,6 +1274,7 @@ body.consultation-open { overflow: hidden; }
   .detail-note-wrap { margin-left: 0; padding: 10px; }
   .detail-note { min-height: 96px; font-size: 16px; }
   .check-group-items > li.has-usage-help { grid-template-columns: 1fr; gap: 3px; }
+  .detail-usage-actions { justify-content: flex-start; flex-wrap: wrap; }
   .detail-usage-button { justify-self: start; min-height: 40px; margin: 0 0 5px 30px; padding: 0 14px; font-size: 11px; }
   .candidate-fields { gap: 14px; margin-bottom: 18px; padding: 18px 14px; }
   .candidate-heading { grid-template-columns: 1fr auto; gap: 6px; }
