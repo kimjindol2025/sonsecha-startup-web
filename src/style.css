@@ -1410,11 +1410,20 @@ body.consultation-open { overflow: hidden; }
   body.printing-business-plan-summary .business-plan-section { display: block !important; min-height: 0; padding: 0; background: white; }
   body.printing-business-plan-summary #businessPlanApp > :not(.plan-document) { display: none !important; }
   body.printing-business-plan-summary .plan-document { margin: 0; padding: 0; border: 0; box-shadow: none; }
-  body.printing-business-plan-summary .plan-document > section:not([data-document-section="overview"]):not([data-document-section="presentation"]),
+  body.printing-business-plan-summary .plan-document > section:not([data-document-section="overview"]):not([data-document-section="executive"]):not([data-document-section="presentation"]):not([data-document-section="business"]):not([data-document-section="schedule"]):not([data-document-section="budget"]):not([data-document-section="funding"]):not([data-document-section="sales"]):not([data-document-section="market"]):not([data-document-section="candidate"]):not([data-document-section="action"]),
   body.printing-business-plan-summary .plan-document > footer { display: none !important; }
   body.printing-business-plan-summary .plan-document > header,
   body.printing-business-plan-summary .plan-document > section[data-document-section="overview"],
-  body.printing-business-plan-summary .plan-document > section[data-document-section="presentation"] { display: block !important; break-inside: avoid; }
+  body.printing-business-plan-summary .plan-document > section[data-document-section="executive"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="presentation"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="business"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="schedule"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="budget"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="funding"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="sales"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="market"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="candidate"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="action"] { display: block !important; break-inside: avoid; }
 }
 /* Keep the disabled menu hidden before scripts run, including mobile layouts. */
 [data-workspace-link][hidden] { display: none !important; }
