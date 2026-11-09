@@ -336,4 +336,13 @@ document.querySelector('#backup').addEventListener('click', () => {
     notify(error.message, true);
   }
 });
+const requestedDate = new URLSearchParams(location.search).get('date');
+try {
+  if (requestedDate) {
+    validateDate(requestedDate);
+    date = requestedDate;
+  }
+} catch {
+  // Invalid links fall back to today's ledger.
+}
 selectDate(date);

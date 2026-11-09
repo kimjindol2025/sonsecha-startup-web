@@ -30,3 +30,5 @@ body.closing-page { margin:0; background:#f2f5fa; color:#0b2146; font:16px/1.55 
 .closing-main footer { padding:1rem 0; }
 
 .closing-page [hidden] { display:none; }
+
+.dashboard-day { border-top:1px solid #dbe3f0; padding:.8rem 0; }

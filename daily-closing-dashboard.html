@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>마감 대시보드 · BIGWASH</title>
+  <link rel="stylesheet" href="./src/daily-closing.css">
+</head>
+<body class="closing-page">
+  <header class="closing-top"><strong>BIGWASH</strong><span>1호점</span><a href="./daily-closing-app.html">거래 입력·마감</a></header>
+  <main class="closing-main">
+    <p class="closing-kicker">매장 운영 장부</p>
+    <h1>일일 마감 대시보드</h1>
+    <p>기간별 확정 금액을 확인하고 미마감 장부를 이어서 처리하세요.</p>
+    <form id="period" class="closing-card">
+      <div class="closing-row">
+        <label>시작일 <input name="start" type="date" required></label>
+        <label>종료일 <input name="end" type="date" required></label>
+      </div>
+      <div class="closing-actions">
+        <button type="submit" class="primary">조회</button>
+        <button type="button" data-period="today">오늘</button>
+        <button type="button" data-period="month">이번 달</button>
+        <a href="./daily-closing-app.html">오늘 장부 열기 →</a>
+      </div>
+    </form>
+    <p id="message" role="status" hidden></p>
+    <div id="dashboard"></div>
+    <footer>현재 브라우저에 저장된 1호점 장부를 표시합니다.</footer>
+  </main>
+  <script type="module" src="./src/daily-closing-dashboard.js"></script>
+</body>
+</html>
