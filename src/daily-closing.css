@@ -1,7 +1,17 @@
 body.closing-page { margin:0; background:#f2f5fa; color:#0b2146; font:16px/1.55 system-ui,sans-serif; }
 .closing-page * { box-sizing:border-box; }
 .closing-top { display:flex; gap:1rem; align-items:center; padding:.85rem max(1rem, calc((100% - 52rem)/2)); background:#0b2146; color:white; }
-.closing-top a { color:white; margin-left:auto; white-space:nowrap; }
+.closing-brand,.closing-menu { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; }
+.closing-brand { gap:.75rem; }
+.closing-menu { margin-left:auto; }
+.closing-menu a { color:white; white-space:nowrap; text-decoration:none; padding:.6rem .7rem; border-radius:.45rem; }
+.closing-menu a[aria-current="page"],.closing-menu a:hover { background:#214478; }
+.closing-menu a:focus-visible { outline:2px solid white; outline-offset:2px; }
+#transaction { scroll-margin-top:1rem; }
+@media (max-width:36rem) {
+  .closing-top { flex-wrap:wrap; gap:.35rem; }
+  .closing-menu { width:100%; margin-left:0; }
+}
 .closing-main { max-width:54rem; margin:auto; padding:1.1rem; }
 .closing-main h1,.closing-main h2,.closing-main h3 { margin:.25rem 0 .55rem; line-height:1.25; }
 .closing-main h1 { font-size:clamp(1.6rem,5vw,2.4rem); }

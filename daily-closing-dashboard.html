@@ -7,7 +7,14 @@
   <link rel="stylesheet" href="./src/daily-closing.css">
 </head>
 <body class="closing-page">
-  <header class="closing-top"><strong>BIGWASH</strong><span>1호점</span><a href="./daily-closing-app.html">거래 입력·마감</a></header>
+  <header class="closing-top">
+    <div class="closing-brand"><strong>BIGWASH</strong><span>1호점</span></div>
+    <nav class="closing-menu" aria-label="마감 앱 메뉴">
+      <a href="./daily-closing-dashboard.html" aria-current="page">대시보드</a>
+      <a href="./daily-closing-app.html#transaction">거래 입력</a>
+      <a href="./operations-apps.html">운영 앱</a>
+    </nav>
+  </header>
   <main class="closing-main">
     <p class="closing-kicker">매장 운영 장부</p>
     <h1>일일 마감 대시보드</h1>
@@ -21,7 +28,7 @@
         <button type="submit" class="primary">조회</button>
         <button type="button" data-period="today">오늘</button>
         <button type="button" data-period="month">이번 달</button>
-        <a href="./daily-closing-app.html">오늘 장부 열기 →</a>
+        <a href="./daily-closing-app.html#transaction">오늘 거래 입력 →</a>
       </div>
     </form>
     <p id="message" role="status" hidden></p>

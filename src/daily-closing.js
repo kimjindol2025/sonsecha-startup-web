@@ -81,7 +81,7 @@ function transactionForm(transactions) {
     .concat(transactions).filter(record => record.kind === 'income' && record.date <= date);
   const originalOptions = Object.fromEntries(originals.map(record => [record.id, `${record.date} · ${record.lines[0].name} · ${money(record.total)}`]));
   return `<section class="closing-card"><h2>${tx ? '거래 수정' : '거래 입력'}</h2>
-    <form id="transaction">
+    <form id="transaction" tabindex="-1">
       <div class="closing-row"><label>거래 구분<select name="kind">${options(kinds, tx?.kind)}</select></label>${input('담당자', 'operator', tx?.operator)}</div>
       <fieldset><legend>판매·구매 품목</legend><div id="lines">${(tx?.lines ?? [{}]).map(lineRow).join('')}</div>
       <button type="button" data-action="add-line">품목 추가</button><output id="line-total"></output></fieldset>
@@ -346,3 +346,18 @@ try {
   // Invalid links fall back to today's ledger.
 }
 selectDate(date);
+
+function openTransactionFromMenu() {
+  if (location.hash !== '#transaction') return;
+  const form = document.querySelector('#transaction');
+  if (form) {
+    form.focus();
+    form.scrollIntoView({ block: 'start' });
+  } else if (document.querySelector('#transactions')) {
+    notify('이미 마감한 영업일입니다. 거래를 변경하려면 정정 시작을 선택하세요.');
+    document.querySelector('#transactions').scrollIntoView({ block: 'start' });
+  }
+}
+
+window.addEventListener('hashchange', openTransactionFromMenu);
+openTransactionFromMenu();
