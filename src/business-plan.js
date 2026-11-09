@@ -59,6 +59,44 @@ const officialSources = [
   },
 ];
 
+const bankDocumentGroups = [
+  {
+    id: 'account',
+    title: '사업자 통장 개설',
+    note: '개인사업자·법인 여부와 대리 방문 여부를 은행에 먼저 확인하세요.',
+    items: [
+      ['personal-registration', '개인사업자 · 사업자등록증', '개인사업자'],
+      ['personal-id', '개인사업자 · 대표자 신분증', '개인사업자'],
+      ['lease-contract', '사업장 임대차계약서', '은행에 요구 여부 확인'],
+      ['signature', '대표자 도장 또는 서명', '은행에 요구 여부 확인'],
+      ['corporate-registry', '법인 · 등기사항전부증명서', '법인'],
+      ['corporate-registration', '법인 · 사업자등록증', '법인'],
+      ['articles', '법인 · 정관', '법인'],
+      ['corporate-seal', '법인 · 인감증명서와 인감도장', '법인'],
+      ['shareholders', '법인 · 주주명부와 실제소유자 확인 서류', '법인'],
+      ['proxy', '대리 방문 · 위임장·대표자 인감증명서·대리인 신분증', '대리 방문 시'],
+    ],
+  },
+  {
+    id: 'loan',
+    title: '창업자금 대출',
+    note: '대출 상품·은행·지점별 요구서류가 다르므로 방문 전 확인이 필요합니다.',
+    items: [
+      ['loan-id', '신분증', '기본 서류'],
+      ['resident-record', '주민등록등본·초본', '기본 서류'],
+      ['loan-business', '사업자등록증 또는 사업계획서', '등록 전에는 사업계획서 확인'],
+      ['loan-lease', '사업장 임대차계약서', '사업 관련'],
+      ['permit-proof', '업종별 인허가증', '필요 업종 해당 시'],
+      ['estimate', '시설·인테리어·장비 견적서 또는 계약서', '자금 용도 증빙'],
+      ['tax-certificates', '국세·지방세 납세증명서', '세무·신용'],
+      ['income-certificate', '소득금액증명원·부가가치세 과세표준증명원', '운영 중인 경우 은행 확인'],
+      ['financial-statements', '법인 재무제표', '법인·운영 중인 경우'],
+      ['guarantee', '신용보증재단·신보·기보 보증서', '보증부 대출 해당 시'],
+      ['policy-fund', '소상공인 확인서 등 정책자금 추가서류', '정책자금 해당 시'],
+    ],
+  },
+];
+
 const statusLabels = {
   unreviewed: '미확인', possible: '가능', conditional: '조건부 가능', blocked: '불가',
 };
@@ -143,6 +181,10 @@ function makePlan(seed = {}) {
       operatingDays: asText(seed.sales?.operatingDays),
     },
     monthlyCosts: Object.fromEntries(monthlyCostItems.map((item) => [item.key, asText(seed.monthlyCosts?.[item.key])])),
+    bankDocuments: Object.fromEntries(bankDocumentGroups.map((group) => [
+      group.id,
+      Object.fromEntries(group.items.map(([key]) => [key, Boolean(seed.bankDocuments?.[group.id]?.[key])])),
+    ])),
     research: {
       targetCustomers: asText(seed.research?.targetCustomers),
       competitorMemo: asText(seed.research?.competitorMemo),
@@ -274,6 +316,20 @@ function renderMonthlyCosts(plan) {
   return monthlyCostItems.map((item) => moneyInput(`monthlyCosts.${item.key}`, item.label, plan.monthlyCosts[item.key])).join('');
 }
 
+function renderBankDocuments(plan) {
+  return bankDocumentGroups.map((group) => {
+    const checked = group.items.filter(([key]) => plan.bankDocuments?.[group.id]?.[key]).length;
+    return `<article class="plan-bank-group"><div class="plan-bank-group-head"><div><h3>${escapeHtml(group.title)}</h3><p>${escapeHtml(group.note)}</p></div><strong>${checked}/${group.items.length} 확인</strong></div><div class="plan-bank-list">${group.items.map(([key, label, hint]) => `<label><input type="checkbox" data-bank-document="${escapeHtml(group.id)}:${escapeHtml(key)}" ${plan.bankDocuments?.[group.id]?.[key] ? 'checked' : ''}><span>${escapeHtml(label)}<small>${escapeHtml(hint)}</small></span></label>`).join('')}</div></article>`;
+  }).join('');
+}
+
+function bankDocumentSummary(plan) {
+  return bankDocumentGroups.map((group) => {
+    const rows = group.items.map(([key, label, hint]) => `<li><span class="${plan.bankDocuments?.[group.id]?.[key] ? 'is-checked' : ''}">${plan.bankDocuments?.[group.id]?.[key] ? '✓' : '○'}</span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(hint)}</small></li>`).join('');
+    return `<article><h4>${escapeHtml(group.title)}</h4><p>${escapeHtml(group.note)}</p><ul>${rows}</ul></article>`;
+  }).join('');
+}
+
 function renderSources() {
   return officialSources.map((source) => `<article class="plan-source-card"><span>${escapeHtml(source.kind)}</span><h3>${escapeHtml(source.title)}</h3><p>${escapeHtml(source.description)}</p><ul>${source.checks.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul><a href="${escapeHtml(source.href)}" target="_blank" rel="noopener noreferrer">공식 자료 열기 ↗</a></article>`).join('');
 }
@@ -331,7 +387,9 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
 
     <section data-document-section="funding"><h3>05. 자금 조달 계획</h3><div class="plan-document-ledger compact">${fundingRows}</div><small>지원금은 선정 전까지 확정 자금으로 간주하지 않으며, 대출 상환액은 월 운영비에 별도로 반영해야 합니다.</small></section>
 
-    <section data-document-section="sales"><h3>06. 매출·운영비 가정</h3><div class="plan-document-detail-grid">${documentRow('평균 객단가', formatMoney(numberValue(plan.sales.averageTicket)))}${documentRow('하루 평균 차량', `${numberValue(plan.sales.dailyCars)}대`)}${documentRow('월 영업일', `${numberValue(plan.sales.operatingDays)}일`)}${documentRow('월 매출 가정', formatMoney(calc.monthlySales), { emphasis: true })}${documentRow('단순 손익분기 차량', calc.breakEvenCars ? `하루 ${calc.breakEvenCars}대` : '계산 조건 확인 필요', { emphasis: true })}</div><h4>월 운영비 상세</h4><div class="plan-document-ledger">${monthlyRows}${documentRow('월 운영비 합계', formatMoney(calc.monthlyCosts), { emphasis: true })}${documentRow('단순 월 잔액', formatMoney(calc.monthlyProfit), { emphasis: true })}</div><small>세금, 감가상각, 부가세, 계절 변동 등을 포함하지 않은 단순 계산이며 실제 수익을 보장하지 않습니다.</small></section>
+    <section data-document-section="bank"><h3>06. 은행 방문 전 서류 체크</h3><p>아래는 일반적인 준비 목록입니다. 은행·대출상품·지점별 요구서류와 발급일 제한은 방문 전에 반드시 확인하세요.</p><div class="plan-bank-document-summary">${bankDocumentSummary(plan)}</div><small>사업자 통장 개설과 창업자금 대출은 요구서류가 다를 수 있습니다. 이 목록은 금융기관의 최종 안내를 대신하지 않습니다.</small></section>
+
+    <section data-document-section="sales"><h3>07. 매출·운영비 가정</h3><div class="plan-document-detail-grid">${documentRow('평균 객단가', formatMoney(numberValue(plan.sales.averageTicket)))}${documentRow('하루 평균 차량', `${numberValue(plan.sales.dailyCars)}대`)}${documentRow('월 영업일', `${numberValue(plan.sales.operatingDays)}일`)}${documentRow('월 매출 가정', formatMoney(calc.monthlySales), { emphasis: true })}${documentRow('단순 손익분기 차량', calc.breakEvenCars ? `하루 ${calc.breakEvenCars}대` : '계산 조건 확인 필요', { emphasis: true })}</div><h4>월 운영비 상세</h4><div class="plan-document-ledger">${monthlyRows}${documentRow('월 운영비 합계', formatMoney(calc.monthlyCosts), { emphasis: true })}${documentRow('단순 월 잔액', formatMoney(calc.monthlyProfit), { emphasis: true })}</div><small>세금, 감가상각, 부가세, 계절 변동 등을 포함하지 않은 단순 계산이며 실제 수익을 보장하지 않습니다.</small></section>
 
     <section data-document-section="market"><h3>07. 시장·상권 조사 정리</h3><div class="plan-document-research"><article><span>예상 고객과 수요</span><p>${escapeHtml(plan.research.targetCustomers || '확인 필요')}</p></article><article><span>주변 경쟁업체</span><p>${escapeHtml(plan.research.competitorMemo || '확인 필요')}</p></article><article><span>차량 유입·동선</span><p>${escapeHtml(plan.research.trafficMemo || '확인 필요')}</p></article><article><span>지원사업·정책자금</span><p>${escapeHtml(plan.research.supportMemo || '확인 필요')}</p></article></div></section>
 
@@ -342,6 +400,10 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
     <section data-document-section="action"><h3>10. 위험요인과 실행계획</h3><div class="plan-document-columns"><div><h4>아직 확정하지 못한 위험</h4><p>${escapeHtml(plan.research.risks || '아직 작성하지 않았습니다. 인허가, 임대차, 공사비, 폐수처리, 전력과 인력 조건을 확인해야 합니다.')}</p></div><div><h4>다음 행동과 일정</h4><p>${escapeHtml(plan.actionPlan || '아직 작성하지 않았습니다. 담당자, 확인일, 문의처와 다음 마감일을 정해야 합니다.')}</p></div></div></section>
 
     <section data-document-section="missing"><h3>11. 작성 전 보완할 항목</h3>${missing.length ? `<p>현재 ${missing.length}개 항목을 더 확인하면 계획서의 근거가 구체화됩니다.</p><ul class="plan-document-missing">${missing.map((item) => `<li>${escapeHtml(item.label)} <b>확인 필요</b></li>`).join('')}</ul>` : '<p class="plan-document-complete">핵심 작성 항목이 모두 입력되었습니다. 이제 입력값을 현장 견적과 공식 답변으로 검증하세요.</p>'}</section>
+
+    <section data-document-section="insurance"><h3>12. 보험·리스크 관리 비교 상품</h3><p>세차장 전용 상품으로 확정하지 않고, 화재·시설배상·영업배상·수탁 차량·풍수해 관련 비교·상담 자료를 정리했습니다. 상품명과 특약은 변경될 수 있으므로 최신 약관과 보험사 상담을 기준으로 확인하세요.</p><a class="plan-insurance-link" href="/insurance" target="_blank" rel="noopener noreferrer">보험 비교 상품과 상담 질문 보기 ↗</a></section>
+
+    <section data-document-section="employment"><h3>13. 직원·알바 채용 준비</h3><p>근로계약서·임금명세서·4대보험·안전보건교육과 미성년자·외국인 채용 시 확인사항을 일반 체크리스트로 정리했습니다. 최신 기준은 고용노동부와 4대사회보험 안내를 확인하세요.</p><a class="plan-insurance-link" href="/employment" target="_blank" rel="noopener noreferrer">직원·알바 채용 준비 보기 ↗</a></section>
 
     <footer><p>본 문서는 사용자가 입력한 가정과 확인 기록을 자동 정리한 초안입니다. 실제 인허가·공사비·대출·지원사업·매출·수익은 관할 기관, 전문가와 현장 견적으로 다시 확인해야 합니다.</p><strong>대한이엔지 손세차장 창업 로드맵</strong></footer>
   </article>`;
@@ -371,16 +433,22 @@ function fullPlanText(plan, calc, candidate, candidateLabel = '') {
     `지원금: ${formatMoney(numberValue(plan.funding.support))}`,
     `${calc.gap >= 0 ? '예상 여유' : '추가 확보 필요'}: ${formatMoney(Math.abs(calc.gap))}`,
     '',
-    '4. 월 매출·운영비 가정',
+    '4. 은행 방문 전 서류 체크',
+    ...bankDocumentGroups.flatMap((group) => [
+      `[${group.title}]`,
+      ...group.items.map(([key, label]) => `- ${plan.bankDocuments?.[group.id]?.[key] ? '확인' : '미확인'} · ${label}`),
+    ]),
+    '',
+    '5. 월 매출·운영비 가정',
     `평균 객단가 ${formatMoney(numberValue(plan.sales.averageTicket))} × 하루 ${numberValue(plan.sales.dailyCars)}대 × 월 ${numberValue(plan.sales.operatingDays)}일 = ${formatMoney(calc.monthlySales)}`,
     ...monthlyCostItems.map((item) => `${item.label}: ${formatMoney(numberValue(plan.monthlyCosts[item.key]))}`),
     `월 운영비 합계: ${formatMoney(calc.monthlyCosts)} · 단순 월 잔액: ${formatMoney(calc.monthlyProfit)} · 손익분기: 하루 ${calc.breakEvenCars}대`,
     '',
-    '4-1. 설명용 시나리오',
+    '5-1. 설명용 시나리오',
     ...scenarioCalculations(calc).map((scenario) => `${scenario.label}: 월 매출 ${formatMoney(scenario.sales)} · 월 운영비 ${formatMoney(scenario.costs)} · 월 잔액 ${formatMoney(scenario.profit)}`),
     '※ 목표 시나리오는 설명용 가정이며 실제 실적·대출 심사·수익을 보장하지 않습니다.',
     '',
-    '5. 시장·상권 조사',
+    '6. 시장·상권 조사',
     `예상 고객과 수요: ${plan.research.targetCustomers || '확인 필요'}`,
     `경쟁업체: ${plan.research.competitorMemo || '확인 필요'}`,
     `차량 유입·동선: ${plan.research.trafficMemo || '확인 필요'}`,
@@ -514,6 +582,13 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
         <div class="plan-summary-strip"><div><span>예상 창업비</span><strong data-plan-total="budget">${formatMoney(calc.budgetTotal)}</strong></div><div><span>자금 확보계획</span><strong data-plan-total="funding">${formatMoney(calc.fundingTotal)}</strong></div><div data-plan-gap-card class="${calc.gap >= 0 ? 'positive' : 'negative'}"><span>${calc.gap >= 0 ? '예상 여유' : '예상 부족'}</span><strong data-plan-total="gap">${formatMoney(Math.abs(calc.gap))}</strong></div></div>
       </section>
 
+      <section class="plan-card plan-bank-card">
+        <div class="plan-card-head"><div><span>04 · 은행 방문 준비</span><h2>통장 개설과 대출 서류를 미리 확인합니다.</h2><p>일반적인 준비 목록입니다. 은행·상품·지점별 요구사항과 발급일 제한은 방문 전에 확인하세요.</p></div></div>
+        <div class="plan-bank-checklist">${renderBankDocuments(plan)}</div>
+        <p class="plan-bank-disclaimer">이 체크리스트는 금융기관의 최종 안내나 대출 승인을 대신하지 않습니다.</p>
+        <a class="plan-insurance-inline-link" href="/insurance" target="_blank" rel="noopener noreferrer">보험·리스크 관리 비교 상품 보기 →</a>
+      </section>
+
       <section class="plan-card">
         <div class="plan-card-head"><div><span>04 · 월 운영 가정</span><h2>매출 목표가 비용을 감당하는지 계산합니다.</h2><p>아래 계산은 입력값을 곱한 단순 시뮬레이션이며 실제 수익을 보장하지 않습니다.</p></div><button type="button" data-plan-action="fill-sales-example">작성 예시 넣기</button></div>
         <div class="plan-form-grid plan-sales-grid">
@@ -585,6 +660,13 @@ export function initializeBusinessPlan({ getCandidateState, candidateDisplayName
       state.activeId = event.target.value;
       save();
       render();
+      return;
+    }
+    if (event.target.matches('[data-bank-document]')) {
+      const [groupId, key] = event.target.dataset.bankDocument.split(':');
+      if (activePlan().bankDocuments?.[groupId]) activePlan().bankDocuments[groupId][key] = event.target.checked;
+      save('은행 서류 체크를 저장했습니다');
+      updateDocument();
       return;
     }
     const field = event.target.closest('[data-plan-path]');

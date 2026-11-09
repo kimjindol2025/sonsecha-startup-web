@@ -490,7 +490,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         <section class="preview-block"><h3>선택 사진 · ${selectedPhotos.length}장</h3><div class="consultation-photo-grid">${previewPhotos.map((photo) => `<article class="consultation-photo${photo.selected ? ' selected' : ''}" data-preview-photo-id="${escapeHtml(photo.id)}"><img src="${escapeHtml(photo.url)}" alt=""><label><input type="checkbox" data-preview-photo ${photo.selected ? 'checked' : ''}><span>${photo.selected ? '전송 포함' : '전송 제외'}</span></label><b>${escapeHtml(photo.candidateName)}</b><small>${escapeHtml(photo.name)}</small></article>`).join('') || '<p class="consultation-empty">사진 공유 안 함</p>'}</div></section>
         <section class="preview-block"><h3>연락처</h3><p>이름: ${escapeHtml(contact.name || '미입력')} · 연락처: ${escapeHtml(contact.phone || '미입력')} · 이메일: ${escapeHtml(contact.email || '미입력')}</p></section>
         <section class="preview-block"><h3>상담 질문</h3><p>${escapeHtml(question)}</p></section>
-        <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 정보, 진행상태, 메모와 사진을 대한이엔지에 전달하는 것에 동의합니다.</span></label>
+        <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 정보, 진행상태, 메모와 사진을 대한이엔지에 전달하고, 문의 응대를 위해 연락처를 수집·이용하는 데 동의합니다. <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 안내</a></span></label>
         <p class="consultation-send-status" data-send-status></p>
         <div class="consultation-footer"><button type="button" class="secondary" data-preview-back>다시 선택</button><button type="button" data-send>동의 후 전송</button></div>
       </div>

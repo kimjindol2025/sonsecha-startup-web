@@ -256,6 +256,17 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .step-detail { display: none; grid-column: 3 / 5; color: var(--muted); line-height: 1.7; }
 .detail-open .step-detail { display: block; }
 .step-detail blockquote { margin: 0; padding: 18px 22px; color: var(--ink); background: white; border-left: 4px solid var(--orange); }
+.contract-summary-link { display: inline-block; margin-top: 12px; color: var(--blue); font-size: 11px; font-weight: 800; }
+.contract-risk-section { padding: 92px 7vw; background: #eef4ff; }
+.contract-risk-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.contract-risk-grid details { min-width: 0; padding: 17px; background: white; border: 1px solid #c4d3e7; box-shadow: 4px 4px 0 rgba(157,186,245,.5); }
+.contract-risk-grid details[open] { border-color: var(--blue); box-shadow: 5px 5px 0 rgba(20,87,255,.18); }
+.contract-risk-grid summary { display: flex; flex-direction: column; gap: 9px; cursor: pointer; list-style: none; }
+.contract-risk-grid summary::-webkit-details-marker { display: none; }
+.contract-risk-grid summary span { color: var(--blue); font-family: "Gowun Batang", serif; font-size: 24px; }
+.contract-risk-grid summary strong { font-size: 14px; line-height: 1.35; word-break: keep-all; }
+.contract-risk-grid details p { margin: 13px 0 0; color: #52647a; font-size: 11px; line-height: 1.7; word-break: keep-all; }
+.contract-risk-caution { max-width: 920px; margin: 22px 0 0; padding: 14px 16px; color: #7b4300; background: #fff5df; border-left: 4px solid #f2a900; font-size: 12px; line-height: 1.65; }
 .roadmap-shop-banner { margin: 18px 0; color: white; background: var(--blue); border: 1px solid #0a42c8; box-shadow: 8px 8px 0 var(--ink); }
 .roadmap-shop-banner[hidden] { display: none; }
 .roadmap-shop-banner > :is(a, button) { display: grid; grid-template-columns: 190px minmax(0, 1fr) auto; gap: 26px; align-items: center; width: 100%; min-height: 150px; padding: 18px 24px 18px 18px; color: inherit; text-align: left; font: inherit; background: transparent; border: 0; cursor: pointer; }
@@ -577,6 +588,10 @@ body.usage-guide-open { overflow: hidden; }
 .feedback-field input:focus, .feedback-field select:focus, .feedback-field textarea:focus { outline: 3px solid rgba(20,87,255,.13); border-color: var(--blue); }
 .feedback-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .feedback-privacy { margin: -4px 0 0; padding: 12px 14px; color: #53647b; background: #eef4ff; font-size: 9px; line-height: 1.6; }
+.feedback-consent { display: flex; align-items: flex-start; gap: 9px; padding: 12px 14px; color: #243a59; background: #f6f9ff; border: 1px solid #cbd9ee; font-size: 10px; line-height: 1.6; cursor: pointer; }
+.feedback-consent input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
+.feedback-consent a { color: var(--blue); font-weight: 700; }
+.step-detail-caution { margin-top: 12px; padding: 9px 11px; color: #6a4a00; background: #fff6d7; font-size: 10px; line-height: 1.55; }
 .feedback-submit-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .feedback-submit-row p { min-height: 18px; margin: 0; color: var(--blue); font-size: 11px; }
 .feedback-submit-row button { flex: 0 0 auto; min-height: 48px; padding: 0 24px; color: white; background: var(--blue); border: 0; font-weight: 800; cursor: pointer; }
@@ -969,6 +984,29 @@ body.consultation-open { overflow: hidden; }
 .plan-scenario-card dt { color: var(--muted); font-size: 9px; }
 .plan-scenario-card dd { margin: 4px 0 0; font-size: 11px; font-weight: 800; }
 .plan-scenario-card p { margin: 12px 0 0; color: #4c596b; font-size: 10px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; writing-mode: horizontal-tb; }
+.plan-bank-checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.plan-bank-group { min-width: 0; padding: 16px; background: #f5f8fc; border: 1px solid #d2ddea; }
+.plan-bank-group-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 12px; }
+.plan-bank-group-head h3 { margin: 0; font-size: 16px; }
+.plan-bank-group-head p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.plan-bank-group-head > strong { flex: 0 0 auto; padding: 5px 7px; color: var(--blue); background: #e4edff; font-size: 10px; }
+.plan-bank-list { display: grid; gap: 1px; background: #d5dfe9; }
+.plan-bank-list label { display: flex; gap: 9px; align-items: start; padding: 9px 10px; background: white; cursor: pointer; }
+.plan-bank-list input { flex: 0 0 auto; width: 17px; height: 17px; margin: 0; accent-color: var(--blue); }
+.plan-bank-list span { min-width: 0; color: #263a55; font-size: 11px; line-height: 1.4; }
+.plan-bank-list small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+.plan-bank-disclaimer { margin: 13px 0 0; color: #8c5e14; font-size: 10px; line-height: 1.55; }
+.plan-insurance-inline-link, .plan-insurance-link { display: inline-block; margin-top: 10px; color: var(--blue); font-size: 11px; font-weight: 800; }
+.plan-bank-document-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.plan-bank-document-summary article { min-width: 0; padding: 14px; background: #f5f8fc; border: 1px solid #d5dfe9; }
+.plan-bank-document-summary h4 { margin: 0 0 6px; font-size: 14px; }
+.plan-bank-document-summary p { margin: 0 0 10px; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.plan-bank-document-summary ul { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: #d5dfe9; }
+.plan-bank-document-summary li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 5px; padding: 7px 8px; background: white; }
+.plan-bank-document-summary li > span { color: #a1adba; font-size: 11px; font-weight: 800; }
+.plan-bank-document-summary li > span.is-checked { color: #1e6841; }
+.plan-bank-document-summary li strong { font-size: 10px; line-height: 1.4; }
+.plan-bank-document-summary li small { grid-column: 2; color: var(--muted); font-size: 8px; }
 .plan-presentation-message { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; padding: 14px 16px; color: #203a5c; background: #e6f0ff; border-left: 4px solid var(--blue); }
 .plan-presentation-message strong { font-size: 12px; }
 .plan-presentation-message p { margin: 0; color: #405269; font-size: 11px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; writing-mode: horizontal-tb; }
@@ -1044,6 +1082,7 @@ body.consultation-open { overflow: hidden; }
   .plan-source-grid { grid-template-columns: 1fr 1fr; }
   .plan-document { padding: 25px 18px; box-shadow: 7px 7px 0 var(--ink); }
   .plan-scenario-grid { grid-template-columns: 1fr; }
+  .plan-bank-checklist, .plan-bank-document-summary { grid-template-columns: 1fr; }
   .plan-presentation-message { grid-template-columns: 1fr; gap: 5px; }
   .plan-document-overview, .plan-document-numbers { grid-template-columns: 1fr 1fr; }
   .plan-document-detail-grid, .plan-document-ledger.compact { grid-template-columns: 1fr 1fr; }
@@ -1127,6 +1166,7 @@ body.consultation-open { overflow: hidden; }
   .rule-strip { grid-template-columns: 1fr; }
   .rule-strip div { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.15); }
   .shop-section, .roadmap-section, .documents-section, .risk-section { padding: 80px 6vw; }
+  .contract-risk-section { padding: 80px 6vw; }
   .shop-heading { align-items: start; flex-direction: column; gap: 26px; }
   .shop-heading-actions { width: 100%; }
   .official-shop-button, .shop-cart-button { flex: 1; width: auto; }
@@ -1147,6 +1187,7 @@ body.consultation-open { overflow: hidden; }
   .step-card { grid-template-columns: 30px 45px 1fr 76px; gap: 10px; }
   .step-card p { display: block; margin: 8px 0 0; }
   .step-detail { grid-column: 1 / 5; }
+  .contract-risk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .roadmap-shop-banner > :is(a, button) { grid-template-columns: 150px minmax(0, 1fr); gap: 20px; }
   .roadmap-shop-banner em { grid-column: 2; justify-self: start; }
   .candidate-fields { grid-template-columns: 1fr; }
@@ -1195,6 +1236,7 @@ body.consultation-open { overflow: hidden; }
   .rule-strip strong { font-size: 15px; }
   .rule-strip small { font-size: 11px; }
   .shop-section, .roadmap-section, .documents-section, .risk-section, .field-guide-section { padding: 64px 20px; }
+  .contract-risk-section { padding: 64px 20px; }
   .shop-heading { margin-bottom: 30px; }
   .shop-heading h2 { font-size: 36px; word-break: keep-all; }
   .shop-heading > div > p:last-child { font-size: 15px; word-break: keep-all; }
@@ -1273,6 +1315,7 @@ body.consultation-open { overflow: hidden; }
     font-size: 48px;
   }
   .step-detail { grid-column: 1 / -1; padding-top: 16px; overflow-wrap: anywhere; }
+  .contract-risk-grid { grid-template-columns: 1fr; }
   .roadmap-shop-banner { margin: 14px 0 22px; box-shadow: 6px 6px 0 var(--ink); }
   .roadmap-shop-banner > :is(a, button) { grid-template-columns: 94px minmax(0, 1fr); gap: 14px; min-height: 0; padding: 14px; }
   .roadmap-banner-image { min-height: 96px; }
@@ -1411,7 +1454,7 @@ body.consultation-open { overflow: hidden; }
   body.printing-business-plan-summary .business-plan-section { display: block !important; min-height: 0; padding: 0; background: white; }
   body.printing-business-plan-summary #businessPlanApp > :not(.plan-document) { display: none !important; }
   body.printing-business-plan-summary .plan-document { margin: 0; padding: 0; border: 0; box-shadow: none; }
-  body.printing-business-plan-summary .plan-document > section:not([data-document-section="overview"]):not([data-document-section="executive"]):not([data-document-section="presentation"]):not([data-document-section="business"]):not([data-document-section="schedule"]):not([data-document-section="budget"]):not([data-document-section="funding"]):not([data-document-section="sales"]):not([data-document-section="market"]):not([data-document-section="candidate"]):not([data-document-section="action"]),
+  body.printing-business-plan-summary .plan-document > section:not([data-document-section="overview"]):not([data-document-section="executive"]):not([data-document-section="presentation"]):not([data-document-section="business"]):not([data-document-section="schedule"]):not([data-document-section="budget"]):not([data-document-section="funding"]):not([data-document-section="bank"]):not([data-document-section="sales"]):not([data-document-section="market"]):not([data-document-section="candidate"]):not([data-document-section="action"]):not([data-document-section="insurance"]):not([data-document-section="employment"]),
   body.printing-business-plan-summary .plan-document > footer { display: none !important; }
   body.printing-business-plan-summary .plan-document > header,
   body.printing-business-plan-summary .plan-document > section[data-document-section="overview"],
@@ -1421,10 +1464,13 @@ body.consultation-open { overflow: hidden; }
   body.printing-business-plan-summary .plan-document > section[data-document-section="schedule"],
   body.printing-business-plan-summary .plan-document > section[data-document-section="budget"],
   body.printing-business-plan-summary .plan-document > section[data-document-section="funding"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="bank"],
   body.printing-business-plan-summary .plan-document > section[data-document-section="sales"],
   body.printing-business-plan-summary .plan-document > section[data-document-section="market"],
   body.printing-business-plan-summary .plan-document > section[data-document-section="candidate"],
-  body.printing-business-plan-summary .plan-document > section[data-document-section="action"] { display: block !important; break-inside: avoid; }
+  body.printing-business-plan-summary .plan-document > section[data-document-section="action"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="insurance"],
+  body.printing-business-plan-summary .plan-document > section[data-document-section="employment"] { display: block !important; break-inside: avoid; }
 }
 /* Keep the disabled menu hidden before scripts run, including mobile layouts. */
 [data-workspace-link][hidden] { display: none !important; }

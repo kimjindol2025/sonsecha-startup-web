@@ -705,6 +705,7 @@ async function handleApi(request, response, url) {
     const body = await readJsonBody(request);
     const feedback = validateFeedback(body);
     const contact = validateContact(body.contact);
+    if (body.privacyConsent !== true) return sendError(response, 400, '개인정보 수집·이용 동의 후 의견을 보낼 수 있습니다.');
     if (feedback.website) return sendJson(response, 201, { received: true });
     const address = requestAddress(request);
     if (!feedbackAllowed(address)) return sendError(response, 429, '의견은 한 시간에 5개까지 보낼 수 있습니다. 잠시 후 다시 시도해 주세요.');
@@ -937,6 +938,9 @@ async function serveStatic(request, response, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname === '/permit' || pathname === '/permit/') pathname = '/permit.html';
+  if (pathname === '/insurance' || pathname === '/insurance/') pathname = '/insurance.html';
+  if (pathname === '/employment' || pathname === '/employment/') pathname = '/employment.html';
+  if (pathname === '/privacy' || pathname === '/privacy/') pathname = '/privacy.html';
   if (pathname === '/admin') pathname = '/admin.html';
   if (pathname === '/admin/login') pathname = '/admin-login.html';
   const uploadedImage = pathname.match(/^\/product-images\/([A-Za-z0-9._-]+)$/);
@@ -977,6 +981,7 @@ async function serveStatic(request, response, url) {
     response.writeHead(200, securityHeaders({
       'content-type': mimeTypes[extname(filePath)] || 'application/octet-stream',
       'cache-control': adminPage || loginPage ? 'private, no-store' : isHtml ? 'no-cache' : 'public, max-age=31536000, immutable',
+      ...(adminPage || loginPage ? { 'x-robots-tag': 'noindex, nofollow, noarchive' } : {}),
     }));
     if (request.method === 'HEAD') return response.end();
     response.end(content);

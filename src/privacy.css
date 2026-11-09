@@ -1,0 +1,14 @@
+:root { color: #172b4d; background: #eef4ff; font-family: Pretendard, Arial, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.privacy-page { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 72px; }
+.privacy-back { color: #1557d6; font-weight: 700; text-decoration: none; }
+.privacy-kicker { margin: 56px 0 10px; color: #1557d6; font-size: 12px; font-weight: 800; letter-spacing: .14em; }
+h1 { margin: 0; font-size: clamp(32px, 6vw, 52px); letter-spacing: -.05em; }
+.privacy-lead { margin: 18px 0 36px; color: #53647b; line-height: 1.8; }
+section { margin: 14px 0; padding: 24px; background: #fff; border: 1px solid #cbd9ee; border-radius: 16px; box-shadow: 0 10px 24px rgba(31, 75, 139, .07); }
+h2 { margin: 0 0 10px; font-size: 19px; }
+section p { margin: 0; color: #405572; line-height: 1.8; }
+.privacy-caution { margin: 28px 0 0; padding: 16px; color: #5d4c1b; background: #fff8dc; border-left: 4px solid #e2b52f; line-height: 1.7; }
+.privacy-date { color: #6c7d93; font-size: 13px; }
+@media (max-width: 600px) { .privacy-page { width: min(100% - 24px, 760px); padding-top: 28px; } .privacy-kicker { margin-top: 40px; } section { padding: 18px; } }

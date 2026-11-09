@@ -1641,6 +1641,7 @@ async function submitFeedback(event) {
           phone: fields.contactPhone.value,
           email: fields.contactEmail.value,
         },
+        privacyConsent: fields.privacyConsent.checked,
         website: fields.website.value,
         page: `${globalThis.location.pathname}${globalThis.location.hash}`,
         device: feedbackDeviceType(),

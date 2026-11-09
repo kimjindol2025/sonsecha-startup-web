@@ -40,13 +40,13 @@ const baseFields = [
   ['roadmapEyebrow', '로드맵 영문 문구', 'STEP BY STEP', '창업 12단계', 100],
   ['roadmapTitle', '로드맵 제목', '창업 절차 12단계', '창업 12단계', 100],
   ['banner1Title', '배너 1 제목', '세차장 폐수처리기', '상품 배너', 100],
-  ['banner1Description', '배너 1 설명', '자동형·수동형 폐수처리 설비의 예산과 설치 조건을 제품몰에서 확인하세요.', '상품 배너', 300, true],
+  ['banner1Description', '배너 1 설명', '자사 판매 제품입니다. 설치 필요 여부와 구성은 관할 확인 후 현장 조건에 맞춰 결정하세요.', '상품 배너', 300, true],
   ['banner1Cta', '배너 1 버튼', '폐수 설비 보기 →', '상품 배너', 50],
   ['reviewBannerTitle', '검토 배너 제목', '후보지 검토 요청', '로드맵 배너', 100],
   ['reviewBannerDescription', '검토 배너 설명', '1~12단계 체크·판정·메모를 선택해 빅워시에 검토를 요청하세요.', '로드맵 배너', 300, true],
   ['reviewBannerCta', '검토 배너 버튼', '빅워시 문의 →', '로드맵 배너', 50],
   ['banner3Title', '배너 3 제목', '세차장 콤프레셔', '상품 배너', 100],
-  ['banner3Description', '배너 3 설명', '에어건과 공압 장비 사용량에 맞는 탱크 용량과 설치 위치를 확인하세요.', '상품 배너', 300, true],
+  ['banner3Description', '배너 3 설명', '자사 판매 제품입니다. 에어건 사용량과 설치 필요 여부는 현장 조건 확인 후 상담하세요.', '상품 배너', 300, true],
   ['banner3Cta', '배너 3 버튼', '콤프레셔 보기 →', '상품 배너', 50],
   ['documentsEyebrow', '서류 영문 문구', 'READY TO APPLY', '안내 섹션', 100],
   ['documentsTitle', '서류 제목', '미리 준비할 서류', '안내 섹션', 100],
@@ -67,7 +67,7 @@ const baseFields = [
   ['commerceReport', '통신판매업신고', '2008-경기양주-0178', '회사 정보', 60],
   ['privacyManager', '개인정보관리책임자', '김진돌', '회사 정보', 50],
   ['footerNotice', '하단 안내문', '본 페이지는 일반적인 절차 안내이며, 최종 판단은 소재지 관할 행정기관에 확인해야 합니다.', '회사 정보', 400, true],
-  ['footerDate', '하단 기준일', '2026. 07 기준', '회사 정보', 50],
+  ['footerDate', '하단 기준일', '2026. 11. 10 기준', '회사 정보', 50],
 ];
 
 const stepFields = stepDefaults.flatMap(([title, description], index) => [
