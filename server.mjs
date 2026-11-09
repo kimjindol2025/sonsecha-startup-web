@@ -970,6 +970,7 @@ async function serveStatic(request, response, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname === '/permit' || pathname === '/permit/') pathname = '/permit.html';
+  if (pathname === '/guide' || pathname === '/guide/') pathname = '/guide.html';
   if (pathname === '/insurance' || pathname === '/insurance/') pathname = '/insurance.html';
   if (pathname === '/employment' || pathname === '/employment/') pathname = '/employment.html';
   if (pathname === '/privacy' || pathname === '/privacy/') pathname = '/privacy.html';
