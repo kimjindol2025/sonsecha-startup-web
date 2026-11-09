@@ -1,0 +1,10 @@
+<!-- BIGWASH brand mark v2 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 344 96" role="img" aria-labelledby="title desc">
+  <title id="title">BIGWASH</title>
+  <desc id="desc">BIGWASH car wash brand logo</desc>
+  <rect width="344" height="96" rx="24" fill="#11253f"/>
+  <path d="M45 20c-9 13-20 25-20 38a20 20 0 0 0 40 0c0-13-11-25-20-38Z" fill="#4da6ff"/>
+  <path d="M35 59c4 5 10 8 17 8 4 0 8-1 11-3-3 8-10 13-18 13-10 0-18-7-18-17 0-2 0-4 1-6 2 2 4 4 7 5Z" fill="#fff" opacity=".92"/>
+  <text x="88" y="62" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="800" letter-spacing="3">BIGWASH</text>
+  <path d="M91 73h179" stroke="#4da6ff" stroke-width="4" stroke-linecap="round"/>
+</svg>

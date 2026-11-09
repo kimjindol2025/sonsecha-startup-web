@@ -2,8 +2,9 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/bigwash-logo.svg?v=2" />
     <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="preload" as="image" href="/hero-carwash-v2.webp" type="image/webp" fetchpriority="high" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="용도변경부터 폐수시설 신고와 개업까지, 손세차장 창업 절차를 순서대로 확인하세요." />
     <meta name="theme-color" content="#eef4ff" />
@@ -16,7 +17,7 @@
   <body class="guide-view">
     <header class="site-header">
       <a class="brand" href="#top" aria-label="처음으로">
-        <span class="brand-mark" aria-hidden="true">水</span>
+        <img class="bigwash-logo" src="/bigwash-logo.svg?v=2" alt="BIGWASH" />
         <span data-content-key="brandTitle">손세차장 창업 로드맵</span>
       </a>
       <button class="menu-toggle" id="menuToggle" type="button" aria-controls="siteNavigation" aria-expanded="false">
@@ -63,20 +64,10 @@
           </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
-          <div class="sun"></div>
-          <div class="building">
-            <div class="sign">HAND<br />WASH</div>
-            <div class="awning"></div>
-            <div class="bay">
-              <div class="car">
-                <span class="window"></span>
-                <span class="wheel wheel-left"></span>
-                <span class="wheel wheel-right"></span>
-              </div>
-            </div>
-          </div>
-          <div class="water-line"></div>
-          <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
+          <picture>
+            <source srcset="/hero-carwash-v2.webp" type="image/webp" />
+            <img class="hero-image" src="/hero-carwash-v2.png" alt="" fetchpriority="high" />
+          </picture>
         </div>
       </section>
 

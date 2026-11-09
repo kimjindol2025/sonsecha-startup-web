@@ -1148,7 +1148,7 @@ function renderProductDetail(productId) {
     .sort((a, b) => b.featured - a.featured)
     .slice(0, 3);
   const image = product.image
-    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">`
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" decoding="async" fetchpriority="high">`
     : '<span class="product-detail-placeholder" aria-hidden="true">水</span>';
   const badge = publicProductBadge(product);
   shopElements.detail.innerHTML = `
@@ -1186,7 +1186,7 @@ function renderProductDetail(productId) {
       <article><span>02</span><strong>견적서 작성</strong><p>장바구니에 수량을 담아 간이견적서를 만들 수 있습니다.</p></article>
       <article><span>03</span><strong>최종 상담</strong><p>배송·설치·재고 조건은 전화 상담에서 확정합니다.</p></article>
     </section>
-    ${related.length ? `<section class="product-related"><header><p>RELATED PRODUCTS</p><h2>같은 분류 상품</h2></header><div>${related.map((item) => `<a href="#shop/product/${encodeURIComponent(item.id)}" data-product-detail="${escapeHtml(item.id)}"><span>${item.image ? `<img src="${escapeHtml(item.image)}" alt="">` : '水'}</span><b>${escapeHtml(item.name)}</b><small>${formatPrice(item.price)}</small></a>`).join('')}</div></section>` : ''}
+    ${related.length ? `<section class="product-related"><header><p>RELATED PRODUCTS</p><h2>같은 분류 상품</h2></header><div>${related.map((item) => `<a href="#shop/product/${encodeURIComponent(item.id)}" data-product-detail="${escapeHtml(item.id)}"><span>${item.image ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" decoding="async">` : '水'}</span><b>${escapeHtml(item.name)}</b><small>${formatPrice(item.price)}</small></a>`).join('')}</div></section>` : ''}
     <a class="product-detail-back" href="#shop">← 제품 목록으로 돌아가기</a>
   `;
 }
@@ -1233,7 +1233,7 @@ function renderCart() {
       const linePrice = product.price === null ? null : product.price * item.quantity;
       return `
         <article class="cart-item" data-cart-product="${escapeHtml(product.id)}">
-          <div class="cart-item-media">${product.image ? `<img src="${escapeHtml(product.image)}" alt="">` : '<span aria-hidden="true">水</span>'}</div>
+          <div class="cart-item-media">${product.image ? `<img src="${escapeHtml(product.image)}" alt="" loading="lazy" decoding="async">` : '<span aria-hidden="true">水</span>'}</div>
           <div class="cart-item-copy">
             <strong>${escapeHtml(product.name)}</strong>
             <small>${formatPrice(product.price)}</small>

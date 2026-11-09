@@ -29,7 +29,7 @@ button, input, textarea, a { -webkit-tap-highlight-color: transparent; }
   position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px);
 }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.03em; }
-.brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: white; background: var(--blue); font-family: serif; }
+.bigwash-logo { display: block; width: 118px; height: 33px; flex: 0 0 auto; }
 nav { display: flex; align-items: center; gap: 26px; font-size: 14px; font-weight: 600; }
 nav a:hover { color: var(--blue); }
 .nav-view-tab { padding: 9px 13px; border-radius: 999px; }
@@ -65,7 +65,9 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 .primary-button:hover { transform: translate(3px, 3px); box-shadow: 5px 5px 0 var(--ink); }
 .text-button { padding: 0; border: 0; border-bottom: 1px solid; background: none; cursor: pointer; }
 
-.hero-visual { position: relative; min-height: 590px; background: #cde5ff; overflow: hidden; }
+.hero-visual { position: relative; min-height: 590px; overflow: hidden; background: #dbeeff; }
+.hero-visual picture { display: block; width: 100%; height: 100%; }
+.hero-image { display: block; width: 100%; height: 100%; min-height: 590px; object-fit: cover; object-position: center center; }
 .sun { position: absolute; width: 310px; height: 310px; border-radius: 50%; background: #ffda5b; top: 40px; right: -50px; }
 .building { position: absolute; left: 9%; right: 7%; bottom: 60px; height: 72%; background: #f9f6ef; border: 5px solid var(--ink); box-shadow: 16px 16px 0 rgba(20,87,255,.25); }
 .sign { position: absolute; top: -40px; left: 8%; background: var(--orange); color: white; border: 4px solid var(--ink); padding: 14px 24px; font-weight: 800; font-size: 24px; line-height: .9; transform: rotate(-3deg); }
@@ -1164,6 +1166,7 @@ body.consultation-open { overflow: hidden; }
   .hero { grid-template-columns: 1fr; }
   .hero-copy { padding: 64px 6vw 56px; }
   .hero-visual { min-height: 440px; }
+  .hero-image { min-height: 440px; object-position: center center; }
   .rule-strip { grid-template-columns: 1fr; }
   .rule-strip div { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.15); }
   .shop-section, .roadmap-section, .documents-section, .risk-section { padding: 80px 6vw; }
@@ -1208,7 +1211,7 @@ body.consultation-open { overflow: hidden; }
   body { overflow-x: hidden; }
   .site-header { min-height: 58px; padding: 8px 20px 0; grid-template-columns: 1fr; }
   .brand { min-width: 0; gap: 10px; font-size: 14px; }
-  .brand-mark { width: 34px; height: 34px; flex: 0 0 34px; }
+  .bigwash-logo { width: 104px; height: 29px; }
   .brand span:last-child { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .print-button { display: none; }
   nav { width: calc(100% + 40px); margin: 8px -20px 0; padding: 0 12px; gap: 2px; }
@@ -1226,12 +1229,7 @@ body.consultation-open { overflow: hidden; }
   }
   .text-button { min-height: 44px; padding: 8px 0; }
   .hero-visual { min-height: 320px; }
-  .building { left: 8%; right: 8%; bottom: 42px; height: 68%; border-width: 4px; box-shadow: 10px 10px 0 rgba(20,87,255,.25); }
-  .sign { top: -30px; padding: 10px 17px; border-width: 4px; font-size: 19px; }
-  .awning { border-width: 4px; background-size: 80px 100%; }
-  .bay, .car, .window { border-width: 4px; }
-  .sun { top: 32px; width: 190px; height: 190px; }
-  .water-line { height: 44px; }
+  .hero-image { min-height: 320px; object-position: 63% center; }
   .rule-strip div { padding: 20px; gap: 1px 15px; }
   .rule-strip span { font-size: 27px; }
   .rule-strip strong { font-size: 15px; }
@@ -1410,7 +1408,7 @@ body.consultation-open { overflow: hidden; }
   html { scroll-padding-top: 84px; }
   .site-header { min-height: 68px; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 10px 20px; }
   .site-header .brand { min-width: 0; gap: 10px; font-size: 14px; }
-  .site-header .brand-mark { flex: 0 0 34px; width: 34px; height: 34px; }
+  .site-header .bigwash-logo { flex: 0 0 104px; width: 104px; height: 29px; }
   .site-header .brand span:last-child { white-space: normal; overflow-wrap: anywhere; }
   .site-header .menu-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 72px; min-height: 44px; padding: 0 10px; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 6px; font-weight: 700; cursor: pointer; }
   .site-header nav { display: none; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-height: 60dvh; margin: 10px 0 0; padding: 12px 0 2px; gap: 8px; overflow-x: hidden; overflow-y: auto; border-top: 1px solid var(--line); }
