@@ -1,0 +1,115 @@
+# 상품몰 등록 안내
+
+운영 상품은 `https://sonsecha.dclub.kr/admin.html`의 관리자 대시보드에서 등록·수정한다. 관리자 비밀번호는 서버에 scrypt 해시로만 보관하고, 로그인 세션은 `HttpOnly`, `Secure`, `SameSite=Strict` 쿠키를 사용한다.
+
+운영 중 저장한 상품 데이터는 Git에 포함되지 않는 `data/products.json`에 보관되며, PM2 재시작·코드 배포 후에도 유지된다. 아직 관리자 저장 내역이 없으면 `src/products.js`의 20개 기본 상품을 사용한다.
+
+## 관리자 사용 순서
+
+1. 사이트 상단의 `관리자` 메뉴 또는 `/admin.html`에 접속한다.
+2. 비밀번호만 입력해 상품 대시보드를 연다.
+3. 왼쪽 목록에서 상품을 선택해 상품명·가격·목록 설명·상세 페이지 설명·이미지·공식몰 링크·배지·판매상태를 수정한다.
+4. `수정 내용 저장`을 누르면 제품몰 새로고침 시 바로 반영된다.
+5. `+ 상품 등록`을 누르면 새 상품을 추가할 수 있다.
+6. `제품몰 공개`를 끄면 상품을 삭제하지 않고 비공개할 수 있다.
+
+## 메인페이지 글 관리
+
+관리자 로그인 후 기본으로 `메인페이지 글` 탭이 열린다. 수정 항목 78개는 6개 그룹으로 나뉘어 있다.
+
+- 첫 화면: 사이트 이름, 메뉴, 메인 제목·소개·버튼
+- 핵심 원칙·제품몰: 3개 핵심 원칙과 제품몰 소개
+- 창업 12단계: 각 단계의 제목과 설명
+- 상품 배너: 폐수처리기·고압세척기·콤프레셔 배너 문구
+- 안내 섹션: 서류·실무자료·주의사항·마지막 요약
+- 회사 정보: 전화, 대표자, 주소, 사업자정보, 하단 안내
+
+`메인 글 저장`을 누르면 `data/content.json`에 저장되고 방문자가 메인페이지를 새로고침할 때 즉시 반영된다. 회사 전화를 바꾸면 하단과 견적서의 문의전화 및 `tel:` 연결도 함께 변경된다.
+
+## 상품 등록 형식
+
+```js
+{
+  id: '고유-상품코드',
+  name: '상품명',
+  category: 'consumable',
+  summary: '목록에 표시할 짧은 설명',
+  details: '내부 상세 페이지에 표시할 제품 특징, 구성, 설치·사용 안내',
+  price: 25000,
+  image: '/products/상품이미지.webp',
+  shopUrl: 'https://k002.com/mall/m_mall_detail.php?ps_goid=상품번호',
+  badge: 'BEST',
+  inStock: true,
+  featured: 10,
+}
+```
+
+- 카테고리 값은 `construction`(세차장공사), `equipment`(세차장장비), `consumable`(세차장 소모품) 중 하나만 사용한다.
+- 가격을 정하지 않은 상품은 `price: null`로 등록하면 `가격 문의`로 표시된다.
+- `details`를 비우면 내부 상세 페이지에서 `summary`를 대신 표시하므로 기존 상품 데이터도 그대로 작동한다.
+- 품절 상품은 `inStock: false`, 임시 비공개 상품은 `active: false`로 설정한다.
+- `featured` 숫자가 클수록 추천순에서 먼저 표시된다.
+- 상품 이미지는 가급적 같은 비율의 JPEG 또는 WebP 파일로 준비하고 `public/product-images/`에 둔다. 사진형 이미지는 900px 정사각형·과도하지 않은 압축 품질을 권장한다.
+- 자체 호스팅 이미지는 `/product-images/상품코드.jpg`처럼 루트 상대경로로 등록할 수 있다. `//외부주소` 형태의 프로토콜 상대 URL은 허용하지 않는다.
+- 상품 카드의 `상세 보기`는 `#shop/product/상품ID` 내부 상세 페이지로 연결한다.
+- 기존 `k002.com` 상품은 `shopUrl`에 주소를 넣으면 내부 상세 페이지의 `공식몰에서 보기` 버튼으로 연결된다.
+
+## AI 상품 등록 API
+
+AI가 소스코드를 수정하지 않고 상품 등록만 수행할 때는 `POST /api/ai/products`를 사용한다. 이 경로는 공개 등록을 허용하지 않으며, 다음 중 하나가 있어야 한다.
+
+- 기존 관리자 로그인으로 발급된 `sonsecha_admin` 세션 쿠키
+- 서버 환경변수 `AI_PRODUCT_API_KEY`에 설정한 키를 `x-ai-product-api-key` 헤더 또는 `Authorization: Bearer <키>`로 전달
+
+API 키를 사용할 경우 서버 실행 환경에 `AI_PRODUCT_API_KEY`를 설정한다. 키가 설정되지 않은 환경에서는 관리자 세션 인증만 사용할 수 있다.
+
+요청 본문은 다음 필드를 사용한다. `name`, `category`, `price`, `summary`, `details`, `image`, `shopUrl`, `badge`, `active`, `inStock`, `featured`를 받을 수 있으며 `active` 기본값은 `true`, `inStock` 기본값은 `false`, `badge` 기본값은 `롤오버`다. 카테고리와 상품명은 필수다.
+
+```http
+POST /api/ai/products
+Content-Type: application/json
+x-ai-product-api-key: <AI_PRODUCT_API_KEY>
+
+{
+  "name": "세차장용 고압호스",
+  "category": "equipment",
+  "price": 120000,
+  "summary": "세차장 고압세척기에 연결하는 교체용 호스입니다.",
+  "details": "연결 규격과 사용 압력을 주문 전에 확인하세요.",
+  "image": "https://example.com/high-pressure-hose.jpg",
+  "shopUrl": "https://example.com/products/high-pressure-hose",
+  "badge": "신상품",
+  "active": true,
+  "inStock": true,
+  "featured": 10
+}
+```
+
+성공 시 `201 Created`와 저장된 상품 객체를 반환한다.
+
+```json
+{
+  "product": {
+    "id": "custom-1760000000000-a1b2c3",
+    "name": "세차장용 고압호스",
+    "category": "equipment",
+    "price": 120000,
+    "active": true,
+    "inStock": true
+  }
+}
+```
+
+인증이 없거나 키가 틀리면 `401`, 새 3개 카테고리 외 값·잘못된 가격·URL 등 입력 검증 실패는 `400`을 반환한다. 이 API는 기존 관리자 상품 API와 분리된 등록 전용 경로다.
+
+## 기본 상품
+
+2026-08-01 KST 기준 `k002.com` 상품 20개가 기본 등록되어 있다. 가격·판매상태·이미지 경로가 바뀐 경우 관리자 대시보드에서 수정한다.
+
+## 현재 주문 흐름
+
+상품 선택 → 장바구니 수량 조정 → 간이견적서 작성 → 인쇄·PDF 저장 또는 전화 주문·견적 문의 순서다. 장바구니와 견적 받는 분의 입력 내용은 이용자의 브라우저에 저장된다.
+
+간이견적서에는 상품명·단가·수량·합계와 공급자 정보가 자동으로 들어간다. 회사·상호, 담당자, 연락처, 이메일, 배송·설치 주소와 요청사항은 이용자가 직접 입력한다. 가격 문의 상품과 배송비·설치비·부가세 적용은 최종 상담에서 확정해야 한다.
+
+온라인 결제, 서버 주문 저장, 재고 수량 차감, 배송조회는 아직 연결하지 않았다. 상품 관리자 인증과 주문·고객정보 관리는 별도 범위로 구분해야 한다.

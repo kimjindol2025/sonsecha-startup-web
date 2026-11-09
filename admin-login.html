@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>관리자 로그인 · 손세차장 창업 로드맵</title>
+    <link rel="stylesheet" href="/src/admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <a class="admin-brand" href="/"><span aria-hidden="true">水</span><strong>손세차장 관리자</strong></a>
+      <a class="back-shop" href="/">사이트로 돌아가기</a>
+    </header>
+    <main>
+      <section class="login-view" aria-labelledby="loginTitle">
+        <form class="login-card" id="loginForm">
+          <p>ADMIN LOGIN</p>
+          <h1 id="loginTitle">관리자 로그인</h1>
+          <span>관리 화면은 로그인 후에 열립니다.</span>
+          <label><b>비밀번호</b><input id="adminPassword" type="password" autocomplete="current-password" maxlength="200" required autofocus /></label>
+          <button type="submit" id="loginSubmit">로그인</button>
+          <small id="loginFeedback" role="status" aria-live="polite"></small>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="/src/admin-login.js"></script>
+  </body>
+</html>

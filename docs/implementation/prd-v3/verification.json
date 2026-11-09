@@ -1,0 +1,132 @@
+{
+  "scope": "Existing-code baseline only. PRD v3 acceptance is unexecuted.",
+  "source": "/tmp/sonsecha-v3-prep-iqwnz9z8/source",
+  "node": "v22.22.1",
+  "build": {
+    "command": "npm run build",
+    "cwd": "/tmp/sonsecha-v3-prep-iqwnz9z8/source",
+    "status": "passed",
+    "note": "Initial snapshot omitted README.md imported as raw text. Added that input and rebuilt; application source unchanged."
+  },
+  "syntax": [
+    {
+      "file": "src/admin-login.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/admin.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/analytics.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/business-plan.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/consultations.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/content.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/main.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/product-images.js",
+      "status": "passed"
+    },
+    {
+      "file": "src/products.js",
+      "status": "passed"
+    },
+    {
+      "file": "server.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "consultations-store.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "vite.config.js",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/browser-smoke-business-plan.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/browser-smoke-cart.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/browser-smoke-consultations.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/browser-smoke-shop.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/package.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/test-consultations.mjs",
+      "status": "passed"
+    },
+    {
+      "file": "scripts/test-qa-regressions.mjs",
+      "status": "passed"
+    }
+  ],
+  "api": [
+    {
+      "command": "node scripts/test-qa-regressions.mjs",
+      "status": "passed",
+      "exit_code": 0,
+      "output": "{\"ok\":true,\"checks\":[\"Unauthenticated GET/HEAD and encoded aliases redirect without dashboard HTML\",\"Login document contains no management dashboard\",\"All management data APIs deny unauthenticated access\",\"Every public product image is same-origin and returns image content\",\"Guide banners do not request external image servers\",\"Correct login grants dashboard and management API access\",\"Logout revokes dashboard and API access\"]}"
+    },
+    {
+      "command": "node scripts/test-consultations.mjs",
+      "status": "passed",
+      "exit_code": 0,
+      "output": "consultation smoke: PASS"
+    }
+  ],
+  "production_data_used": false,
+  "pm2_commands_executed": false,
+  "external_messages_sent": false,
+  "test_base": "http://127.0.0.1:35703",
+  "test_data": "/tmp/sonsecha-v3-prep-iqwnz9z8/synthetic-data",
+  "browser": {
+    "status": "not_run",
+    "reason": "This turn verifies preparation and existing APIs; no PRD implementation exists."
+  },
+  "ok": true,
+  "own_test_server_stopped": true,
+  "source_snapshot_runtime_log": "(node:2388587) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n[server] Serving /tmp/sonsecha-v3-prep-iqwnz9z8/source/dist on 0.0.0.0:35703\n",
+  "original_source_hash_check": {
+    "status": "passed",
+    "checked_files": 51,
+    "changed_files": []
+  },
+  "prd_acceptance": {
+    "total": 24,
+    "executed": 0,
+    "status": "unexecuted"
+  },
+  "preparation_files": [
+    "ACCEPTANCE.csv",
+    "READINESS.md",
+    "WORK_ORDER.md",
+    "baseline.json",
+    "verification.json"
+  ]
+}
