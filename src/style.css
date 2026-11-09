@@ -957,7 +957,7 @@ body.consultation-open { overflow: hidden; }
 .plan-document-overview span, .plan-document-numbers span { color: var(--muted); font-size: 10px; }
 .plan-document-overview strong, .plan-document-numbers strong { margin-top: 5px; font-size: 14px; }
 .plan-presentation { background: #f7faff; border: 1px solid #b8c8dc; }
-.plan-scenario-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.plan-scenario-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 10px; margin-top: 16px; }
 .plan-scenario-card { min-width: 0; padding: 16px; background: white; border: 1px solid #d1dce9; }
 .plan-scenario-card.target { border: 2px solid var(--blue); background: #eef4ff; }
 .plan-scenario-card > span, .plan-scenario-card > strong, .plan-scenario-card > small { display: block; }
@@ -968,12 +968,12 @@ body.consultation-open { overflow: hidden; }
 .plan-scenario-card dl div { padding: 8px; background: #f5f8fc; }
 .plan-scenario-card dt { color: var(--muted); font-size: 9px; }
 .plan-scenario-card dd { margin: 4px 0 0; font-size: 11px; font-weight: 800; }
-.plan-scenario-card p { margin: 12px 0 0; color: #4c596b; font-size: 10px; line-height: 1.6; }
-.plan-presentation-message { margin-top: 14px; padding: 14px 16px; color: #203a5c; background: #e6f0ff; border-left: 4px solid var(--blue); }
+.plan-scenario-card p { margin: 12px 0 0; color: #4c596b; font-size: 10px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; writing-mode: horizontal-tb; }
+.plan-presentation-message { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; padding: 14px 16px; color: #203a5c; background: #e6f0ff; border-left: 4px solid var(--blue); }
 .plan-presentation-message strong { font-size: 12px; }
-.plan-presentation-message p { margin: 5px 0 0; color: #405269; font-size: 11px; line-height: 1.7; }
+.plan-presentation-message p { margin: 0; color: #405269; font-size: 11px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; writing-mode: horizontal-tb; }
 .plan-presentation > small { display: block; margin-top: 12px; color: #69788b; font-size: 9px; line-height: 1.6; }
-.plan-document-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.plan-document-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 28px; }
 .plan-document-columns h4 { margin-top: 0; }
 .plan-document-columns p { margin: 0; color: #4c596b; font-size: 12px; line-height: 1.75; white-space: pre-wrap; }
 .plan-document-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 13px; background: #d6dfe9; }
@@ -1044,6 +1044,7 @@ body.consultation-open { overflow: hidden; }
   .plan-source-grid { grid-template-columns: 1fr 1fr; }
   .plan-document { padding: 25px 18px; box-shadow: 7px 7px 0 var(--ink); }
   .plan-scenario-grid { grid-template-columns: 1fr; }
+  .plan-presentation-message { grid-template-columns: 1fr; gap: 5px; }
   .plan-document-overview, .plan-document-numbers { grid-template-columns: 1fr 1fr; }
   .plan-document-detail-grid, .plan-document-ledger.compact { grid-template-columns: 1fr 1fr; }
   .plan-document-timeline { grid-template-columns: 1fr 1fr; }
