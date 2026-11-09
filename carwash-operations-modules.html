@@ -436,96 +436,11 @@
 
         <!-- ================= MOD-01 ================= -->
         <article class="module-pane active" id="mod-sales">
-          <div class="pane-header">
-            <span class="pane-tag" style="background:var(--green-light); color:var(--green);">A급 · 현장 필수</span>
-            <h2 class="pane-title">01. 매출·결제 통합 관리 모듈 (MOD-01-SALES)</h2>
-            <p class="pane-desc">
-              무인 키오스크, 신용카드, RF 충전카드, 모바일 간편결제, 현금 시재를 종합 정산하고, 
-              코스별·시간대별 대당 객단가(ATV)를 분석하여 매출 누수를 차단합니다.
-            </p>
-          </div>
-
-          <div class="sub-block">
-            <h3>1. 핵심 입력 데이터 구조</h3>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th style="width:25%">필드명</th>
-                  <th style="width:15%">유형</th>
-                  <th style="width:15%">필수여부</th>
-                  <th style="width:45%">설명 및 현장 예시</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>date</code></td>
-                  <td>Date</td>
-                  <td><span class="req-badge">필수</span></td>
-                  <td>영업일자 (YYYY-MM-DD)</td>
-                </tr>
-                <tr>
-                  <td><code>basicCourseCount</code></td>
-                  <td>Number</td>
-                  <td><span class="req-badge">필수</span></td>
-                  <td>기본 세차 코스 판매 대수 (예: 10,000원)</td>
-                </tr>
-                <tr>
-                  <td><code>underbodyCourseCount</code></td>
-                  <td>Number</td>
-                  <td><span class="opt-badge">선택</span></td>
-                  <td>하부세차 포함 코스 판매 대수 (예: 12,000원)</td>
-                </tr>
-                <tr>
-                  <td><code>premiumCourseCount</code></td>
-                  <td>Number</td>
-                  <td><span class="req-badge">필수</span></td>
-                  <td>최고급 프리미엄 코팅 코스 판매 대수 (예: 15,000원)</td>
-                </tr>
-                <tr>
-                  <td><code>kioskCardAmount</code></td>
-                  <td>Number</td>
-                  <td><span class="req-badge">필수</span></td>
-                  <td>키오스크 신용/체크/간편결제 승인 합계액</td>
-                </tr>
-                <tr>
-                  <td><code>rfCardReloadAmount</code></td>
-                  <td>Number</td>
-                  <td><span class="req-badge">필수</span></td>
-                  <td>현장 RF카드 충전 매출액</td>
-                </tr>
-                <tr>
-                  <td><code>refundAmount</code></td>
-                  <td>Number</td>
-                  <td><span class="opt-badge">선택</span></td>
-                  <td>기계 오작동 등으로 인한 환불 및 승인 취소 금액</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="sub-block">
-            <h3>2. 자동 연산 및 비즈니스 로직</h3>
-            <div class="logic-box">
-              <strong>핵심 산출 지표</strong>
-              <ul>
-                <li><strong>총 매출액 (Gross Revenue)</strong> = (기본대수 × 10,000) + (하부대수 × 12,000) + (프리미엄대수 × 15,000)</li>
-                <li><strong>순 매출액 (Net Revenue)</strong> = 총 매출액 - 환불액</li>
-                <li><strong>총 세차 대수</strong> = 기본 + 하부 + 버블 + 프리미엄 판매 대수 합산</li>
-                <li><strong>대당 평균 객단가 (ATV)</strong> = 순 매출액 ÷ 총 세차 대수 (목표: 13,000원 이상 유지)</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="sub-block">
-            <h3>3. 이상 징후 감지 및 알림 규칙</h3>
-            <div class="alert-box">
-              <strong>점주 알림 조건</strong>
-              <ul>
-                <li><strong>피크타임 결제 누락:</strong> 주말 맑은 날 11:00~16:00 사이 특정 베이 세차 대수가 0건일 때 → <em>키오스크 통신 불량 또는 진입 차단기 에러 경보</em></li>
-                <li><strong>환불율 5% 초과:</strong> 당일 세차 대비 환불 금액이 5% 이상 발생 시 → <em>노즐 압력 센서 또는 물기 건조기 고장 점검 요청</em></li>
-              </ul>
-            </div>
-          </div>
+          <div class="pane-header"><h2 class="pane-title">01. 일일 수입·지출 장부 및 마감 (MOD-01-SALES)</h2>
+          <p>1차는 1호점의 거래 장부와 일일 마감이다. <a href="./carwash-operations-plan.html#implementation">v1.2 구현 명세 보기 →</a></p></div>
+          <div class="spec-block"><h3>영업 중 · 거래를 기록한다</h3><p>수입·지출·판매 환불을 구분한다. 영업일, 담당자, 품목명, 수량, 단위, 단가, 수납·지급 수단을 남긴다. 한 거래에 여러 품목과 결제수단을 기록할 수 있다.</p></div>
+          <div class="spec-block"><h3>영업 후 · 실제 금액과 대조한다</h3><p>합계에서 원거래와 품목을 조회한다. 현금은 시재와 실사액, 카드는 승인·취소, 계좌는 입출금 내역을 확인한다. 순수입은 수입에서 환불을 뺀 금액이며, 수입·지출 차액은 순수입에서 지출을 뺀 금액이다.</p></div>
+          <div class="spec-block"><h3>확정과 정정 · 당시 장부를 보존한다</h3><p>대조값이 빠지거나 금액 차이의 사유가 없으면 확정을 막는다. 정정할 때는 사유와 대조 결과를 새 개정본에 저장하고 이전 확정본을 조회할 수 있게 한다.</p></div>
         </article>
 
         <!-- ================= MOD-02 ================= -->

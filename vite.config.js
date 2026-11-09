@@ -16,6 +16,7 @@ export default defineConfig({
         carwashOperationsModules: resolve(import.meta.dirname, 'carwash-operations-modules.html'),
         carwashAllSpecs: resolve(import.meta.dirname, 'carwash-all-specs.html'),
         inventoryApp: resolve(import.meta.dirname, 'inventory-app.html'),
+        dailyClosing: resolve(import.meta.dirname, 'daily-closing-app.html'),
         salesApp: resolve(import.meta.dirname, 'sales-app.html'),
         wastewaterApp: resolve(import.meta.dirname, 'wastewater-app.html'),
         equipmentApp: resolve(import.meta.dirname, 'equipment-app.html'),
