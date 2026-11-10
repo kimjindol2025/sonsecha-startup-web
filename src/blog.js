@@ -1,6 +1,6 @@
 import './blog.css';
 import './blog-extra.css';
-import { blogPosts } from './blog-posts-long.js';
+import { blogPosts } from './blog-posts-promo.js';
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const articlePath = (slug) => `/blog/${encodeURIComponent(slug)}`;
