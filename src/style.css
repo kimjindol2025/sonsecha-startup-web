@@ -406,6 +406,8 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
 }
 .candidate-fields input:focus, .candidate-fields select:focus { outline: none; border-color: #78a3ff; }
 .step-subfeature-label { display: inline-block; margin-top: 7px; padding: 4px 8px; color: var(--blue); background: #edf4ff; border: 1px solid #c5d8ff; border-radius: 4px; font-size: 10px; font-weight: 800; line-height: 1.45; }
+.step-subfeature-link { text-decoration: none; cursor: pointer; }
+.step-subfeature-link:hover { color: #fff; background: var(--blue); border-color: var(--blue); }
 .candidate-remove {
   align-self: end; min-height: 44px; padding: 0 14px; color: #ffd2d2; background: rgba(215,53,53,.12);
   border: 1px solid rgba(255,145,145,.45); border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;
