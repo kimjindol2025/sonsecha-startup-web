@@ -345,6 +345,22 @@ function candidateStepState(candidate, index) {
   return { checked, decision };
 }
 
+function candidateMarketResearch(candidate) {
+  const research = candidate?.marketResearch && typeof candidate.marketResearch === 'object' ? candidate.marketResearch : {};
+  return [
+    ['아이디어·운영 방식', research.idea],
+    ['주요 고객·이용 이유', research.customer],
+    ['차별화 가정', research.differentiation],
+    ['주변 수요 조사', research.survey],
+    ['경쟁 세차장 조사', research.competitors],
+    ['토지 주변환경 조사', research.surroundings],
+    ['근거·출처', research.sources],
+    ['예상 장점과 위험', research.advantages],
+    ['추가 조사 필요사항', research.risks],
+    ['시장조사 상태', ({ unreviewed: '미확인', possible: '자료 확인', field: '현장 확인', needs_review: '추가 조사 필요' })[research.status] || '미확인'],
+  ].map(([label, value]) => [label, String(value || '').trim() || '미입력']);
+}
+
 function documentRow(label, value, options = {}) {
   const className = options.emphasis ? ' class="emphasis"' : '';
   return `<div${className}><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
@@ -368,6 +384,7 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
   }).join('') : '';
   const candidateNotes = candidate?.detailNotes && typeof candidate.detailNotes === 'object'
     ? Object.values(candidate.detailNotes).map((value) => String(value).trim()).filter(Boolean) : [];
+  const candidateMarketRows = candidateMarketResearch(candidate);
   const scenarios = scenarioCalculations(calc);
   const executiveSummary = `${plan.basic.ownerName || '예비 창업자'}는 ${plan.basic.targetRegion || '희망 지역 확인 필요'}에서 ${plan.basic.floorArea || '규모 확인 필요'}평, ${plan.basic.bayCount || '수량 확인 필요'}베이 규모의 ${plan.basic.washType || '형태 확인 필요'} 창업을 검토한다. 목표 개업일은 ${plan.basic.openingDate || '확인 필요'}이며, 준비기간 ${plan.basic.preparationMonths || '확인 필요'}개월과 공사기간 ${plan.basic.constructionWeeks || '확인 필요'}주를 가정했다. 현재 입력 기준 예상 창업비는 ${formatMoney(calc.budgetTotal)}, 자금 확보계획은 ${formatMoney(calc.fundingTotal)}으로 ${calc.gap >= 0 ? `예상 여유자금은 ${formatMoney(calc.gap)}` : `추가 확보가 필요한 금액은 ${formatMoney(Math.abs(calc.gap))}`}이다.`;
 
@@ -393,7 +410,7 @@ function planDocumentHtml(plan, calc, candidate, candidateLabel = '') {
 
     <section data-document-section="market"><h3>07. 시장·상권 조사 정리</h3><div class="plan-document-research"><article><span>예상 고객과 수요</span><p>${escapeHtml(plan.research.targetCustomers || '확인 필요')}</p></article><article><span>주변 경쟁업체</span><p>${escapeHtml(plan.research.competitorMemo || '확인 필요')}</p></article><article><span>차량 유입·동선</span><p>${escapeHtml(plan.research.trafficMemo || '확인 필요')}</p></article><article><span>지원사업·정책자금</span><p>${escapeHtml(plan.research.supportMemo || '확인 필요')}</p></article></div></section>
 
-    ${candidate ? `<section data-document-section="candidate"><h3>08. 후보지 12단계 검토 기록</h3><p>${escapeHtml(candidateLabel)} · ${escapeHtml(candidate.address || '주소 미입력')} · 진행 ${linkedMetrics.completed}/12 · 종합 판정 ${escapeHtml(linkedMetrics.status)}</p><ol class="plan-document-stages">${stageRows}</ol>${candidateNotes.length ? `<h4>후보지에 작성된 메모</h4><ul class="plan-document-notes">${candidateNotes.map((note) => `<li>${escapeHtml(note)}</li>`).join('')}</ul>` : '<p class="plan-document-empty">작성된 후보지 세부 메모가 없습니다.</p>'}<small>체크와 판정은 사용자의 기존 후보지 기록을 옮긴 것이며 허가 가능성을 자동 확정하지 않습니다.</small></section>` : `<section data-document-section="candidate"><h3>08. 후보지 검토 기록</h3><p>연결된 후보지가 없습니다. 후보지가 정해지면 1~12단계 기록을 연결해 검토 근거를 보완할 수 있습니다.</p></section>`}
+    ${candidate ? `<section data-document-section="candidate"><h3>08. 후보지 12단계 검토 기록</h3><p>${escapeHtml(candidateLabel)} · ${escapeHtml(candidate.address || '주소 미입력')} · 진행 ${linkedMetrics.completed}/12 · 종합 판정 ${escapeHtml(linkedMetrics.status)}</p><h4>01-1 아이디어 검증·시장조사</h4><div class="plan-document-detail-grid candidate-market-print">${candidateMarketRows.map(([label, value]) => documentRow(label, value)).join('')}</div><ol class="plan-document-stages">${stageRows}</ol>${candidateNotes.length ? `<h4>후보지에 작성된 메모</h4><ul class="plan-document-notes">${candidateNotes.map((note) => `<li>${escapeHtml(note)}</li>`).join('')}</ul>` : '<p class="plan-document-empty">작성된 후보지 세부 메모가 없습니다.</p>'}<small>체크와 판정은 사용자의 기존 후보지 기록을 옮긴 것이며 허가 가능성을 자동 확정하지 않습니다.</small></section>` : `<section data-document-section="candidate"><h3>08. 후보지 검토 기록</h3><p>연결된 후보지가 없습니다. 후보지가 정해지면 1~12단계 기록을 연결해 검토 근거를 보완할 수 있습니다.</p></section>`}
 
     <section data-document-section="sources"><h3>09. 확인할 공식 자료</h3><div class="plan-document-source-list">${officialSources.map((source) => `<div><span>${escapeHtml(source.kind)}</span><strong>${escapeHtml(source.title)}</strong><p>${escapeHtml(source.description)}</p><a href="${escapeHtml(source.href)}" target="_blank" rel="noopener noreferrer">공식 자료 열기 ↗</a></div>`).join('')}</div></section>
 
@@ -458,9 +475,12 @@ function fullPlanText(plan, calc, candidate, candidateLabel = '') {
     const metrics = candidateMetrics(candidate);
     const candidateNotes = candidate.detailNotes && typeof candidate.detailNotes === 'object'
       ? Object.values(candidate.detailNotes).map((value) => String(value).trim()).filter(Boolean) : [];
+    const marketRows = candidateMarketResearch(candidate);
     lines.push('', `6. 후보지 검토 · ${candidateLabel}`,
       `주소: ${candidate.address || '주소 미입력'}`,
       `진행: ${metrics.completed}/12 · 종합 판정: ${metrics.status}`,
+      '01-1 아이디어 검증·시장조사:',
+      ...marketRows.map(([label, value]) => `- ${label}: ${value}`),
       ...roadmapSteps.map((label, index) => {
         const status = candidateStepState(candidate, index);
         return `${index + 1}. ${label}: ${status.checked ? '체크 완료' : '미완료'} · ${status.decision}`;
