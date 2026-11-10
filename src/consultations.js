@@ -146,7 +146,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
   modal.setAttribute('aria-labelledby', 'consultationTitle');
   modal.innerHTML = `
     <header class="consultation-modal-header">
-      <div><p>CANDIDATE REVIEW REQUEST</p><h2 id="consultationTitle">후보지 검토 요청서</h2><span>선택하고 확인한 자료만 대한이엔지에 전달됩니다.</span></div>
+      <div><p>CANDIDATE REVIEW REQUEST</p><h2 id="consultationTitle">후보지 검토 요청서</h2><span>선택하고 확인한 자료만 대한이엔지에 전달됩니다. 상담 후 장비·설계·인허가·공사·운영관리 제안과 견적 안내가 이어질 수 있습니다.</span></div>
       <button type="button" data-consultation-close aria-label="닫기">×</button>
     </header>
     <div class="consultation-body" data-consultation-body></div>
@@ -505,7 +505,7 @@ export function initializeConsultations({ getState, getActiveCandidate, saveCand
         <section class="preview-block"><h3>연락처</h3><p>이름: ${escapeHtml(contact.name || '미입력')} · 연락처: ${escapeHtml(contact.phone || '미입력')} · 이메일: ${escapeHtml(contact.email || '미입력')}</p></section>
         <section class="preview-block"><h3>상담 범위</h3><p>${escapeHtml(requestScopeLabels[snapshot.requestScope] || requestScopeLabels.remaining)}</p><p>${(snapshot.serviceNeeds || []).map((item) => escapeHtml(serviceNeedLabels[item] || item)).join(' · ') || '특정 분야 미선택 · 관리자 검토 후 안내'}</p></section>
         <section class="preview-block"><h3>상담 질문</h3><p>${escapeHtml(question)}</p></section>
-        <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 정보, 진행상태, 메모와 사진을 대한이엔지에 전달하고, 문의 응대를 위해 연락처를 수집·이용하는 데 동의합니다. <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 안내</a></span></label>
+        <label class="consultation-consent"><input type="checkbox" data-consent><span>선택한 후보지 주소·사업 형태·체크·판정·메모·사진과 이름·연락처·이메일을 대한이엔지에 전달하고, 상담 응대 및 상담 후 장비·설계·인허가·공사·운영관리 제안과 견적 안내에 수집·이용하는 데 동의합니다. 사진에 위치정보·차량번호·사람 얼굴이 없는지 확인했습니다. <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 안내</a></span></label>
         <p class="consultation-send-status" data-send-status></p>
         <div class="consultation-footer"><button type="button" class="secondary" data-preview-back>다시 선택</button><button type="button" data-send>동의 후 전송</button></div>
       </div>
