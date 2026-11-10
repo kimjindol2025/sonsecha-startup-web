@@ -56,6 +56,9 @@ const detailFeasibilityLabels = {
   possible: '가능',
   hold: '보류',
 };
+const defaultMarketResearch = () => ({
+  idea: '', customer: '', differentiation: '', survey: '', competitors: '', surroundings: '', sources: '', advantages: '', risks: '', status: 'unreviewed',
+});
 let businessPlanApp = null;
 const stepOneCheckGroups = [
   {
@@ -516,6 +519,9 @@ function makeCandidate(seed = {}) {
     permit: seed.permit && typeof seed.permit === 'object' ? seed.permit : undefined,
     washType: typeof seed.washType === 'string' ? seed.washType : '',
     bayCount: typeof seed.bayCount === 'string' ? seed.bayCount : '',
+    marketResearch: seed.marketResearch && typeof seed.marketResearch === 'object'
+      ? { ...defaultMarketResearch(), ...seed.marketResearch }
+      : defaultMarketResearch(),
     consultationNotes: Array.isArray(seed.consultationNotes) ? seed.consultationNotes : [],
   };
 }
@@ -614,6 +620,10 @@ function renderCandidatePanel(fields) {
   fields.querySelector('[data-candidate-field="status"]').value = active.status;
   fields.querySelector('[data-candidate-field="washType"]').value = active.washType;
   fields.querySelector('[data-candidate-field="bayCount"]').value = active.bayCount;
+  const marketResearch = { ...defaultMarketResearch(), ...(active.marketResearch || {}) };
+  fields.querySelectorAll('[data-market-field]').forEach((input) => {
+    input.value = typeof marketResearch[input.dataset.marketField] === 'string' ? marketResearch[input.dataset.marketField] : '';
+  });
   const removeButton = fields.querySelector('[data-candidate-remove]');
   removeButton.disabled = candidateState.candidates.length === 1;
   removeButton.title = removeButton.disabled ? '후보지는 최소 1개가 필요합니다.' : '현재 후보지 삭제';
@@ -676,6 +686,22 @@ function injectCandidateFields(group) {
       <span>예상 베이 수</span>
       <input type="text" data-candidate-field="bayCount" inputmode="numeric" placeholder="예: 3베이">
     </label>
+    <details class="market-research-panel" open>
+      <summary><strong>01-1 아이디어 검증·시장조사</strong><span>고객·수요·경쟁·주변환경을 후보지별로 기록합니다.</span></summary>
+      <p class="market-research-note">이 조사는 성공이나 매출을 자동 판정하지 않습니다. 확인한 사실·가정·추가 조사 필요사항을 나누어 기록하세요.</p>
+      <div class="market-research-grid">
+        <label><span>아이디어와 운영 방식</span><textarea data-market-field="idea" maxlength="1200" placeholder="예: 손세차·디테일링 복합형, 예약 중심 운영"></textarea></label>
+        <label><span>주요 고객과 이용 이유</span><textarea data-market-field="customer" maxlength="1200" placeholder="예: 인근 아파트 거주자, 법인 차량, 주말 수요"></textarea></label>
+        <label><span>차별화 가정</span><textarea data-market-field="differentiation" maxlength="1200" placeholder="고객이 이 후보지를 선택할 것이라고 생각한 이유"></textarea></label>
+        <label><span>주변 수요 조사</span><textarea data-market-field="survey" maxlength="1800" placeholder="주거지·상업시설·차량 흐름·주요 시간대·조사 반경"></textarea></label>
+        <label><span>경쟁 세차장 조사</span><textarea data-market-field="competitors" maxlength="1800" placeholder="업체명·거리·방식·가격·영업시간·리뷰·강점과 불만"></textarea></label>
+        <label><span>토지 주변환경 조사</span><textarea data-market-field="surroundings" maxlength="1800" placeholder="인접 용도·주거지·학교·도로·주차·소음·개발계획"></textarea></label>
+        <label><span>근거·출처</span><textarea data-market-field="sources" maxlength="1200" placeholder="지도·현장사진·방문일·URL·담당자·확인일"></textarea></label>
+        <label><span>예상 장점과 위험</span><textarea data-market-field="advantages" maxlength="1200" placeholder="장점과 우려사항을 함께 기록"></textarea></label>
+        <label><span>추가 조사 필요사항</span><textarea data-market-field="risks" maxlength="1200" placeholder="아직 모르는 내용, 고객에게 물어볼 질문, 기관 확인사항"></textarea></label>
+        <label><span>시장조사 상태</span><select data-market-field="status"><option value="unreviewed">미확인</option><option value="possible">자료 확인</option><option value="field">현장 확인</option><option value="needs_review">추가 조사 필요</option></select></label>
+      </div>
+    </details>
     <button type="button" class="candidate-remove" data-candidate-remove>현재 후보지 삭제</button>
     <p class="local-save-state" aria-live="polite">이 기기에 저장됨</p>
   `;
@@ -697,6 +723,19 @@ function injectCandidateFields(group) {
       }
       const state = fields.querySelector('.local-save-state');
       state.textContent = '저장됨 ✓';
+      clearTimeout(input.saveTimer);
+      input.saveTimer = setTimeout(() => { state.textContent = '이 기기에 저장됨'; }, 1200);
+    });
+  });
+  fields.querySelectorAll('[data-market-field]').forEach((input) => {
+    input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', () => {
+      const active = getActiveCandidate();
+      const marketResearch = { ...defaultMarketResearch(), ...(active.marketResearch || {}) };
+      marketResearch[input.dataset.marketField] = input.value.slice(0, input.tagName === 'TEXTAREA' ? 1800 : 80);
+      active.marketResearch = marketResearch;
+      saveCandidateState();
+      const state = fields.querySelector('.local-save-state');
+      state.textContent = '시장조사 저장됨 ✓';
       clearTimeout(input.saveTimer);
       input.saveTimer = setTimeout(() => { state.textContent = '이 기기에 저장됨'; }, 1200);
     });
@@ -1727,6 +1766,7 @@ document.querySelector('#resetButton').addEventListener('click', () => {
   active.detailChecks = [];
   active.detailNotes = {};
   active.detailStatuses = {};
+  active.marketResearch = defaultMarketResearch();
   saveCandidateState();
   checkboxes.forEach((box) => {
     box.checked = false;

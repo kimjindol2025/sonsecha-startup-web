@@ -410,6 +410,20 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
   border: 1px solid rgba(255,145,145,.45); border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;
 }
 .candidate-remove:disabled { opacity: .38; cursor: not-allowed; }
+.market-research-panel { grid-column: 1 / -1; margin-top: 6px; padding: 0 14px 14px; background: #f7faff; border: 1px solid #cbdcff; border-radius: 7px; }
+.market-research-panel summary { display: flex; flex-wrap: wrap; gap: 7px 14px; align-items: center; min-height: 54px; color: var(--blue); cursor: pointer; list-style: none; }
+.market-research-panel summary::-webkit-details-marker { display: none; }
+.market-research-panel summary::after { content: "+"; margin-left: auto; font-size: 20px; }
+.market-research-panel[open] summary::after { content: "−"; }
+.market-research-panel summary strong { font-size: 14px; }
+.market-research-panel summary span { color: var(--muted); font-size: 11px; }
+.market-research-note { margin: 0 0 12px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.market-research-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.market-research-grid label { display: block; }
+.market-research-grid label > span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 11px; font-weight: 800; }
+.market-research-grid textarea { display: block; width: 100%; min-height: 74px; resize: vertical; padding: 9px 10px; color: var(--ink); background: #fff; border: 1px solid #bbc8d9; border-radius: 4px; font: 13px/1.5 Pretendard, "Noto Sans KR", sans-serif; }
+.market-research-grid textarea:focus, .market-research-grid select:focus { outline: 3px solid rgba(20,87,255,.14); border-color: var(--blue); }
+.market-research-grid select { width: 100%; height: 44px; padding: 0 10px; color: var(--ink); background: #fff; border: 1px solid #bbc8d9; border-radius: 4px; font: inherit; }
 .local-save-state { grid-column: 1 / -1; margin: 0; color: var(--blue) !important; font-size: 10px !important; text-align: right; }
 .step-one-checklist { display: grid; gap: 12px; margin: 0 0 18px; }
 .step-one-check-group { overflow: hidden; background: white; border: 1px solid #d8e2ef; border-radius: 7px; }
@@ -1354,6 +1368,8 @@ body.consultation-open { overflow: hidden; }
   .candidate-card-metrics b { font-size: 8px; }
   .candidate-add { min-height: 48px; }
   .candidate-fields input, .candidate-fields select { height: 48px; font-size: 16px; }
+  .market-research-grid { grid-template-columns: 1fr; }
+  .market-research-grid textarea { font-size: 16px; }
   .candidate-remove { min-height: 48px; }
   .step-one-check-group summary { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 13px 12px; }
   .step-one-check-group summary::after { grid-column: 2; grid-row: 1; }
