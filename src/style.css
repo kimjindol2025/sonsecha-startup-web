@@ -405,9 +405,14 @@ h1 em { color: var(--blue); font-style: normal; font-family: "Gowun Batang", ser
   border: 2px solid transparent; border-radius: 4px; font: inherit;
 }
 .candidate-fields input:focus, .candidate-fields select:focus { outline: none; border-color: #78a3ff; }
-.step-subfeature-label { display: inline-block; margin-top: 7px; padding: 4px 8px; color: var(--blue); background: #edf4ff; border: 1px solid #c5d8ff; border-radius: 4px; font-size: 10px; font-weight: 800; line-height: 1.45; }
-.step-subfeature-link { text-decoration: none; cursor: pointer; }
+.step-subfeature-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.step-subfeature-card { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 9px 10px; color: var(--ink); background: #f5f8ff; border: 1px solid #c5d8ff; border-radius: 5px; text-decoration: none; }
+.step-subfeature-card b { flex: 0 0 auto; color: var(--blue); font-size: 11px; }
+.step-subfeature-card span { display: grid; gap: 1px; min-width: 0; }
+.step-subfeature-card strong { font-size: 11px; line-height: 1.35; }
+.step-subfeature-card small { color: var(--muted); font-size: 9px; line-height: 1.35; }
 .step-subfeature-link:hover { color: #fff; background: var(--blue); border-color: var(--blue); }
+.step-subfeature-link:hover small { color: #dbe8ff; }
 .candidate-remove {
   align-self: end; min-height: 44px; padding: 0 14px; color: #ffd2d2; background: rgba(215,53,53,.12);
   border: 1px solid rgba(255,145,145,.45); border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;
@@ -1373,6 +1378,7 @@ body.consultation-open { overflow: hidden; }
   .candidate-fields input, .candidate-fields select { height: 48px; font-size: 16px; }
   .market-research-grid { grid-template-columns: 1fr; }
   .market-research-grid textarea { font-size: 16px; }
+  .step-subfeature-list { grid-template-columns: 1fr; }
   .candidate-remove { min-height: 48px; }
   .step-one-check-group summary { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 13px 12px; }
   .step-one-check-group summary::after { grid-column: 2; grid-row: 1; }
