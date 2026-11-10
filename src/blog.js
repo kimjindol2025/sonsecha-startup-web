@@ -94,9 +94,61 @@ function renderSourceArticle(slug) {
   flush(); return `<section class="blog-source-body">${blocks.join('')}</section>`;
 }
 
+const blogSections = [
+  { id: 'all', label: '전체 글', description: '후보지 검토부터 개업·운영까지' },
+  { id: 'candidate', label: '01 후보지·입지', description: '후보지, 서류, 현장과 기관 확인' },
+  { id: 'building', label: '02 건축·계약', description: '용도변경, 임대계약과 건물주 협의' },
+  { id: 'wastewater', label: '03 폐수·하수', description: '폐수량, 처리시설, 배관과 신고' },
+  { id: 'construction', label: '04 공사·설비', description: '승인 도면과 시설공사 기록' },
+  { id: 'operation', label: '05 개업·운영', description: '사업자등록, 보험, 직원과 운영' },
+];
+const sectionForPost = (post) => {
+  const category = String(post.category || '');
+  if (/^01\s·|현장 확인|후보지|창업 준비/.test(category)) return 'candidate';
+  if (/^02\s·|^03\s·|부동산·건축|계약/.test(category)) return 'building';
+  if (/^04\s·|^05\s·|폐수시설/.test(category)) return 'wastewater';
+  if (/공사 준비/.test(category)) return 'construction';
+  if (/개업·운영/.test(category)) return 'operation';
+  return 'candidate';
+};
+const searchablePostText = (post) => [post.category, post.title, post.description, post.intro, post.site, post.next].filter(Boolean).join(' ').toLocaleLowerCase('ko-KR');
+const blogListState = { section: 'all', query: '' };
+
 function postCard(post) { return `<article><span>${escapeHtml(post.category)} · NAVER READY</span><h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.intro || post.description)}</p><small>실무 안내 · 확인 순서 · 사이트 활용법</small><a href="${articlePath(post.slug)}">본문 읽기 →</a></article>`; }
 
-function renderList() { const list = document.querySelector('#blogList'); if (list) list.innerHTML = allPosts.map(postCard).join(''); }
+function renderFilters() {
+  const root = document.querySelector('#blogFilters');
+  if (!root) return;
+  root.innerHTML = blogSections.map((section) => `<button type="button" class="blog-filter${section.id === blogListState.section ? ' is-active' : ''}" data-blog-section="${section.id}" aria-pressed="${section.id === blogListState.section}"><strong>${escapeHtml(section.label)}</strong><span>${escapeHtml(section.description)}</span></button>`).join('');
+  root.querySelectorAll('[data-blog-section]').forEach((button) => button.addEventListener('click', () => { blogListState.section = button.dataset.blogSection || 'all'; renderList(); renderFilters(); }));
+}
+
+function renderList() {
+  const list = document.querySelector('#blogList');
+  if (!list) return;
+  const query = blogListState.query.trim().toLocaleLowerCase('ko-KR');
+  const filtered = allPosts.filter((post) => (blogListState.section === 'all' || sectionForPost(post) === blogListState.section) && (!query || searchablePostText(post).includes(query)));
+  const summary = document.querySelector('#blogResultSummary');
+  if (summary) summary.textContent = query ? `“${blogListState.query.trim()}” 검색 결과 ${filtered.length}편` : `${filtered.length}편의 글 · 메인페이지 구역별 안내`;
+  list.innerHTML = filtered.length ? filtered.map(postCard).join('') : '<div class="blog-empty"><strong>찾는 글이 없습니다.</strong><span>다른 검색어를 입력하거나 전체 글을 선택해 보세요.</span></div>';
+}
+
+function initBlogList() {
+  const list = document.querySelector('#blogList');
+  if (!list) return;
+  const library = document.createElement('section');
+  library.className = 'blog-library';
+  library.setAttribute('aria-label', '블로그 검색 및 구역별 탐색');
+  library.innerHTML = '<div class="blog-library-tools"><label class="blog-search-label" for="blogSearch">블로그 검색</label><div class="blog-search-row"><input id="blogSearch" type="search" autocomplete="off" placeholder="예: 용도변경, 폐수, 임대계약, 전기" aria-describedby="blogSearchHelp"><button id="blogSearchClear" type="button" hidden>검색어 지우기</button></div><p id="blogSearchHelp" class="blog-search-help">메인페이지의 창업 순서와 시설공사 구역에 맞춰 글을 찾을 수 있습니다.</p></div><nav id="blogFilters" class="blog-filters" aria-label="블로그 구역 필터"></nav><p id="blogResultSummary" class="blog-result-summary" aria-live="polite"></p>';
+  list.parentNode.insertBefore(library, list);
+  library.appendChild(list);
+  const input = document.querySelector('#blogSearch');
+  const clear = document.querySelector('#blogSearchClear');
+  input?.addEventListener('input', () => { blogListState.query = input.value.slice(0, 80); if (clear) clear.hidden = !blogListState.query; renderList(); });
+  clear?.addEventListener('click', () => { input.value = ''; blogListState.query = ''; clear.hidden = true; input.focus(); renderList(); });
+  renderFilters();
+  renderList();
+}
 
 function renderPost() {
   const root = document.querySelector('#blogPost'); if (!root) return;
@@ -125,4 +177,4 @@ function renderPost() {
   root.innerHTML = `<header class="blog-hero"><p class="blog-kicker">${escapeHtml(post.category)}</p><h1>${escapeHtml(post.title)}</h1><p class="blog-lead">${escapeHtml(post.description)}</p><div class="blog-meta"><span>2026년 11월 10일</span><span>${sourceMarkup ? '원문 기반 실무 안내 · 읽는 시간 약 8분' : practical || documentDetail || longform ? '본문·실무 안내 포함 · 읽는 시간 약 7분' : '읽는 시간 약 4분'}</span></div></header><div class="blog-body">${returnMarkup}${articleBody}<h2>사이트에서는 이렇게 활용합니다</h2><p>${escapeHtml(post.site)}</p><p class="blog-note">이 글과 사이트의 안내는 일반적인 준비 정보이며 법률 자문이나 허가 완료 판정이 아닙니다. 최종 확인은 소재지 관할 기관과 전문가에게 요청하세요.</p><h2>다음 단계</h2><p>${escapeHtml(post.next)}</p><section class="blog-cta"><p class="blog-kicker">CONTINUE</p><h2>확인한 내용을<br>후보지 기록으로 남겨보세요.</h2><div><a class="button primary" href="${escapeHtml(post.link)}">관련 기능 열기</a><a class="button" href="/blog">블로그 목록</a></div></section><nav class="blog-pager" aria-label="글 이동">${previous ? `<a href="${articlePath(previous.slug)}">← ${escapeHtml(previous.title)}</a>` : '<span></span>'}${next ? `<a href="${articlePath(next.slug)}">${escapeHtml(next.title)} →</a>` : '<span></span>'}</nav></div>`;
 }
 
-renderList(); renderPost();
+initBlogList(); renderPost();
