@@ -1,0 +1,2 @@
+.blog-return-button{display:inline-flex;align-items:center;min-height:36px;margin:0 0 28px;padding:0 13px;color:var(--blue);background:#edf4ff;border:1px solid #b8cff5;border-radius:5px;font-size:12px;font-weight:900;text-decoration:none}
+.blog-return-button:hover{background:#dceaff;border-color:var(--blue)}

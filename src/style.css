@@ -1473,3 +1473,5 @@ body.consultation-open { overflow: hidden; }
 }
 /* Keep the disabled menu hidden before scripts run, including mobile layouts. */
 [data-workspace-link][hidden] { display: none !important; }
+.usage-guide-links a.blog-detail-link { min-height: 34px; padding: 0 12px; border-radius: 5px; font-size: 11px; box-shadow: 0 2px 0 rgba(10,42,96,.16); }
+.usage-guide-links a.blog-detail-link:hover { background: #0d45bd; transform: translateY(-1px); }

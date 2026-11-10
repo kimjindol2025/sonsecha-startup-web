@@ -442,6 +442,7 @@ function hydrateGuide() {
   document.querySelectorAll('.step-card').forEach((card, index) => {
     const match = guideSteps[index];
     if (!match) return;
+    card.id = `guide-step-${match[1]}`;
     let detail = card.querySelector('.step-detail');
     if (!detail) {
       detail = document.createElement('div');
@@ -1568,9 +1569,12 @@ function openUsageGuide(id, trigger) {
   usageGuideElements.kicker.textContent = guide.kicker;
   usageGuideElements.title.textContent = guide.title;
   usageGuideElements.description.textContent = guide.description;
-  usageGuideElements.links.innerHTML = guide.links.map((link) => `
-    <a href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)} <span>↗</span></a>
-  `).join('');
+  usageGuideElements.links.innerHTML = guide.links.map((link) => {
+    const destination = new URL(link.href, globalThis.location.origin);
+    destination.searchParams.set('from', 'top');
+    destination.searchParams.set('check', id);
+    return `<a class="blog-detail-link" href="${escapeHtml(`${destination.pathname}${destination.search}${destination.hash}`)}">${escapeHtml(link.label)} <span>↗</span></a>`;
+  }).join('');
   usageGuideElements.steps.innerHTML = guide.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
   usageGuideElements.checks.innerHTML = guide.checks.map((check) => `<li>${escapeHtml(check)}</li>`).join('');
   usageGuideElements.record.textContent = guide.record;
@@ -1761,6 +1765,15 @@ hydrateGuide();
 candidateState = loadCandidateState();
 saveCandidateState();
 hydrateDetailChecks();
+if (new URLSearchParams(globalThis.location.search).get('from') === 'blog') {
+  const returnCheck = new URLSearchParams(globalThis.location.search).get('check');
+  requestAnimationFrame(() => {
+    const target = returnCheck
+      ? document.querySelector(`input[data-detail-check="${returnCheck}"]`)?.closest('li')
+      : document.querySelector('#guide-step-08');
+    target?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
+}
 loadCandidateData();
 initializeConsultations({
   getState: () => candidateState,
