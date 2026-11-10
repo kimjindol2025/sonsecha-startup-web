@@ -28,4 +28,36 @@ if [[ -z "${AI_PRODUCT_API_KEY:-}" ]]; then
   export AI_PRODUCT_API_KEY
 fi
 
-exec /usr/bin/node ./server.mjs
+child_pid=''
+stopping=0
+forward_signal() {
+  stopping=1
+  if [[ -n "$child_pid" ]]; then
+    kill -TERM "$child_pid" 2>/dev/null || true
+  fi
+}
+trap forward_signal INT TERM
+
+restart_delay=1
+while true; do
+  /usr/bin/node ./server.mjs &
+  child_pid=$!
+  if wait "$child_pid"; then
+    exit_code=0
+  else
+    exit_code=$?
+  fi
+  child_pid=''
+
+  if (( stopping == 1 || exit_code == 0 )); then
+    exit "$exit_code"
+  fi
+
+  echo "[server] child exited with code $exit_code; retrying in ${restart_delay}s" >&2
+  sleep "$restart_delay" &
+  sleep_pid=$!
+  wait "$sleep_pid" || true
+  if (( stopping == 1 )); then exit 0; fi
+  restart_delay=$((restart_delay * 3 / 2))
+  if (( restart_delay > 15 )); then restart_delay=15; fi
+done

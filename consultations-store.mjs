@@ -361,18 +361,32 @@ export async function createConsultationStore(dataRoot) {
       const count = Number(database.prepare('SELECT COUNT(*) AS count FROM consultation_attachments WHERE consultation_id = ? AND candidate_ref = ?').get(row.id, storedCandidateRef).count);
       if (count >= 10) throw new Error('PHOTO_LIMIT');
       const now = new Date().toISOString();
-      const result = database.prepare(`
-        INSERT INTO consultation_attachments (consultation_id, original_name, candidate_ref, mime, size, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(row.id, originalName, storedCandidateRef, mime, data.length, now);
-      const attachmentId = Number(result.lastInsertRowid);
-      const directory = resolve(uploadRoot, String(row.id));
-      await mkdir(directory, { recursive: true });
-      const pathname = resolve(directory, `${attachmentId}${extension}`);
-      await writeFile(pathname, data, { mode: 0o600 });
-      database.prepare('UPDATE consultation_attachments SET stored_path = ? WHERE id = ?').run(pathname, attachmentId);
-      database.prepare('UPDATE consultations SET updated_at = ? WHERE id = ?').run(now, row.id);
-      return detail(getByReceipt.get(receipt));
+      let transactionStarted = false;
+      let pathname = '';
+      try {
+        database.exec('BEGIN IMMEDIATE');
+        transactionStarted = true;
+        const result = database.prepare(`
+          INSERT INTO consultation_attachments (consultation_id, original_name, candidate_ref, mime, size, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(row.id, originalName, storedCandidateRef, mime, data.length, now);
+        const attachmentId = Number(result.lastInsertRowid);
+        const directory = resolve(uploadRoot, String(row.id));
+        await mkdir(directory, { recursive: true });
+        pathname = resolve(directory, `${attachmentId}${extension}`);
+        await writeFile(pathname, data, { mode: 0o600 });
+        database.prepare('UPDATE consultation_attachments SET stored_path = ? WHERE id = ?').run(pathname, attachmentId);
+        database.prepare('UPDATE consultations SET updated_at = ? WHERE id = ?').run(now, row.id);
+        database.exec('COMMIT');
+        transactionStarted = false;
+        return detail(getByReceipt.get(receipt));
+      } catch (error) {
+        if (transactionStarted) {
+          try { database.exec('ROLLBACK'); } catch { /* preserve the original failure */ }
+        }
+        if (pathname) await unlink(pathname).catch(() => {});
+        throw error;
+      }
     },
     async attachment(receipt, attachmentId, key = '', admin = false) {
       const row = admin ? getByReceipt.get(receipt) : authorized(receipt, key);

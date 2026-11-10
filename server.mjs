@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { isIP } from 'node:net';
@@ -55,6 +55,7 @@ function securityHeaders(extra = {}) {
   return {
     'content-security-policy': "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
     'referrer-policy': 'strict-origin-when-cross-origin',
+    'permissions-policy': 'camera=(), geolocation=(), microphone=()',
     'x-content-type-options': 'nosniff',
     'x-frame-options': 'DENY',
     ...extra,
@@ -126,6 +127,13 @@ async function writeJsonAtomic(pathname, value) {
   await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
   await rename(temporaryPath, pathname);
   await chmod(pathname, 0o600);
+}
+
+let catalogWriteQueue = Promise.resolve();
+function withCatalogWriteLock(task) {
+  const next = catalogWriteQueue.catch(() => {}).then(task);
+  catalogWriteQueue = next.catch(() => {});
+  return next;
 }
 
 await mkdir(dataRoot, { recursive: true });
@@ -582,12 +590,6 @@ function validateProduct(input, existingId = '') {
   };
 }
 
-function makePassword() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const block = () => Array.from({ length: 4 }, () => alphabet[randomInt(alphabet.length)]).join('');
-  return `SW-${block()}-${block()}-${block()}`;
-}
-
 function passwordRecord(password) {
   const salt = randomBytes(24).toString('hex');
   return {
@@ -605,11 +607,16 @@ async function ensureCredentials() {
     return parsed;
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
-    const initialPassword = makePassword();
+    const passwordFile = (process.env.ADMIN_INITIAL_PASSWORD_FILE || '').trim();
+    const initialPassword = passwordFile
+      ? (await readFile(resolve(root, passwordFile), 'utf8')).trim()
+      : (process.env.ADMIN_INITIAL_PASSWORD || '').trim();
+    if (initialPassword.length < 12 || initialPassword.length > 200) {
+      throw new Error('ADMIN_INITIAL_PASSWORD_REQUIRED');
+    }
     const record = passwordRecord(initialPassword);
     await writeJsonAtomic(authDataPath, record);
-    console.log(`[admin] Initial password: ${initialPassword}`);
-    console.log('[admin] Change the initial password after the first login.');
+    console.log('[admin] Initial credentials stored. Change the password after the first login.');
     return record;
   }
 }
@@ -671,6 +678,21 @@ function requestAddress(request) {
   return address || remoteAddress;
 }
 
+function sameOriginRequest(request) {
+  const origin = request.headers.origin;
+  if (typeof origin !== 'string' || !origin.trim()) return true;
+  if (origin === 'null') return false;
+  try {
+    const forwardedProto = String(request.headers['x-forwarded-proto'] || '').split(',')[0].trim().toLowerCase();
+    const protocol = forwardedProto === 'https' || forwardedProto === 'http'
+      ? forwardedProto
+      : production ? 'https' : 'http';
+    return new URL(origin).origin === `${protocol}://${request.headers.host}`;
+  } catch {
+    return false;
+  }
+}
+
 function loginBlocked(address) {
   const entry = loginAttempts.get(address);
   if (!entry) return false;
@@ -716,11 +738,13 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'POST' && url.pathname === '/api/ai/products') {
     if (!isAiProductRequestAuthorized(request)) return sendError(response, 401, 'AI 상품 등록 인증이 필요합니다.');
-    const products = await loadProducts();
-    const product = validateProduct(await readJsonBody(request));
-    products.unshift(product);
-    await writeJsonAtomic(productDataPath, products);
-    return sendJson(response, 201, { product });
+    return withCatalogWriteLock(async () => {
+      const products = await loadProducts();
+      const product = validateProduct(await readJsonBody(request));
+      products.unshift(product);
+      await writeJsonAtomic(productDataPath, products);
+      return sendJson(response, 201, { product });
+    });
   }
 
   if (request.method === 'POST' && url.pathname === '/api/feedback') {
@@ -925,30 +949,36 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === 'PUT' && url.pathname === '/api/admin/content') {
-    const body = await readJsonBody(request);
-    const content = validateContent(body.content);
-    await writeJsonAtomic(contentDataPath, content);
-    return sendJson(response, 200, { content });
+    return withCatalogWriteLock(async () => {
+      const body = await readJsonBody(request);
+      const content = validateContent(body.content);
+      await writeJsonAtomic(contentDataPath, content);
+      return sendJson(response, 200, { content });
+    });
   }
 
   if (request.method === 'POST' && url.pathname === '/api/admin/products') {
-    const products = await loadProducts();
-    const product = validateProduct(await readJsonBody(request));
-    products.unshift(product);
-    await writeJsonAtomic(productDataPath, products);
-    return sendJson(response, 201, { product });
+    return withCatalogWriteLock(async () => {
+      const products = await loadProducts();
+      const product = validateProduct(await readJsonBody(request));
+      products.unshift(product);
+      await writeJsonAtomic(productDataPath, products);
+      return sendJson(response, 201, { product });
+    });
   }
 
   const productMatch = url.pathname.match(/^\/api\/admin\/products\/([^/]+)$/);
   if (request.method === 'PUT' && productMatch) {
     const productId = decodeURIComponent(productMatch[1]);
-    const products = await loadProducts();
-    const index = products.findIndex((product) => String(product.id) === productId);
-    if (index < 0) return sendError(response, 404, '상품을 찾을 수 없습니다.');
-    const product = validateProduct(await readJsonBody(request), productId);
-    products[index] = product;
-    await writeJsonAtomic(productDataPath, products);
-    return sendJson(response, 200, { product });
+    return withCatalogWriteLock(async () => {
+      const products = await loadProducts();
+      const index = products.findIndex((product) => String(product.id) === productId);
+      if (index < 0) return sendError(response, 404, '상품을 찾을 수 없습니다.');
+      const product = validateProduct(await readJsonBody(request), productId);
+      products[index] = product;
+      await writeJsonAtomic(productDataPath, products);
+      return sendJson(response, 200, { product });
+    });
   }
 
   if (request.method === 'PUT' && url.pathname === '/api/admin/password') {
@@ -1028,7 +1058,15 @@ async function serveStatic(request, response, url) {
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
-    if (url.pathname.startsWith('/api/')) return await handleApi(request, response, url);
+    if (request.method === 'GET' && url.pathname === '/healthz') {
+      return sendJson(response, 200, { status: 'ok', service: 'sonsecha-startup-web' });
+    }
+    if (url.pathname.startsWith('/api/')) {
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && !sameOriginRequest(request)) {
+        return sendError(response, 403, '허용되지 않은 요청 출처입니다.');
+      }
+      return await handleApi(request, response, url);
+    }
     if (!['GET', 'HEAD'].includes(request.method)) return sendError(response, 405, '허용되지 않은 메서드입니다.');
     return await serveStatic(request, response, url);
   } catch (error) {

@@ -111,7 +111,7 @@ await waitFor("document.querySelector('[data-plan-total=sales]').textContent ===
 assert.equal(await evaluate("document.querySelector('[data-plan-total=costs]').textContent"), '7,600,000원');
 assert.equal(await evaluate("document.querySelector('[data-plan-total=profit]').textContent"), '1,500,000원');
 assert.equal(await evaluate("document.querySelector('[data-plan-total=break-even]').textContent"), '하루 9대');
-assert.equal(await evaluate("document.querySelectorAll('[data-plan-document] > section').length"), 12);
+assert.equal(await evaluate("document.querySelectorAll('[data-plan-document] > section').length"), 16);
 assert.equal(await evaluate("document.querySelector('[data-document-section=budget]').textContent.includes('바닥·방수·배수 공사')"), true);
 assert.equal(await evaluate("document.querySelector('[data-document-section=budget]').textContent.includes('폐수처리·배관')"), true);
 assert.equal(await evaluate("document.querySelector('[data-document-section=funding]').textContent.includes('추가 확보 필요')"), true);

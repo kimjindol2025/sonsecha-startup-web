@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/package.mjs",
+    "test:health": "node scripts/test-health.mjs",
     "preview": "vite preview",
     "test:plan-browser": "node scripts/browser-smoke-business-plan.mjs",
     "test:shop-browser": "node scripts/browser-smoke-shop.mjs",

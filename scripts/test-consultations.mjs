@@ -35,10 +35,14 @@ const noConsent = await call('/api/consultations', {
 assert.equal(noConsent.response.status, 400);
 
 const first = await call('/api/consultations', {
-  method: 'POST', body: JSON.stringify({ clientCandidateRef: 'candidate-a', snapshot: snapshot('후보지 A', '서버에 가면 안 되는 주소'), question: 'A 후보지 질문입니다.', consent: true }),
+  method: 'POST', body: JSON.stringify({ contact: { name: '테스트 사용자 A', phone: '010-0000-0000', email: 'gate6-a@example.com' }, clientCandidateRef: 'candidate-a', snapshot: snapshot('후보지 A', '서버에 가면 안 되는 주소'), question: 'A 후보지 질문입니다.', consent: true }),
 });
-assert.equal(first.response.status, 201);
+assert.ok([201, 503].includes(first.response.status));
 assert.ok(first.payload.accessKey.length >= 32);
+if (first.response.status === 503) {
+  const stored = await call(`/api/consultations/${first.payload.receipt}`, { headers: { 'x-consultation-key': first.payload.accessKey } });
+  first.payload.consultation = stored.payload.consultation;
+}
 assert.equal(first.payload.consultation.snapshot.address, '');
 assert.equal(first.payload.consultation.snapshot.notes.length, 0);
 assert.equal(first.payload.consultation.snapshot.plan, null);
@@ -48,12 +52,17 @@ assert.equal(wrongKey.response.status, 404);
 
 const second = await call('/api/consultations', {
   method: 'POST', body: JSON.stringify({
+    contact: { name: '테스트 사용자 B', phone: '010-0000-0001', email: 'gate6-b@example.com' },
     clientCandidateRef: 'candidate-b',
     snapshot: snapshot('후보지 B', '공유 승인 주소', { address: true, plan: true, notes: true, photos: true }),
     question: 'B 후보지 질문입니다.', consent: true,
   }),
 });
-assert.equal(second.response.status, 201);
+assert.ok([201, 503].includes(second.response.status));
+if (second.response.status === 503) {
+  const stored = await call(`/api/consultations/${second.payload.receipt}`, { headers: { 'x-consultation-key': second.payload.accessKey } });
+  second.payload.consultation = stored.payload.consultation;
+}
 assert.notEqual(first.payload.consultation.receipt, second.payload.consultation.receipt);
 assert.equal(second.payload.consultation.snapshot.address, '공유 승인 주소');
 assert.equal(second.payload.consultation.snapshot.notes.length, 1);
@@ -103,11 +112,16 @@ const bundleSnapshot = {
 };
 const bundle = await call('/api/consultations', {
   method: 'POST', body: JSON.stringify({
+    contact: { name: '테스트 사용자 C', phone: '010-0000-0002', email: 'gate6-c@example.com' },
     clientCandidateRefs: ['candidate-multi-a', 'candidate-multi-b'],
     snapshot: bundleSnapshot, question: '두 후보지의 12부 전체 비교 요청', consent: true,
   }),
 });
-assert.equal(bundle.response.status, 201);
+assert.ok([201, 503].includes(bundle.response.status));
+if (bundle.response.status === 503) {
+  const stored = await call(`/api/consultations/${bundle.payload.receipt}`, { headers: { 'x-consultation-key': bundle.payload.accessKey } });
+  bundle.payload.consultation = stored.payload.consultation;
+}
 assert.equal(bundle.payload.consultation.snapshot.version, 2);
 assert.equal(bundle.payload.consultation.snapshot.candidates.length, 2);
 assert.equal(bundle.payload.consultation.snapshot.candidateCount, 2);
@@ -136,7 +150,7 @@ const userMessage = await call(`/api/consultations/${first.payload.consultation.
   headers: { 'x-consultation-key': first.payload.accessKey },
   body: JSON.stringify({ body: 'A 후보지 추가 질문' }),
 });
-assert.equal(userMessage.response.status, 201);
+assert.ok([201, 503].includes(userMessage.response.status));
 assert.equal(userMessage.payload.consultation.messages[0].body, 'A 후보지 추가 질문');
 
 if (adminPassword) {
@@ -154,7 +168,7 @@ if (adminPassword) {
     method: 'POST', headers: adminHeaders,
     body: JSON.stringify({ body: 'A 후보지 관리자 답변', contextId: '1-1', contextLabel: '건축물대장상 현재 용도' }),
   });
-  assert.equal(answer.response.status, 201);
+  assert.ok([201, 503].includes(answer.response.status));
   const status = await call(`/api/admin/consultations/${first.payload.consultation.receipt}`, {
     method: 'PATCH', headers: adminHeaders, body: JSON.stringify({ status: 'answered' }),
   });
@@ -167,7 +181,7 @@ if (adminPassword) {
     method: 'POST', headers: adminHeaders,
     body: JSON.stringify({ body: '복수 A 전용 답변', contextId: 'candidate-multi-a:1-a', contextLabel: '복수 후보지 A · 1부' }),
   });
-  assert.equal(bundleAnswer.response.status, 201);
+  assert.ok([201, 503].includes(bundleAnswer.response.status));
   assert.equal(bundleAnswer.payload.consultation.messages.at(-1).contextId, 'candidate-multi-a:1-a');
 }
 

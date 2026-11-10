@@ -1,0 +1,11 @@
+/home/kim/.local/state/kim-pm2/logs/sonsecha-startup-web-out.log /home/kim/.local/state/kim-pm2/logs/sonsecha-startup-web-error.log {
+  daily
+  size 10M
+  rotate 14
+  missingok
+  notifempty
+  compress
+  delaycompress
+  copytruncate
+  create 0600 kim kim
+}

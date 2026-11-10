@@ -51,7 +51,13 @@ async function navigate(url) {
   await waitFor('document.readyState === "complete"');
 }
 
-const setValue = (selector, value) => evaluate(`(() => { const element = document.querySelector(${JSON.stringify(selector)}); element.value = ${JSON.stringify(value)}; element.dispatchEvent(new Event(element.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); return element.value; })()`);
+const setValue = async (selector, value) => {
+  const tagName = await evaluate(`document.querySelector(${JSON.stringify(selector)})?.tagName`);
+  if (tagName === 'SELECT') return evaluate(`(() => { const element = document.querySelector(${JSON.stringify(selector)}); element.value = ${JSON.stringify(value)}; element.dispatchEvent(new Event('change', { bubbles: true })); return element.value; })()`);
+  await evaluate(`document.querySelector(${JSON.stringify(selector)}).focus()`);
+  await command('Input.insertText', { text: value });
+  return evaluate(`document.querySelector(${JSON.stringify(selector)}).value`);
+};
 const click = (selector) => evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
 
 await command('Page.enable');
@@ -84,7 +90,7 @@ const candidateC = await evaluate(`JSON.parse(localStorage.getItem('sonsecha-can
 
 await click('[data-consultation-create]');
 await waitFor('document.querySelector("[data-consultation-form]")');
-assert.equal(await evaluate(`[...document.querySelectorAll('.consultation-options input')].every((item) => !item.checked)`), true);
+assert.equal(await evaluate(`[...document.querySelectorAll('.consultation-options input[type="checkbox"]')].every((item) => !item.checked)`), true);
 await click(`[data-candidate-select][value="${candidateC}"]`);
 await click(`[data-candidate-select][value="${candidateA}"]`);
 await click(`[data-candidate-select][value="${candidateB}"]`);
@@ -104,8 +110,11 @@ if (photoPath) {
   await waitFor('document.querySelectorAll("[data-photo-id]").length === 1', 15000);
   await click('[name="sharePhotos"]');
 }
-await setValue('[name="question"]', 'A와 B 후보지 12부 전체 비교 질문입니다.');
-await evaluate(`document.querySelector('[data-consultation-form]').requestSubmit()`);
+await setValue('[data-consultation-form] [name="question"]', 'A와 B 후보지 12부 전체 비교 질문입니다.');
+await setValue('[data-consultation-form] [name="contactName"]', '브라우저 테스트 사용자');
+await setValue('[data-consultation-form] [name="contactPhone"]', '010-0000-0000');
+await setValue('[data-consultation-form] [name="contactEmail"]', 'browser-gate6@example.com');
+await click('[data-consultation-form] button[type="submit"]');
 await waitFor('document.querySelector("[data-consent]")');
 assert.equal(await evaluate(`document.querySelectorAll('.consultation-candidate-preview').length`), 2);
 assert.equal(await evaluate(`document.querySelector('.consultation-preview').textContent.includes('브라우저 후보지 C 제외')`), false);
