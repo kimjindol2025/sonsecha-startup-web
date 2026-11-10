@@ -14,8 +14,10 @@ const allPosts = [...blogPosts, ...realEstatePosts, ...wastewaterPosts];
 const wastewaterSourceNumbers = { 'wastewater-location-map': '01', 'wastewater-layout': '02', 'wastewater-process': '03', 'water-use-calculation': '04', 'wastewater-generation': '05', 'chemical-inventory': '06', 'prevention-facility-design': '07', 'wastewater-flow-diagram': '08', 'sewer-connection': '09', 'sludge-plan': '10', 'wastewater-outsourcing': '11' };
 function renderSourceArticle(slug) {
   const number = wastewaterSourceNumbers[slug]; if (!number) return '';
-  const match = wastewaterSource.match(new RegExp(`^## ${number} ·[\\s\\S]*?(?=\\n---|\\n## |$)`, 'm')); if (!match) return '';
-  const lines = match[0].split(/\r?\n/).slice(1); const blocks = []; let paragraph = [];
+  const start = wastewaterSource.indexOf(`## ${number} ·`); if (start < 0) return '';
+  const separator = wastewaterSource.indexOf('\n---', start + 1); const nextHeading = wastewaterSource.indexOf('\n## ', start + 1);
+  const ends = [separator, nextHeading, wastewaterSource.length].filter((position) => position >= 0); const end = Math.min(...ends);
+  const lines = wastewaterSource.slice(start, end).split(/\r?\n/).slice(1); const blocks = []; let paragraph = [];
   const flush = () => { if (paragraph.length) { blocks.push(`<p>${escapeHtml(paragraph.join(' ')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`); paragraph = []; } };
   for (const line of lines) { const trimmed = line.trim(); if (!trimmed) { flush(); continue; } if (trimmed.startsWith('**') && trimmed.endsWith('**')) { flush(); blocks.push(`<h2>${escapeHtml(trimmed.slice(2, -2))}</h2>`); continue; } if (trimmed.startsWith('**확인 포인트:**')) { flush(); blocks.push(`<div class="blog-highlight"><strong>확인 포인트</strong><span>${escapeHtml(trimmed.replace('**확인 포인트:**', '').trim())}</span></div>`); continue; } if (trimmed.startsWith('**체크리스트:**')) { flush(); blocks.push(`<div class="blog-source-checks"><strong>체크리스트</strong><p>${escapeHtml(trimmed.replace('**체크리스트:**', '').trim())}</p></div>`); continue; } paragraph.push(trimmed); }
   flush(); return `<section class="blog-source-body">${blocks.join('')}</section>`;
