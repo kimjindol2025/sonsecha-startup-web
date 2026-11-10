@@ -5,3 +5,4 @@
 .blog-longform{margin:12px 0 28px}.blog-longform p{margin-bottom:24px}.blog-longform+.blog-post-section{margin-top:16px}
 .blog-source-body{margin:0 0 30px}.blog-source-body h2{margin:43px 0 13px}.blog-source-body p{margin-bottom:24px}.blog-source-checks{margin:28px 0;padding:18px 20px;background:#f8fbff;border:1px solid var(--line);border-radius:8px}.blog-source-checks strong{display:block;color:var(--blue);font-size:13px;margin-bottom:7px}.blog-source-checks p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
 .blog-source-body h3{margin:34px 0 12px;color:var(--ink);font-size:20px;line-height:1.4;letter-spacing:-.04em}
+.blog-source-body ol,.blog-source-body ul{margin:18px 0 28px;padding-left:24px;color:var(--muted)}.blog-source-body li{margin:10px 0;padding-left:5px;line-height:1.85}.blog-source-body li strong{color:var(--ink)}

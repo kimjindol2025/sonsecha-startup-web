@@ -23,9 +23,23 @@ function renderSourceArticle(slug) {
   const start = source.indexOf(`## ${number} ·`); if (start < 0) return '';
   const separator = source.indexOf('\n---', start + 1); const nextHeading = source.indexOf('\n## ', start + 1);
   const ends = [separator, nextHeading, source.length].filter((position) => position >= 0); const end = Math.min(...ends);
-  const lines = source.slice(start, end).split(/\r?\n/).slice(1); const blocks = []; let paragraph = [];
-  const flush = () => { if (paragraph.length) { blocks.push(`<p>${escapeHtml(paragraph.join(' ')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`); paragraph = []; } };
-  for (const line of lines) { const trimmed = line.trim(); if (!trimmed) { flush(); continue; } if (trimmed.startsWith('### ')) { flush(); blocks.push(`<h3>${escapeHtml(trimmed.slice(4).trim())}</h3>`); continue; } if (trimmed.startsWith('**') && trimmed.endsWith('**')) { flush(); blocks.push(`<h2>${escapeHtml(trimmed.slice(2, -2))}</h2>`); continue; } if (trimmed.startsWith('**확인 포인트:**')) { flush(); blocks.push(`<div class="blog-highlight"><strong>확인 포인트</strong><span>${escapeHtml(trimmed.replace('**확인 포인트:**', '').trim())}</span></div>`); continue; } if (trimmed.startsWith('**체크리스트:**')) { flush(); blocks.push(`<div class="blog-source-checks"><strong>체크리스트</strong><p>${escapeHtml(trimmed.replace('**체크리스트:**', '').trim())}</p></div>`); continue; } paragraph.push(trimmed); }
+  const lines = source.slice(start, end).split(/\r?\n/).slice(1); const blocks = []; let paragraph = []; let listType = ''; let listItems = [];
+  const inline = (value) => escapeHtml(value).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const flushList = () => { if (listItems.length) { blocks.push(`<${listType}>${listItems.join('')}</${listType}>`); listItems = []; listType = ''; } };
+  const flush = () => { if (paragraph.length) { blocks.push(`<p>${inline(paragraph.join(' '))}</p>`); paragraph = []; } };
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) { flush(); flushList(); continue; }
+    const ordered = trimmed.match(/^\d+\.\s+(.+)$/); const unordered = trimmed.match(/^[-*]\s+(.+)$/);
+    if (ordered || unordered) { flush(); const type = ordered ? 'ol' : 'ul'; if (listType && listType !== type) flushList(); listType = type; listItems.push(`<li>${inline((ordered || unordered)[1])}</li>`); continue; }
+    flushList();
+    if (trimmed.startsWith('### ')) { flush(); blocks.push(`<h3>${escapeHtml(trimmed.slice(4).trim())}</h3>`); continue; }
+    if (trimmed.startsWith('**') && trimmed.endsWith('**')) { flush(); blocks.push(`<h2>${escapeHtml(trimmed.slice(2, -2))}</h2>`); continue; }
+    if (trimmed.startsWith('**확인 포인트:**')) { flush(); blocks.push(`<div class="blog-highlight"><strong>확인 포인트</strong><span>${escapeHtml(trimmed.replace('**확인 포인트:**', '').trim())}</span></div>`); continue; }
+    if (trimmed.startsWith('**체크리스트:**')) { flush(); blocks.push(`<div class="blog-source-checks"><strong>체크리스트</strong><p>${escapeHtml(trimmed.replace('**체크리스트:**', '').trim())}</p></div>`); continue; }
+    paragraph.push(trimmed);
+  }
+  flushList();
   flush(); return `<section class="blog-source-body">${blocks.join('')}</section>`;
 }
 
