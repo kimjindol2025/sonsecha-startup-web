@@ -10,16 +10,18 @@ import { wastewaterLongform } from './blog-wastewater-longform.js';
 import wastewaterSource from './blog-wastewater-source.md?raw';
 import operationsSource from './blog-operations-source.md?raw';
 import realEstateSource from './blog-realestate-source.md?raw';
+import addressFacilitySource from './blog-address-facility-source.md?raw';
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const articlePath = (slug) => `/blog/${encodeURIComponent(slug)}`;
-const allPosts = [...blogPosts, ...realEstatePosts, ...wastewaterPosts, ...operationsPosts];
+const addressFacilityPost = { slug: 'address-facility-permission', category: '부동산·건축 09', title: '이 주소에서 자동차 관련 시설인 세차장이 허용됩니까?', description: '주소만 던지고 답을 기다리지 않도록 건축물대장·토지이용계획·현장 조건과 기관 질문을 정리합니다.', intro: '', sections: [], site: '후보지별 서류 발급일과 기관 답변을 기록하고, 미확인 항목을 상담 질문으로 정리할 수 있습니다.', next: '이 주소의 조건을 후보지 기록에 남기고 관할 기관에 구체적으로 문의하세요.', link: '/permit' };
+const allPosts = [...blogPosts, ...realEstatePosts, ...wastewaterPosts, ...operationsPosts, addressFacilityPost];
 const wastewaterSourceNumbers = { 'wastewater-location-map': '01', 'wastewater-layout': '02', 'wastewater-process': '03', 'water-use-calculation': '04', 'wastewater-generation': '05', 'chemical-inventory': '06', 'prevention-facility-design': '07', 'wastewater-flow-diagram': '08', 'sewer-connection': '09', 'sludge-plan': '10', 'wastewater-outsourcing': '11' };
 const operationsSourceNumbers = { 'business-registration': '01', 'business-insurance': '02', 'msds-management': '03', 'wastewater-operation-log': '04', 'facility-inspection': '05', 'employee-contract': '06', 'vehicle-intake': '07', 'vehicle-damage-response': '08', 'operation-waste': '09' };
 const realEstateSourceNumbers = { 'realestate-documents': '00', 'building-register': '01', 'land-use-plan': '02', 'registry': '03', 'lease-documents': '04', 'existing-plan': '05', 'planned-floor-plan': '06', 'owner-use-change-consent': '07', 'owner-construction-consent': '08' };
 function renderSourceArticle(slug) {
-  const number = wastewaterSourceNumbers[slug] || operationsSourceNumbers[slug] || realEstateSourceNumbers[slug]; if (!number) return '';
-  const source = wastewaterSourceNumbers[slug] ? wastewaterSource : operationsSourceNumbers[slug] ? operationsSource : realEstateSource;
+  const number = wastewaterSourceNumbers[slug] || operationsSourceNumbers[slug] || realEstateSourceNumbers[slug] || (slug === 'address-facility-permission' ? '01' : ''); if (!number) return '';
+  const source = wastewaterSourceNumbers[slug] ? wastewaterSource : operationsSourceNumbers[slug] ? operationsSource : realEstateSourceNumbers[slug] ? realEstateSource : addressFacilitySource;
   const start = source.indexOf(`## ${number} ·`); if (start < 0) return '';
   const separator = source.indexOf('\n---', start + 1); const nextHeading = source.indexOf('\n## ', start + 1);
   const ends = [separator, nextHeading, source.length].filter((position) => position >= 0); const end = Math.min(...ends);
