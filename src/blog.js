@@ -9,15 +9,17 @@ import { documentDetails } from './blog-document-details.js';
 import { wastewaterLongform } from './blog-wastewater-longform.js';
 import wastewaterSource from './blog-wastewater-source.md?raw';
 import operationsSource from './blog-operations-source.md?raw';
+import realEstateSource from './blog-realestate-source.md?raw';
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const articlePath = (slug) => `/blog/${encodeURIComponent(slug)}`;
 const allPosts = [...blogPosts, ...realEstatePosts, ...wastewaterPosts, ...operationsPosts];
 const wastewaterSourceNumbers = { 'wastewater-location-map': '01', 'wastewater-layout': '02', 'wastewater-process': '03', 'water-use-calculation': '04', 'wastewater-generation': '05', 'chemical-inventory': '06', 'prevention-facility-design': '07', 'wastewater-flow-diagram': '08', 'sewer-connection': '09', 'sludge-plan': '10', 'wastewater-outsourcing': '11' };
 const operationsSourceNumbers = { 'business-registration': '01', 'business-insurance': '02', 'msds-management': '03', 'wastewater-operation-log': '04', 'facility-inspection': '05', 'employee-contract': '06', 'vehicle-intake': '07', 'vehicle-damage-response': '08', 'operation-waste': '09' };
+const realEstateSourceNumbers = { 'realestate-documents': '00', 'building-register': '01', 'land-use-plan': '02', 'registry': '03', 'lease-documents': '04', 'existing-plan': '05', 'planned-floor-plan': '06', 'owner-use-change-consent': '07', 'owner-construction-consent': '08' };
 function renderSourceArticle(slug) {
-  const number = wastewaterSourceNumbers[slug] || operationsSourceNumbers[slug]; if (!number) return '';
-  const source = wastewaterSourceNumbers[slug] ? wastewaterSource : operationsSource;
+  const number = wastewaterSourceNumbers[slug] || operationsSourceNumbers[slug] || realEstateSourceNumbers[slug]; if (!number) return '';
+  const source = wastewaterSourceNumbers[slug] ? wastewaterSource : operationsSourceNumbers[slug] ? operationsSource : realEstateSource;
   const start = source.indexOf(`## ${number} ·`); if (start < 0) return '';
   const separator = source.indexOf('\n---', start + 1); const nextHeading = source.indexOf('\n## ', start + 1);
   const ends = [separator, nextHeading, source.length].filter((position) => position >= 0); const end = Math.min(...ends);
