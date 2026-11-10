@@ -5,7 +5,7 @@ import { blogPosts } from './blog-posts-long.js';
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const articlePath = (slug) => `/blog/${encodeURIComponent(slug)}`;
 
-function postCard(post) { return `<article><span>${escapeHtml(post.category)}</span><h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.description)}</p><a href="${articlePath(post.slug)}">글 읽기 →</a></article>`; }
+function postCard(post) { return `<article><span>${escapeHtml(post.category)} · NAVER READY</span><h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.intro || post.description)}</p><small>실무 안내 · 확인 순서 · 사이트 활용법</small><a href="${articlePath(post.slug)}">본문 읽기 →</a></article>`; }
 
 function renderList() { const list = document.querySelector('#blogList'); if (list) list.innerHTML = blogPosts.map(postCard).join(''); }
 
