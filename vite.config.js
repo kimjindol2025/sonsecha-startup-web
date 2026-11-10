@@ -8,6 +8,8 @@ export default defineConfig({
         main: resolve(import.meta.dirname, 'index.html'),
         permit: resolve(import.meta.dirname, 'permit.html'),
         guide: resolve(import.meta.dirname, 'guide.html'),
+        blog: resolve(import.meta.dirname, 'blog.html'),
+        blogPost: resolve(import.meta.dirname, 'blog-post.html'),
         insurance: resolve(import.meta.dirname, 'insurance.html'),
         employment: resolve(import.meta.dirname, 'employment.html'),
         privacy: resolve(import.meta.dirname, 'privacy.html'),

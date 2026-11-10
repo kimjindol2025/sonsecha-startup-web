@@ -1001,6 +1001,8 @@ async function serveStatic(request, response, url) {
   if (pathname === '/') pathname = '/index.html';
   if (pathname === '/permit' || pathname === '/permit/') pathname = '/permit.html';
   if (pathname === '/guide' || pathname === '/guide/') pathname = '/guide.html';
+  if (pathname === '/blog' || pathname === '/blog/') pathname = '/blog.html';
+  if (/^\/blog\/[^/]+\/?$/.test(pathname)) pathname = '/blog-post.html';
   if (pathname === '/insurance' || pathname === '/insurance/') pathname = '/insurance.html';
   if (pathname === '/employment' || pathname === '/employment/') pathname = '/employment.html';
   if (pathname === '/privacy' || pathname === '/privacy/') pathname = '/privacy.html';
