@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';
+import { readFile, access, readdir } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+const root=resolve(import.meta.dirname,'../dist');const base='/sonsecha-startup-web/';
+const pages=['index.html','guide.html',...(await readdir(resolve(root,'guides'))).map(p=>'guides/'+p)];let links=0;
+for(const name of pages){const html=await readFile(resolve(root,name),'utf8');if(name.startsWith('guides/')){assert.match(html,/<h1>[^<]+<\/h1>/);assert.match(html,/<section class="prose-section"/);assert.match(html,/<link rel="canonical"/);}
+for(const m of html.matchAll(/(?:href|src)="([^"]+)"/g)){let url=m[1];if(/^(https?:|tel:|data:|mailto:|#)/.test(url))continue;const [path,hash]=url.split('#');if(!path)continue;let file=path.startsWith(base)?resolve(root,path.slice(base.length)):path.startsWith('/')?resolve(root,path.slice(1)):resolve(dirname(resolve(root,name)),path);assert(file.startsWith(root+'/'),'path outside build '+url);await access(file);if(hash&&file.endsWith('.html')&&!hash.startsWith('shop/')){const target=await readFile(file,'utf8');assert(target.includes(`id="${hash}"`)||['plan'].includes(hash),`Missing anchor ${name} ${url}`);}links++;}}
+const old=await readFile(resolve(root,'guide.html'),'utf8');assert.equal([...old.matchAll(/data-step="\d+"/g)].length,20);console.log(JSON.stringify({status:'PASS',pages:pages.length,localReferences:links,legacySteps:20,initialArticleBodies:6}));

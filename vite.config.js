@@ -7,6 +7,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
+        guide: resolve(import.meta.dirname, 'guide.html'),
         workspace: resolve(import.meta.dirname, 'workspace.html'),
         admin: resolve(import.meta.dirname, 'admin.html'),
         koreaTouchlessReport: resolve(import.meta.dirname, 'korea-touchless-report.html'),

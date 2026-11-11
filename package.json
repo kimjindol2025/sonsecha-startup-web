@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/package.mjs",
+    "build": "node scripts/generate-editorial.mjs && vite build && node scripts/package.mjs",
     "preview": "vite preview",
     "test:plan-browser": "node scripts/browser-smoke-business-plan.mjs",
     "test:shop-browser": "node scripts/browser-smoke-shop.mjs",
