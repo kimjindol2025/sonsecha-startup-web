@@ -382,9 +382,43 @@
           columns: 1;
         }
       }
+
+      /* Shared site navigation remains visible above the report's own sections. */
+      :root { --report-header-height: 72px; }
+      html { scroll-padding-top: calc(var(--report-header-height) + 70px); }
+      .report-site-header { position: sticky; top: 0; z-index: 40; background: #fffdf8; border-bottom: 1px solid var(--line); }
+      .report-site-header .shell { height: var(--report-header-height); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+      .report-site-brand { font-size: 21px; font-weight: 900; letter-spacing: -0.6px; color: var(--accent); text-decoration: none; white-space: nowrap; }
+      .report-site-brand small { font-size: 11px; margin-left: 12px; font-weight: 600; letter-spacing: 0; }
+      .report-site-links { display: flex; align-items: center; gap: 8px; overflow-x: auto; white-space: nowrap; }
+      .report-site-links a { display: inline-block; flex: 0 0 auto; padding: 11px 12px; text-decoration: none; font-size: 13px; font-weight: 700; border-radius: 6px; }
+      .report-site-links a:hover, .report-site-links a[aria-current="page"] { color: var(--accent); background: #e8f0eb; }
+      .report-site-header a:focus-visible, .top-nav a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .top-nav { top: var(--report-header-height); }
+      @media (max-width: 720px) {
+        :root { --report-header-height: 112px; }
+        .report-site-header .shell { flex-direction: column; align-items: stretch; justify-content: center; gap: 6px; padding: 10px 0; }
+        .report-site-links a { padding: 10px 12px; font-size: 12px; }
+        .top-nav .shell { flex-wrap: nowrap; overflow-x: auto; gap: 4px; }
+        .top-nav a { flex: 0 0 auto; white-space: nowrap; padding: 9px 11px; font-size: 12px; }
+      }
+      @media print { .report-site-header, .top-nav { display: none; } }
     </style>
   </head>
   <body>
+    <header class="report-site-header">
+      <div class="shell">
+        <a class="report-site-brand" href="./index.html" aria-label="빅워시 메인페이지">BIGWASH<small>메인페이지로</small></a>
+        <nav class="report-site-links" aria-label="사이트 주요 메뉴">
+          <a href="./index.html">홈</a>
+          <a href="./index.html#library">창업 가이드</a>
+          <a href="./guide.html#plan">사업계획서</a>
+          <a href="./guide.html#shop">제품몰</a>
+          <a href="./operations-apps.html">운영 앱</a>
+          <a href="./korea-touchless-report.html" aria-current="page">리서치 보고서</a>
+        </nav>
+      </div>
+    </header>
     <header class="masthead">
       <div class="shell title-row">
         <div class="hero-copy">
