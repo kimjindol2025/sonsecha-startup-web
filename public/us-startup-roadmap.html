@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="고객 검증부터 미국 사업체 등록과 오픈까지, 단계별 할 일과 첫 달 준비표를 확인하세요.">
-  <title>미국 창업 준비 로드맵 | 빅워시</title>
+  <meta name="description" content="미국 세차장 고객 검증, 후보지와 설비 비교, 투자비 계산, 허가 및 오픈 준비를 단계별로 기록하세요.">
+  <title>미국 세차장 창업 로드맵 | 빅워시</title>
   <style>
     :root { color-scheme: light; --ink: #142f38; --muted: #486067; --green: #245b4d; --line: #cfddd8; --paper: #f4f8f5; }
     * { box-sizing: border-box; }
@@ -26,6 +26,8 @@
     .stage-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .75rem; }
     .stage { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: .7rem 1.5rem; }
     .time { font-weight: 750; color: var(--green); }
+    .tasks { margin-block: .6rem; padding-inline-start: 1.2rem; }
+    .tasks li + li { margin-top: .4rem; }
     .muted { color: var(--muted); }
     label { display: block; }
     input[type="checkbox"] { width: 1.2rem; height: 1.2rem; vertical-align: middle; margin-right: .4rem; accent-color: var(--green); }
@@ -33,7 +35,9 @@
     .choices { display: flex; flex-wrap: wrap; gap: .15rem 1.2rem; }
     .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .fields label { font-weight: 650; }
-    .fields input, .fields select { display: block; width: 100%; min-height: 2.75rem; margin-top: .35rem; padding: .45rem .65rem; border: 1px solid #829a90; border-radius: .35rem; background: #fff; color: var(--ink); font: inherit; }
+    .fields input, .fields select, .fields textarea { display: block; width: 100%; min-height: 2.75rem; margin-top: .35rem; padding: .45rem .65rem; border: 1px solid #829a90; border-radius: .35rem; background: #fff; color: var(--ink); font: inherit; }
+    .fields textarea { resize: vertical; }
+    .wide { grid-column: 1 / -1; }
     :focus-visible { outline: 3px solid #216b99; outline-offset: 3px; }
     footer { padding-block: 1rem 2rem; border-top: 1px solid var(--line); }
     @media (max-width: 38rem) { .stage, .fields { grid-template-columns: 1fr; } }
@@ -44,8 +48,8 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <h1>미국 창업 준비 로드맵</h1>
-        <p>고객 검증부터 정식 오픈까지, 업종에 관계없이 준비할 순서를 확인하고 첫 달 계획을 작성하세요.</p>
+        <h1>미국 세차장 창업 로드맵</h1>
+        <p>셀프세차, 손세차·디테일링, 노터치 자동세차 중 어떤 방식이 맞는지 현장에서 확인하고, 후보지 검토부터 오픈까지 준비하세요.</p>
         <div class="actions">
           <a class="button" href="#stage-1">1주차부터 시작</a>
           <a class="button secondary" href="#progress">내 준비 단계 찾기</a>
@@ -56,16 +60,16 @@
       <section class="panel" id="progress">
         <h2>내 준비 단계</h2>
         <p id="progress-text" role="status">아래 완료 기준을 읽고 준비한 단계에 표시하세요.</p>
-        <a id="next-stage" href="#stage-1">고객 검증 보기</a>
+        <a id="next-stage" href="#stage-1">세차장 고객 검증 보기</a>
       </section>
       <section class="panel">
         <h2>내 상황에 맞는 준비 항목</h2>
         <div class="choices">
           <label><input type="checkbox" id="direct" data-save> 미국에서 직접 운영</label>
-          <label><input type="checkbox" id="premises" data-save> 매장 운영</label>
+          <label><input type="checkbox" id="premises" data-save> 매장 후보지 검토 중</label>
         </div>
         <p id="direct-note"><strong>1~2주차에 병행</strong> · 미국 현지에서 일할 계획이면 체류·근로 자격을 먼저 검토하세요. <a href="https://travel.state.gov/content/travel/en/us-visas/employment/treaty-trader-investor-visa-e.html">미 국무부 투자자 비자 안내</a></p>
-        <p id="premises-note"><strong>계약 전 확인</strong> · 후보 주소에서 해당 업종이 가능한지 관할 기관에 확인하고 허가와 공사 일정을 검토하세요.</p>
+        <p id="premises-note"><strong>계약 전 확인</strong> · 후보 주소의 세차장 용도, 차량 진출입, 급수와 폐수 접속 조건을 각각 관할 기관에 확인하세요.</p>
       </section>
       <section aria-labelledby="stages-title">
         <h2 id="stages-title">준비 순서</h2>
@@ -73,42 +77,93 @@
         <ol class="stage-list">
           <li class="stage" id="stage-1">
             <span class="time">1~2주차</span>
-            <div><h3>고객 검증</h3><p>누구에게 무엇을 얼마에 팔지 정하고, 인터뷰와 견적 문의로 반응을 확인합니다.</p><p><strong>결과물</strong> · 사업 구상 1장</p><label><input type="checkbox" id="done-1" data-save data-stage> 첫 고객층, 판매 방식, 예상 가격을 정했다.</label></div>
+            <div>
+              <h3>세차장 고객 검증</h3>
+              <ul class="tasks">
+                <li>후보 생활권 두 곳에서 경쟁 세차장 5곳의 세차 방식, 가격, 최근 후기와 대기 시간을 기록합니다. 평일과 주말을 나눠 같은 시간대에 방문 차량을 세어 보세요.</li>
+                <li>차량 소유자 10명에게 마지막으로 이용한 세차장과 실제 지불액, 재방문 이유를 묻습니다. 개인 고객과 차량 관리 업체는 구분해서 기록하세요.</li>
+                <li>셀프·손세차·노터치 중 주력 방식 하나를 가설로 정하고, 예상 가격과 그 근거를 남깁니다. 조사 수량은 첫 조사 목표 예시입니다.</li>
+              </ul>
+              <p><strong>결과물</strong> · 경쟁점 비교와 고객 인터뷰 기록</p>
+              <label><input type="checkbox" id="done-1" data-save data-stage> 실제 지불 가격과 이용 이유를 근거로 주력 세차 방식과 고객층을 정했다.</label>
+            </div>
           </li>
           <li class="stage" id="stage-2">
             <span class="time">3~4주차</span>
-            <div><h3>지역과 자금 결정</h3><p>후보 지역 두 곳을 비교하고 현지 운영 책임자, 초기 투자비, 월 고정비와 손익분기 매출을 계산합니다.</p><p><strong>결과물</strong> · 후보 지역 비교표와 12개월 자금표</p><label><input type="checkbox" id="done-2" data-save data-stage> 지역, 운영 책임자, 필요 자금과 손실 한도를 정했다.</label></div>
+            <div>
+              <h3>후보지와 투자비 비교</h3>
+              <ul class="tasks">
+                <li>후보 주소 두 곳을 놓고 기존 세차장 인수·임대와 신규 시공을 비교합니다. 진출입, 대기 차량 공간, 주변 경쟁점과 현지 운영 책임자를 확인하세요.</li>
+                <li>임대나 매입 계약 전에 시청에 해당 주소의 세차장 용도와 승인 조건을, 상하수도 기관에 급수 용량·세차 폐수 접속 및 전처리 조건을 확인합니다. 전기 용량과 보강 견적도 받으세요.</li>
+                <li>오픈까지 드는 부지·공사·장비 비용과 운영 예비자금을 합산합니다. 기존점 인수라면 POS 매출, 공과금과 장비 수리 기록을 대조합니다.</li>
+              </ul>
+              <p><strong>결과물</strong> · 후보 주소 비교표, 투자비와 월 손익분기점</p>
+              <label><input type="checkbox" id="done-2" data-save data-stage> 후보지의 영업·설비 조건을 확인하고 투자 한도와 월 손익분기 대수를 계산했다.</label>
+            </div>
           </li>
           <li class="stage" id="stage-3">
             <span class="time">5~6주차</span>
-            <div><h3>사업 기반 마련</h3><p>사업 형태와 지분을 정하고 필요한 사업체 등록, 연방 세금번호(EIN), 사업 계좌와 회계를 준비합니다.</p><p><strong>결과물</strong> · 등록·계좌 준비 목록</p><label><input type="checkbox" id="done-3" data-save data-stage> 계약, 결제와 회계에 필요한 준비를 마쳤다.</label></div>
+            <div>
+              <h3>사업체·계약 준비</h3>
+              <ul class="tasks">
+                <li>운영 주와 지분, 현지 책임자를 정하고 해당되는 사업체 등록, EIN, 사업 계좌와 회계를 준비합니다.</li>
+                <li>현지에서 직접 일할 경우 초반에 체류·근로 자격을 확인합니다. 공사·장비 견적에는 납기, 설치, 시운전, 보증과 부품 공급 범위를 적으세요.</li>
+              </ul>
+              <p><strong>결과물</strong> · 등록·계좌 기록과 계약 검토 목록</p>
+              <label><input type="checkbox" id="done-3" data-save data-stage> 사업체와 계좌를 준비하고 임대·시공·장비 계약 조건을 확인했다.</label>
+            </div>
           </li>
           <li class="stage" id="stage-4">
             <span class="time">7주차 이후</span>
-            <div><h3>오픈 준비</h3><p>지역과 업종에 필요한 허가를 확인하고 보험, 결제, 공급처와 운영 절차를 준비합니다.</p><p><strong>결과물</strong> · 오픈 전 점검표</p><label><input type="checkbox" id="done-4" data-save data-stage> 필요한 허가와 영업 준비를 마쳤다.</label></div>
+            <div>
+              <h3>허가·공사·장비 설치</h3>
+              <ul class="tasks">
+                <li>시청과 상하수도 기관이 안내한 승인과 검사 순서를 확인합니다. 배수와 폐수 처리 계획을 설계에 반영하고, 토목·전기·급배수·장비 설치 일정을 맞춥니다.</li>
+                <li>장비 발주 전에 전원·급수 조건과 현지 검사 요건을 확인합니다. 보험, 결제, 세제 공급, 장애 대응 연락망을 준비하세요.</li>
+              </ul>
+              <p><strong>결과물</strong> · 허가·검사 일정과 설치·오픈 점검표</p>
+              <label><input type="checkbox" id="done-4" data-save data-stage> 필요한 승인과 검사를 마치고 장비·결제·운영 준비를 확인했다.</label>
+            </div>
           </li>
           <li class="stage" id="stage-5">
-            <span class="time">오픈 전후 30일</span>
-            <div><h3>시험 운영과 첫 달 점검</h3><p>주문부터 결제와 환불까지 시험합니다. 정식 오픈 후 매주 매출, 비용과 현금 잔액을 확인합니다.</p><p><strong>결과물</strong> · 첫 달 운영 점검표</p><label><input type="checkbox" id="done-5" data-save data-stage> 첫 달 실적을 확인하고 다음 달 계획을 조정했다.</label></div>
+            <span class="time">오픈 전~오픈 후 30일</span>
+            <div>
+              <h3>시운전과 첫 달 점검</h3>
+              <ul class="tasks">
+                <li>진입부터 결제, 세차, 출차까지 직접 시험합니다. 누수, 배수, 비상 정지, 결제 실패와 환불 절차를 확인하세요.</li>
+                <li>오픈 후 30일간 일별 세차 대수와 객단가, 수도·전기·세제 비용, 장비 중단 시간을 기록합니다. 매주 목표 대수와 실제 실적을 비교해 가격과 운영 시간을 조정합니다.</li>
+              </ul>
+              <p><strong>결과물</strong> · 시운전 기록과 첫 달 운영표</p>
+              <label><input type="checkbox" id="done-5" data-save data-stage> 시운전을 마치고 첫 달 실적을 바탕으로 다음 달 운영 계획을 정했다.</label>
+            </div>
           </li>
         </ol>
       </section>
       <section class="panel" aria-labelledby="worksheet-title">
         <h2 id="worksheet-title">첫 달 준비표</h2>
+        <p>입력 예시: 셀프세차, 객단가 $12, 월 고정비 $9,000, 대당 변동비 $3이면 월 손익분기는 1,000대입니다. 실제 가격과 비용은 후보지에서 확인한 값으로 바꿔 계산하세요.</p>
         <p class="muted" id="save-status" role="status">입력 내용과 체크 상태는 이 브라우저에 저장됩니다.</p>
         <div class="fields">
-          <label>첫 고객과 판매할 상품·서비스<input id="customer" maxlength="240" data-save></label>
-          <label>예상 판매 가격 (USD)<input id="price" maxlength="80" data-save></label>
-          <label>후보 지역 1 (주·도시)<input id="region-1" maxlength="120" data-save></label>
-          <label>후보 지역 2 (주·도시)<input id="region-2" maxlength="120" data-save></label>
+          <label>첫 고객층과 주력 서비스<input id="customer" maxlength="240" data-save></label>
+          <label>예상 객단가 (USD)<input id="price" maxlength="80" data-save></label>
+          <label>후보지 1 (주·도시·주소)<input id="region-1" maxlength="120" data-save></label>
+          <label>후보지 2 (주·도시·주소)<input id="region-2" maxlength="120" data-save></label>
           <label>초기 투자 한도 (USD)<input id="budget" inputmode="decimal" maxlength="40" data-save></label>
+          <label>주력 세차 방식<select id="wash-type" data-save><option value="">검토 중</option><option>셀프세차</option><option>손세차·디테일링</option><option>노터치 자동세차</option></select></label>
+          <label class="wide">경쟁점·고객 조사 결과<textarea id="market-evidence" rows="3" maxlength="2000" placeholder="경쟁점 가격·대기, 고객이 실제로 지불한 금액과 재방문 이유" data-save></textarea></label>
+          <label class="wide">후보지별 확인 결과<textarea id="site-evidence" rows="3" maxlength="2000" placeholder="주소별 세차장 허용 여부, 급수·폐수·전기, 보강 견적" data-save></textarea></label>
+          <label>월 고정비 (USD)<input id="fixed-cost" type="number" min="0" step="0.01" data-save></label>
+          <label>세차 1대당 변동비 (USD)<input id="variable-cost" type="number" min="0" step="0.01" data-save></label>
+          <p class="wide muted" id="break-even" role="status">객단가·월 고정비·대당 변동비를 입력하면 월 손익분기 대수를 계산합니다.</p>
+          <label class="wide">다음 할 일과 담당자<textarea id="next-actions" rows="3" maxlength="2000" placeholder="허가 문의, 현장 견적, 장비 발주·시운전 일정" data-save></textarea></label>
           <label>첫 달 검토 결과<select id="decision" data-save><option value="">검토 중</option><option>진행</option><option>보류</option><option>사업 방식 수정</option></select></label>
         </div>
       </section>
       <section aria-labelledby="sources-title">
         <h2 id="sources-title">미국 공식 안내</h2>
         <ul><li><a href="https://www.sba.gov/counseling/launch-your-business/">미국 중소기업청(SBA) 사업 시작 절차</a></li>
-        <li><a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number">미국 국세청(IRS) EIN 신청 안내</a></li></ul>
+        <li><a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number">미국 국세청(IRS) EIN 신청 안내</a></li>
+        <li><a href="https://www.placer.ca.gov/11070/Car-Washing">캘리포니아 플래서 카운티의 세차 폐수 안내 예시</a></li></ul>
       </section>
     </div>
   </main>
@@ -130,8 +185,25 @@
         nextStage.href = '#' + card.id;
         nextStage.textContent = '다음 확인 · ' + card.querySelector('h3').textContent;
       }
+      updateBreakEven();
       document.querySelector('#direct-note').hidden = !document.querySelector('#direct').checked;
       document.querySelector('#premises-note').hidden = !document.querySelector('#premises').checked;
+    }
+
+    function updateBreakEven() {
+      const raw = ['price', 'fixed-cost', 'variable-cost'].map(id => document.getElementById(id).value.trim());
+      const [price, fixed, variable] = raw.map(value => Number(value.replace(/^\$\s*/, '').replaceAll(',', '')));
+      const output = document.querySelector('#break-even');
+      if (raw.some(value => !value) || ![price, fixed, variable].every(value => Number.isFinite(value) && value >= 0)) {
+        output.textContent = '객단가·월 고정비·대당 변동비를 숫자로 입력하면 월 손익분기 대수를 계산합니다.';
+        return;
+      }
+      if (price <= variable) {
+        output.textContent = '객단가가 대당 변동비보다 높아야 월 손익분기 대수를 계산할 수 있습니다.';
+        return;
+      }
+      const count = Math.ceil(fixed / (price - variable));
+      output.textContent = '월 손익분기 약 ' + count.toLocaleString('ko-KR') + '대 (월 고정비 ÷ 대당 공헌이익, 올림)';
     }
 
     try {
