@@ -653,6 +653,7 @@ function injectCandidateFields(group) {
   if (!group.closest('.step-card')?.querySelector('input[data-step="1"]')) return;
   const fields = document.createElement('div');
   fields.className = 'candidate-fields';
+  fields.id = 'candidate-record';
   fields.innerHTML = `
     <div class="candidate-heading">
       <span>MY CANDIDATE</span>

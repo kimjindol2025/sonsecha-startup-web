@@ -384,7 +384,7 @@
       }
 
       /* Shared site navigation remains visible above the report's own sections. */
-      :root { --report-header-height: 72px; }
+      :root { --report-header-height: 88px; }
       html { scroll-padding-top: calc(var(--report-header-height) + 70px); }
       .report-site-header { position: sticky; top: 0; z-index: 40; background: #fffdf8; border-bottom: 1px solid var(--line); }
       .report-site-header .shell { height: var(--report-header-height); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
@@ -396,7 +396,7 @@
       .report-site-header a:focus-visible, .top-nav a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .top-nav { top: var(--report-header-height); }
       @media (max-width: 720px) {
-        :root { --report-header-height: 112px; }
+        :root { --report-header-height: 76px; }
         .report-site-header .shell { flex-direction: column; align-items: stretch; justify-content: center; gap: 6px; padding: 10px 0; }
         .report-site-links a { padding: 10px 12px; font-size: 12px; }
         .top-nav .shell { flex-wrap: nowrap; overflow-x: auto; gap: 4px; }
@@ -404,21 +404,10 @@
       }
       @media print { .report-site-header, .top-nav { display: none; } }
     </style>
-  </head>
+  <link rel="stylesheet" href="./business.css">
+</head>
   <body>
-    <header class="report-site-header">
-      <div class="shell">
-        <a class="report-site-brand" href="./index.html" aria-label="빅워시 메인페이지">BIGWASH<small>메인페이지로</small></a>
-        <nav class="report-site-links" aria-label="사이트 주요 메뉴">
-          <a href="./index.html">홈</a>
-          <a href="./index.html#library">창업 가이드</a>
-          <a href="./guide.html#plan">사업계획서</a>
-          <a href="./guide.html#shop">제품몰</a>
-          <a href="./operations-apps.html">운영 앱</a>
-          <a href="./korea-touchless-report.html" aria-current="page">리서치 보고서</a>
-        </nav>
-      </div>
-    </header>
+<header class="business-header"><div class="business-header-inner"><a class="business-brand" href="./index.html" aria-label="빅워시 메인페이지"><span class="business-mark">BW</span><span>BIGWASH<small>세차장 창업 · 토목부터 오픈까지</small></span></a><button class="business-menu-toggle" type="button" aria-expanded="false" aria-controls="businessNav">메뉴 ☰</button><nav class="business-nav" id="businessNav" aria-label="주요 메뉴"><a href="./self-carwash.html">셀프세차 창업</a><a href="./hand-carwash.html">손세차 창업</a><a href="./construction.html">토목·건축</a><a href="./equipment-service.html">장비 제조·설치</a><a href="./projects.html">시공 사례</a><a href="./guide.html#shop">제품몰</a><details class="business-more"><summary>더보기</summary><div><a href="./index.html#library">창업 가이드</a><a href="./guide.html#plan">사업계획서</a><a href="./guide.html#candidate-record">후보지 기록</a><a href="./guide.html#field-guide">실무 체크리스트</a><a href="./korea-touchless-report.html" aria-current="page">노터치 리서치</a><a href="./about.html">회사 소개</a><a href="./operations-apps.html">운영 앱</a></div></details><a class="business-contact" href="./consult.html">창업·시공 상담 ↗</a></nav></div></header><script defer src="./site-nav.js"></script>
     <header class="masthead">
       <div class="shell title-row">
         <div class="hero-copy">

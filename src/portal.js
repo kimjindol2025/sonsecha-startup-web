@@ -1,9 +1,3 @@
-const menuButton = document.querySelector('[data-menu-toggle]');
-const nav = document.querySelector('#primaryNav');
-function closeMenu() { menuButton.setAttribute('aria-expanded', 'false'); nav.classList.remove('is-open'); }
-menuButton.addEventListener('click', () => { const open = menuButton.getAttribute('aria-expanded') !== 'true'; menuButton.setAttribute('aria-expanded', String(open)); nav.classList.toggle('is-open', open); });
-nav.addEventListener('click', event => { if (event.target.closest('a')) closeMenu(); });
-document.addEventListener('keydown', event => { if (event.key === 'Escape' && nav.classList.contains('is-open')) { closeMenu(); menuButton.focus(); } });
 const search = document.querySelector('#guideSearch');
 const cards = [...document.querySelectorAll('[data-guide-card]')];
 let category = 'all'; let stage = 'all';
@@ -21,6 +15,6 @@ document.querySelectorAll('button[data-stage]').forEach(button=>button.addEventL
 search.addEventListener('input',render);
 document.querySelector('[data-reset-filters]').addEventListener('click',()=>{search.value='';category='all';stage='all';document.querySelectorAll('button[data-category],button[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.category??b.dataset.stage)==='all')));render();search.focus();});
 // Keep old bookmarks on the same origin and retain all existing browser storage.
-const legacyHashes=['#plan','#shop','#roadmap','#documents','#field-guide','#risk','#contract-check'];
+const legacyHashes=['#plan','#shop','#roadmap','#documents','#field-guide','#risk','#contract-check','#candidate-record'];
 function legacyRoute(){if(legacyHashes.some(hash=>location.hash===hash||location.hash.startsWith(hash+'/')))location.replace(`./guide.html${location.hash}`);}
 legacyRoute();window.addEventListener('hashchange',legacyRoute);render();
