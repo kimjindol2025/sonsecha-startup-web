@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="고객 검증부터 미국 사업체 등록과 오픈까지, 단계별 할 일과 첫 달 준비표를 확인하세요.">
+  <title>미국 창업 준비 로드맵 | 빅워시</title>
+  <style>
+    :root { color-scheme: light; --ink: #142f38; --muted: #486067; --green: #245b4d; --line: #cfddd8; --paper: #f4f8f5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 1rem/1.65 system-ui, sans-serif; }
+    a { color: var(--green); text-underline-offset: .22em; }
+    .wrap { width: min(100% - 2rem, 68rem); margin-inline: auto; }
+    header { background: #fff; border-bottom: 1px solid var(--line); }
+    header .wrap { padding-block: 1rem; }
+    .hero { padding-block: clamp(2.5rem, 7vw, 5rem); background: #dceee5; }
+    h1 { font-size: clamp(2rem, 5vw, 4rem); line-height: 1.16; letter-spacing: -.05em; margin: 0; }
+    h2, h3 { line-height: 1.35; margin: 0 0 .5rem; }
+    p { margin: .5rem 0; }
+    .hero p { max-width: 42rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
+    .button { display: inline-block; padding: .65rem 1rem; border-radius: .45rem; color: white; background: var(--green); text-decoration: none; }
+    .button.secondary { color: var(--ink); background: white; }
+    main > .wrap { padding-block: 2rem 3rem; display: grid; gap: 2rem; }
+    .panel, .stage { background: #fff; border: 1px solid var(--line); border-radius: .8rem; padding: clamp(1rem, 3vw, 1.6rem); }
+    .stage-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .75rem; }
+    .stage { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: .7rem 1.5rem; }
+    .time { font-weight: 750; color: var(--green); }
+    .muted { color: var(--muted); }
+    label { display: block; }
+    input[type="checkbox"] { width: 1.2rem; height: 1.2rem; vertical-align: middle; margin-right: .4rem; accent-color: var(--green); }
+    .stage label, .choices label { padding-block: .3rem; }
+    .choices { display: flex; flex-wrap: wrap; gap: .15rem 1.2rem; }
+    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .fields label { font-weight: 650; }
+    .fields input, .fields select { display: block; width: 100%; min-height: 2.75rem; margin-top: .35rem; padding: .45rem .65rem; border: 1px solid #829a90; border-radius: .35rem; background: #fff; color: var(--ink); font: inherit; }
+    :focus-visible { outline: 3px solid #216b99; outline-offset: 3px; }
+    footer { padding-block: 1rem 2rem; border-top: 1px solid var(--line); }
+    @media (max-width: 38rem) { .stage, .fields { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><a href="./index.html">빅워시 홈</a></div></header>
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <h1>미국 창업 준비 로드맵</h1>
+        <p>고객 검증부터 정식 오픈까지, 업종에 관계없이 준비할 순서를 확인하고 첫 달 계획을 작성하세요.</p>
+        <div class="actions">
+          <a class="button" href="#stage-1">1주차부터 시작</a>
+          <a class="button secondary" href="#progress">내 준비 단계 찾기</a>
+        </div>
+      </div>
+    </section>
+    <div class="wrap">
+      <section class="panel" id="progress">
+        <h2>내 준비 단계</h2>
+        <p id="progress-text" role="status">아래 완료 기준을 읽고 준비한 단계에 표시하세요.</p>
+        <a id="next-stage" href="#stage-1">고객 검증 보기</a>
+      </section>
+      <section class="panel">
+        <h2>내 상황에 맞는 준비 항목</h2>
+        <div class="choices">
+          <label><input type="checkbox" id="direct" data-save> 미국에서 직접 운영</label>
+          <label><input type="checkbox" id="premises" data-save> 매장 운영</label>
+        </div>
+        <p id="direct-note"><strong>1~2주차에 병행</strong> · 미국 현지에서 일할 계획이면 체류·근로 자격을 먼저 검토하세요. <a href="https://travel.state.gov/content/travel/en/us-visas/employment/treaty-trader-investor-visa-e.html">미 국무부 투자자 비자 안내</a></p>
+        <p id="premises-note"><strong>계약 전 확인</strong> · 후보 주소에서 해당 업종이 가능한지 관할 기관에 확인하고 허가와 공사 일정을 검토하세요.</p>
+      </section>
+      <section aria-labelledby="stages-title">
+        <h2 id="stages-title">준비 순서</h2>
+        <p class="muted">주차는 기획 예시입니다. 오픈일은 필요한 허가와 준비 일정에 맞춰 잡으세요.</p>
+        <ol class="stage-list">
+          <li class="stage" id="stage-1">
+            <span class="time">1~2주차</span>
+            <div><h3>고객 검증</h3><p>누구에게 무엇을 얼마에 팔지 정하고, 인터뷰와 견적 문의로 반응을 확인합니다.</p><p><strong>결과물</strong> · 사업 구상 1장</p><label><input type="checkbox" id="done-1" data-save data-stage> 첫 고객층, 판매 방식, 예상 가격을 정했다.</label></div>
+          </li>
+          <li class="stage" id="stage-2">
+            <span class="time">3~4주차</span>
+            <div><h3>지역과 자금 결정</h3><p>후보 지역 두 곳을 비교하고 현지 운영 책임자, 초기 투자비, 월 고정비와 손익분기 매출을 계산합니다.</p><p><strong>결과물</strong> · 후보 지역 비교표와 12개월 자금표</p><label><input type="checkbox" id="done-2" data-save data-stage> 지역, 운영 책임자, 필요 자금과 손실 한도를 정했다.</label></div>
+          </li>
+          <li class="stage" id="stage-3">
+            <span class="time">5~6주차</span>
+            <div><h3>사업 기반 마련</h3><p>사업 형태와 지분을 정하고 필요한 사업체 등록, 연방 세금번호(EIN), 사업 계좌와 회계를 준비합니다.</p><p><strong>결과물</strong> · 등록·계좌 준비 목록</p><label><input type="checkbox" id="done-3" data-save data-stage> 계약, 결제와 회계에 필요한 준비를 마쳤다.</label></div>
+          </li>
+          <li class="stage" id="stage-4">
+            <span class="time">7주차 이후</span>
+            <div><h3>오픈 준비</h3><p>지역과 업종에 필요한 허가를 확인하고 보험, 결제, 공급처와 운영 절차를 준비합니다.</p><p><strong>결과물</strong> · 오픈 전 점검표</p><label><input type="checkbox" id="done-4" data-save data-stage> 필요한 허가와 영업 준비를 마쳤다.</label></div>
+          </li>
+          <li class="stage" id="stage-5">
+            <span class="time">오픈 전후 30일</span>
+            <div><h3>시험 운영과 첫 달 점검</h3><p>주문부터 결제와 환불까지 시험합니다. 정식 오픈 후 매주 매출, 비용과 현금 잔액을 확인합니다.</p><p><strong>결과물</strong> · 첫 달 운영 점검표</p><label><input type="checkbox" id="done-5" data-save data-stage> 첫 달 실적을 확인하고 다음 달 계획을 조정했다.</label></div>
+          </li>
+        </ol>
+      </section>
+      <section class="panel" aria-labelledby="worksheet-title">
+        <h2 id="worksheet-title">첫 달 준비표</h2>
+        <p class="muted" id="save-status" role="status">입력 내용과 체크 상태는 이 브라우저에 저장됩니다.</p>
+        <div class="fields">
+          <label>첫 고객과 판매할 상품·서비스<input id="customer" maxlength="240" data-save></label>
+          <label>예상 판매 가격 (USD)<input id="price" maxlength="80" data-save></label>
+          <label>후보 지역 1 (주·도시)<input id="region-1" maxlength="120" data-save></label>
+          <label>후보 지역 2 (주·도시)<input id="region-2" maxlength="120" data-save></label>
+          <label>초기 투자 한도 (USD)<input id="budget" inputmode="decimal" maxlength="40" data-save></label>
+          <label>첫 달 검토 결과<select id="decision" data-save><option value="">검토 중</option><option>진행</option><option>보류</option><option>사업 방식 수정</option></select></label>
+        </div>
+      </section>
+      <section aria-labelledby="sources-title">
+        <h2 id="sources-title">미국 공식 안내</h2>
+        <ul><li><a href="https://www.sba.gov/counseling/launch-your-business/">미국 중소기업청(SBA) 사업 시작 절차</a></li>
+        <li><a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number">미국 국세청(IRS) EIN 신청 안내</a></li></ul>
+      </section>
+    </div>
+  </main>
+  <footer><div class="wrap"><a href="./guide.html#plan">기존 빅워시 창업 사업계획서</a></div></footer>
+  <script>
+    const storageKey = 'bigwash-us-startup-roadmap-v1';
+    const fields = [...document.querySelectorAll('[data-save]')];
+    const stages = [...document.querySelectorAll('[data-stage]')];
+    const saveStatus = document.querySelector('#save-status');
+    const nextStage = document.querySelector('#next-stage');
+
+    function updateView() {
+      const completed = stages.filter(stage => stage.checked).length;
+      const next = stages.find(stage => !stage.checked);
+      document.querySelector('#progress-text').textContent = '준비 완료 ' + completed + ' / ' + stages.length + '단계';
+      nextStage.hidden = !next;
+      if (next) {
+        const card = next.closest('.stage');
+        nextStage.href = '#' + card.id;
+        nextStage.textContent = '다음 확인 · ' + card.querySelector('h3').textContent;
+      }
+      document.querySelector('#direct-note').hidden = !document.querySelector('#direct').checked;
+      document.querySelector('#premises-note').hidden = !document.querySelector('#premises').checked;
+    }
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      for (const field of fields) {
+        const value = saved?.[field.id];
+        if (field.type === 'checkbox') field.checked = value === true;
+        else if (typeof value === 'string') field.value = value;
+      }
+    } catch {
+      saveStatus.textContent = '저장된 준비표를 불러오지 못했습니다.';
+    }
+
+    for (const field of fields) {
+      field.addEventListener('input', () => {
+        updateView();
+        const values = Object.fromEntries(fields.map(item => [item.id, item.type === 'checkbox' ? item.checked : item.value]));
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(values));
+        } catch {
+          saveStatus.textContent = '브라우저에 저장할 수 없습니다. 입력은 현재 화면에서 확인할 수 있습니다.';
+        }
+      });
+    }
+    updateView();
+  </script>
+</body>
+</html>
